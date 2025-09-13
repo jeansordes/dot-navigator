@@ -1,3 +1,9 @@
+## [1.14.5](https://github.com/jeansordes/dot-navigator/compare/1.14.4...1.14.5) (2025-09-13)
+
+### Bug Fixes
+
+* refresh tree on yaml title update ([#32](https://github.com/jeansordes/dot-navigator/issues/32)) ([00a6810](https://github.com/jeansordes/dot-navigator/commit/00a68108f13db6a64af8961662f1caddfcbbc7e3))
+
 ## [1.14.4](https://github.com/jeansordes/dot-navigator/compare/1.14.3...1.14.4) (2025-09-13)
 
 ### Bug Fixes
