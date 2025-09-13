@@ -1,3 +1,10 @@
+## [1.14.3](https://github.com/jeansordes/dot-navigator/compare/1.14.2...1.14.3) (2025-09-13)
+
+### Bug Fixes
+
+* resolve build and lint issues ([#31](https://github.com/jeansordes/dot-navigator/issues/31)) ([bce6795](https://github.com/jeansordes/dot-navigator/commit/bce6795b5164143436bed109641ce46670ac5454))
+* **tree:** separate YAML title from filename ([#30](https://github.com/jeansordes/dot-navigator/issues/30)) ([18b81fa](https://github.com/jeansordes/dot-navigator/commit/18b81fa2066b1745b319145a256ec69104586390))
+
 ## [1.14.2](https://github.com/jeansordes/dot-navigator/compare/1.14.1...1.14.2) (2025-09-13)
 
 ### Bug Fixes
