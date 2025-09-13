@@ -77,11 +77,11 @@ export function createTitleElement(item: RowItem): HTMLElement {
   title.setAttribute('data-node-kind', item.kind);
   title.setAttribute('data-path', item.id);
 
-  const yamlTitle = item.title ?? getYamlTitle(app, item.id);
+  const yamlTitle = item.title;
 
   if (yamlTitle) {
     const customTitle = document.createElement('span');
-    customTitle.textContent = item.title;
+    customTitle.textContent = yamlTitle;
     customTitle.className = 'yaml-custom-title';
 
     const separator = document.createElement('span');
@@ -93,6 +93,7 @@ export function createTitleElement(item: RowItem): HTMLElement {
     filename.className = 'yaml-filename font-italic';
 
     title.appendChild(customTitle);
+    title.appendChild(separator);
     title.appendChild(filename);
   } else {
     title.textContent = item.name;
