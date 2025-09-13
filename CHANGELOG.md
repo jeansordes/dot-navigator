@@ -1,3 +1,9 @@
+## [1.14.4](https://github.com/jeansordes/dot-navigator/compare/1.14.3...1.14.4) (2025-09-13)
+
+### Bug Fixes
+
+* **style:** add css utility for spacing ([943a2fd](https://github.com/jeansordes/dot-navigator/commit/943a2fdfc1c23129b9eedb2357d3185d7a6edf83))
+
 ## [1.14.3](https://github.com/jeansordes/dot-navigator/compare/1.14.2...1.14.3) (2025-09-13)
 
 ### Bug Fixes
