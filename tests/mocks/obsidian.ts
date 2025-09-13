@@ -42,13 +42,27 @@ export class Notice {
     }
 }
 
+export class MetadataCache {
+    on(__name: string, __callback: (...args: unknown[]) => void): void {
+        /* no-op */
+    }
+    off(__name: string, __callback: (...args: unknown[]) => void): void {
+        /* no-op */
+    }
+    getFileCache(__file: TFile): unknown {
+        return null;
+    }
+}
+
 export class App {
     vault: Vault;
     workspace: Workspace;
+    metadataCache: MetadataCache;
 
     constructor() {
         this.vault = new Vault();
         this.workspace = new Workspace();
+        this.metadataCache = new MetadataCache();
     }
 }
 

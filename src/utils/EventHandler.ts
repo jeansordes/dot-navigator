@@ -10,7 +10,7 @@ export class DendronEventHandler {
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
-    // Cache YAML titles to detect changes on modify events
+    // Cache YAML titles to detect changes on modify or metadata events
     private yamlTitleCache: Map<string, string | null> = new Map();
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
@@ -36,6 +36,7 @@ export class DendronEventHandler {
         this.app.vault.on('delete', this.handleFileDelete);
         this.app.vault.on('rename', this.handleFileRename);
         this.app.vault.on('modify', this.handleFileModify);
+        this.app.metadataCache.on('changed', this.handleMetadataChange);
     }
     
     /**
@@ -46,6 +47,7 @@ export class DendronEventHandler {
         this.app.vault.off('delete', this.handleFileDelete);
         this.app.vault.off('rename', this.handleFileRename);
         this.app.vault.off('modify', this.handleFileModify);
+        this.app.metadataCache.off('changed', this.handleMetadataChange);
     }
     
     // Bound event handlers to ensure 'this' is preserved
@@ -81,6 +83,16 @@ export class DendronEventHandler {
         if (oldTitle !== newTitle) {
             this.yamlTitleCache.set(path, newTitle);
             // Refresh this file to update potential title changes
+            this.queueRefresh(path, false, true);
+        }
+    };
+
+    private handleMetadataChange = (file: TFile) => {
+        const path = file.path;
+        const newTitle = getYamlTitle(this.app, path);
+        const oldTitle = this.yamlTitleCache.get(path) ?? null;
+        if (oldTitle !== newTitle) {
+            this.yamlTitleCache.set(path, newTitle);
             this.queueRefresh(path, false, true);
         }
     };
