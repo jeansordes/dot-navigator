@@ -1,5 +1,6 @@
 import { App, TFile, TAbstractFile } from 'obsidian';
 import { TreeNode } from '../types';
+import { getYamlTitle } from './YamlTitleUtils';
 
 export class DendronEventHandler {
     private app: App;
@@ -9,6 +10,8 @@ export class DendronEventHandler {
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
+    // Cache YAML titles to detect changes on modify events
+    private yamlTitleCache: Map<string, string | null> = new Map();
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
     private readonly graceMs = 300; // keep very small to reduce perceived lag
@@ -32,6 +35,7 @@ export class DendronEventHandler {
         this.app.vault.on('create', this.handleFileCreate);
         this.app.vault.on('delete', this.handleFileDelete);
         this.app.vault.on('rename', this.handleFileRename);
+        this.app.vault.on('modify', this.handleFileModify);
     }
     
     /**
@@ -41,22 +45,44 @@ export class DendronEventHandler {
         this.app.vault.off('create', this.handleFileCreate);
         this.app.vault.off('delete', this.handleFileDelete);
         this.app.vault.off('rename', this.handleFileRename);
+        this.app.vault.off('modify', this.handleFileModify);
     }
     
     // Bound event handlers to ensure 'this' is preserved
     private handleFileCreate = (file: TAbstractFile) => {
         // Full rebuild safest for structural add; allow small debounce
-        this.queueRefresh(file?.path, true, false);
-    };
-    
-    private handleFileDelete = (file: TAbstractFile) => {
-        // Full rebuild safest for structural delete; allow small debounce
+        if (file instanceof TFile) {
+            this.yamlTitleCache.set(file.path, getYamlTitle(this.app, file.path));
+        }
         this.queueRefresh(file?.path, true, false);
     };
 
-    private handleFileRename = (file: TAbstractFile, _oldPath: string) => {
+    private handleFileDelete = (file: TAbstractFile) => {
+        // Full rebuild safest for structural delete; allow small debounce
+        this.yamlTitleCache.delete(file.path);
+        this.queueRefresh(file?.path, true, false);
+    };
+
+    private handleFileRename = (file: TAbstractFile, oldPath: string) => {
         // Defer to unified rebuild path; debounce lightly for stability
+        if (file instanceof TFile) {
+            const cached = this.yamlTitleCache.get(oldPath) ?? getYamlTitle(this.app, file.path);
+            this.yamlTitleCache.delete(oldPath);
+            this.yamlTitleCache.set(file.path, cached);
+        }
         this.queueRefresh(file?.path, false, true);
+    };
+
+    private handleFileModify = (file: TAbstractFile) => {
+        if (!(file instanceof TFile)) return;
+        const path = file.path;
+        const newTitle = getYamlTitle(this.app, path);
+        const oldTitle = this.yamlTitleCache.get(path) ?? null;
+        if (oldTitle !== newTitle) {
+            this.yamlTitleCache.set(path, newTitle);
+            // Refresh this file to update potential title changes
+            this.queueRefresh(path, false, true);
+        }
     };
     
     /**
