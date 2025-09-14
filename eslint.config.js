@@ -38,7 +38,7 @@ export default [
 		},
 		rules: {
 			"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-			"@typescript-eslint/no-explicit-any": "warn", // Optional: discourage any
+			"@typescript-eslint/no-explicit-any": "error",
 			"@typescript-eslint/ban-ts-comment": "error",
 			"@typescript-eslint/no-unnecessary-type-assertion": "error",
 			"@typescript-eslint/consistent-type-assertions": [
@@ -118,7 +118,7 @@ export default [
 		},
 		rules: {
 			"@typescript-eslint/consistent-type-assertions": "off",
-			"@typescript-eslint/no-explicit-any": "warn",
+			"@typescript-eslint/no-explicit-any": "error",
 		},
 	},
 	// View/DOM-heavy code: soften innerHTML/style restrictions to allow performant rendering
