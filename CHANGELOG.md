@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/jeansordes/dot-navigator/compare/1.15.3...1.15.4) (2025-09-14)
+
+### Features
+
+* **ui:** reorder undo notification buttons to prevent mis-clicking ([8706ccd](https://github.com/jeansordes/dot-navigator/commit/8706ccd193234c3c85768b2d3242b6294125ba81))
+* **ui:** simplify dotn_rename-notification styles for improved layout ([9a8aa42](https://github.com/jeansordes/dot-navigator/commit/9a8aa42be6480889f1f8a019e425feee66455660))
+
 ## [1.15.3](https://github.com/jeansordes/dot-navigator/compare/1.15.2...1.15.3) (2025-09-14)
 
 ### Features
