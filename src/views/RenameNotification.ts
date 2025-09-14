@@ -85,7 +85,7 @@ export class RenameNotification {
 
         const closeIcon = document.createElement('div');
         closeIcon.className = 'dotn_rename-notification-icon';
-        setIcon(closeIcon, 'x');
+        setIcon(closeIcon, 'check');
 
         closeBtn.appendChild(closeIcon);
         closeBtn.addEventListener('click', () => {
