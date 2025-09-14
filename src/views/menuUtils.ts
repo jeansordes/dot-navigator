@@ -30,7 +30,11 @@ export function buildMoreMenu(app: App, path: string, items?: MoreMenuItem[], re
         menu.addItem((mi) => {
           mi.setTitle(t('commandCreateChildNote'))
             .setIcon(it.icon || 'copy-plus')
-            .onClick(async () => { await FileUtils.createChildNote(app, path); });
+            .onClick(async () => {
+              // @ts-expect-error - plugins registry exists at runtime
+              const plugin = app?.plugins?.getPlugin?.('dot-navigator');
+              await FileUtils.createChildNote(app, path, plugin?.settings);
+            });
         });
       } else if (it.builtin === 'delete') {
         if (!(af instanceof TFile) && !(af instanceof TFolder)) continue;

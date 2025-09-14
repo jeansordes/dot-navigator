@@ -17,6 +17,24 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
     containerEl.createEl('h2', { text: 'Dot Navigator Settings' });
 
+    // File creation section
+    const fileCreationHeader = containerEl.createEl('h3', { text: 'File Creation' });
+    fileCreationHeader.id = 'dotnav-file-creation';
+    containerEl.createEl('p', { text: 'Customize how new files are created.' });
+
+    // Default new file name
+    new Setting(containerEl)
+      .setName('Default new file name')
+      .setDesc('The default name for new files (leave empty to use "untitled" or localized equivalent)')
+      .addText((text) => {
+        text.setValue(this.plugin.settings.defaultNewFileName || '')
+          .setPlaceholder('untitled')
+          .onChange(async (value) => {
+            this.plugin.settings.defaultNewFileName = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
     // More menu section
     const moreMenuHeader = containerEl.createEl('h3', { text: 'More Menu' });
     moreMenuHeader.id = 'dotnav-more-menu';

@@ -76,6 +76,21 @@ describe('FileUtils', () => {
 
             expect(FileUtils.getChildPath('test.md', app)).toBe('test.untitled.2.md');
         });
+
+        it('should use custom name from settings when provided', () => {
+            const settings = { mySetting: 'default', defaultNewFileName: 'custom' };
+            expect(FileUtils.getChildPath('test.md', undefined, settings)).toBe('test.custom.md');
+        });
+
+        it('should fall back to i18n default when settings provide empty string', () => {
+            const settings = { mySetting: 'default', defaultNewFileName: '' };
+            expect(FileUtils.getChildPath('test.md', undefined, settings)).toBe('test.untitled.md');
+        });
+
+        it('should trim whitespace from custom name', () => {
+            const settings = { mySetting: 'default', defaultNewFileName: '  custom  ' };
+            expect(FileUtils.getChildPath('test.md', undefined, settings)).toBe('test.custom.md');
+        });
     });
 
     describe('createAndOpenNote', () => {
@@ -127,10 +142,22 @@ describe('FileUtils', () => {
             const app = createMockApp();
             const createAndOpenNoteSpy = jest.spyOn(FileUtils, 'createAndOpenNote').mockResolvedValue();
             const getChildPathSpy = jest.spyOn(FileUtils, 'getChildPath');
-            
+
             await FileUtils.createChildNote(app, 'parent.md');
-            
-            expect(getChildPathSpy).toHaveBeenCalledWith('parent.md', app);
+
+            expect(getChildPathSpy).toHaveBeenCalledWith('parent.md', app, undefined);
+            expect(createAndOpenNoteSpy).toHaveBeenCalled();
+        });
+
+        it('should pass settings to getChildPath when provided', async () => {
+            const app = createMockApp();
+            const settings = { mySetting: 'default', defaultNewFileName: 'custom' };
+            const createAndOpenNoteSpy = jest.spyOn(FileUtils, 'createAndOpenNote').mockResolvedValue();
+            const getChildPathSpy = jest.spyOn(FileUtils, 'getChildPath');
+
+            await FileUtils.createChildNote(app, 'parent.md', settings);
+
+            expect(getChildPathSpy).toHaveBeenCalledWith('parent.md', app, settings);
             expect(createAndOpenNoteSpy).toHaveBeenCalled();
         });
     });

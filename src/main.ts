@@ -42,7 +42,7 @@ export default class DotNavigatorPlugin extends Plugin {
         
         await this.loadSettings();
 
-        // Initialize rename manager
+        // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);
 
         // Settings tab
@@ -141,7 +141,7 @@ export default class DotNavigatorPlugin extends Plugin {
                 if (!activeFile) return false;
 
                 if (!checking) {
-                    FileUtils.createChildNote(this.app, activeFile.path);
+                    FileUtils.createChildNote(this.app, activeFile.path, this.settings);
                 }
 
                 return true;

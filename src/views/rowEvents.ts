@@ -36,7 +36,9 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
   } else if (action === 'create-note') {
     FileUtils.createAndOpenNote(app, id);
   } else if (action === 'create-child') {
-    FileUtils.createChildNote(app, id);
+    // @ts-expect-error - plugins registry exists at runtime
+    const plugin = app?.plugins?.getPlugin?.('dot-navigator');
+    FileUtils.createChildNote(app, id, plugin?.settings);
   } else if (action === 'more') {
     const menu = new Menu();
 
@@ -57,7 +59,9 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
             mi.setTitle(t('commandCreateChildNote'))
               .setIcon(it.icon || 'copy-plus')
               .onClick(async () => {
-                await FileUtils.createChildNote(app, id);
+                // @ts-expect-error - plugins registry exists at runtime
+                const plugin = app?.plugins?.getPlugin?.('dot-navigator');
+                await FileUtils.createChildNote(app, id, plugin?.settings);
               });
           });
         } else if (it.builtin === 'delete') {

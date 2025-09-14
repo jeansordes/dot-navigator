@@ -1,6 +1,7 @@
 import { App, TFile, TFolder } from "obsidian";
 import { Notice } from "obsidian";
 import { t } from "src/i18n";
+import { PluginSettings } from "src/types";
 export class FileUtils {
     public static basename(path: string): string {
         const normalizedPath = path.replace(/\\/g, '/');
@@ -8,12 +9,14 @@ export class FileUtils {
         return parts[parts.length - 1] || '';
     }
     
-    public static getChildPath(path: string, app?: App): string {
+    public static getChildPath(path: string, app?: App, settings?: PluginSettings): string {
         // Normalize path separators and strip trailing slash (except root '/')
         const normalized = path.replace(/\\/g, '/');
         const trimmed = normalized !== '/' ? normalized.replace(/\/+$/g, '') : normalized;
         const basename = this.basename(trimmed);
-        const untitledBase = t('untitledPath');
+        const untitledBase = (settings?.defaultNewFileName && settings.defaultNewFileName.trim() !== '')
+            ? settings.defaultNewFileName.trim()
+            : t('untitledPath');
 
         // Helper to build a candidate under a folder
         const buildInFolder = (folderPath: string, suffix: string) => {
@@ -104,8 +107,8 @@ export class FileUtils {
         }
     }
 
-    public static async createChildNote(app: App, path: string): Promise<void> {
-        await this.createAndOpenNote(app, this.getChildPath(path, app));
+    public static async createChildNote(app: App, path: string, settings?: PluginSettings): Promise<void> {
+        await this.createAndOpenNote(app, this.getChildPath(path, app, settings));
     }
     
     public static async openFile(app: App, file: TFile): Promise<void> {

@@ -13,6 +13,7 @@ export interface PluginSettings {
     builtinMenuOrder?: string[]; // array of builtin item ids
     userMenuItems?: MoreMenuItemCommand[]; // only custom command items
     viewWasOpen?: boolean; // Whether the view was open when plugin was unloaded
+    defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -21,7 +22,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     moreMenuItems: undefined,
     builtinMenuOrder: undefined,
     userMenuItems: [],
-    viewWasOpen: true // Auto-open the panel on first install
+    viewWasOpen: true, // Auto-open the panel on first install
+    defaultNewFileName: '' // Empty string means use i18n default
 }
 
 export enum TreeNodeType {
