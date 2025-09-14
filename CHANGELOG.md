@@ -1,3 +1,9 @@
+## [1.15.6](https://github.com/jeansordes/dot-navigator/compare/1.15.5...1.15.6) (2025-09-14)
+
+### Features
+
+* **ui:** add .base to file icon logic and repaired some css ([8fbca13](https://github.com/jeansordes/dot-navigator/commit/8fbca13136140f05491226e46aea2a4efb9afa16))
+
 ## [1.15.5](https://github.com/jeansordes/dot-navigator/compare/1.15.4...1.15.5) (2025-09-14)
 
 ### Features
