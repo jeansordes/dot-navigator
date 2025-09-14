@@ -1,3 +1,13 @@
+## [1.14.7](https://github.com/jeansordes/dot-navigator/compare/1.14.6...1.14.7) (2025-09-14)
+
+### Bug Fixes
+
+* **style:** clean up CSS formatting and improve YAML filename styling ([b594915](https://github.com/jeansordes/dot-navigator/commit/b594915a068415d3aa59fab7bc475835c8653d2c))
+
+### Features
+
+* **ui:** enhance menu settings with icons and improved custom commands UI ([4732cee](https://github.com/jeansordes/dot-navigator/commit/4732cee44d9d8a89c79398869ba3af6ba7714b42))
+
 ## [1.14.6](https://github.com/jeansordes/dot-navigator/compare/1.14.5...1.14.6) (2025-09-13)
 
 ## [1.14.5](https://github.com/jeansordes/dot-navigator/compare/1.14.4...1.14.5) (2025-09-13)
