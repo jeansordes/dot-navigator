@@ -49,8 +49,8 @@ export class FileUtils {
             if (app) {
                 const af = app.vault.getAbstractFileByPath(trimmed);
                 if (af instanceof TFile) {
-                    // Real file on disk: preserve its extension (md or others)
-                    targetExt = basename.slice(lastDot + 1) || 'md';
+                    // Real file on disk: always use .md extension for child notes
+                    targetExt = 'md';
                     baseNoExt = trimmed.replace(/\.[^/.]+$/, '');
                 } else {
                     // Virtual node or non-existing path: default to md and do not strip
@@ -58,8 +58,8 @@ export class FileUtils {
                     baseNoExt = trimmed.replace(/\.[Mm][Dd]$/, '');
                 }
             } else if (hasDot) {
-                // No app available: best-effort guess using the apparent extension
-                targetExt = basename.slice(lastDot + 1) || 'md';
+                // No app available: always use .md extension for child notes
+                targetExt = 'md';
                 baseNoExt = trimmed.replace(/\.[^/.]+$/, '');
             } else {
                 targetExt = 'md';

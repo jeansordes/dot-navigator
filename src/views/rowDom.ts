@@ -121,7 +121,7 @@ export function createActionButtons(item: VItem, _app: App): HTMLElement {
     createNoteBtn.className = 'dotn_button-icon';
     createNoteBtn.title = t('tooltipCreateNote', { path: item.id });
     createNoteBtn.setAttribute('data-action', 'create-note');
-    setIcon(createNoteBtn, 'square-pen');
+    setIcon(createNoteBtn, 'file-plus');
     container.appendChild(createNoteBtn);
   }
 

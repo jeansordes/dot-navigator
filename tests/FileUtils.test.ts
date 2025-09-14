@@ -42,7 +42,7 @@ describe('FileUtils', () => {
     describe('getChildPath', () => {
         it('should create child path for files with extension', () => {
             expect(FileUtils.getChildPath('test.md')).toBe('test.untitled.md');
-            expect(FileUtils.getChildPath('folder/test.txt')).toBe('folder/test.untitled.txt');
+            expect(FileUtils.getChildPath('folder/test.txt')).toBe('folder/test.untitled.md');
         });
 
         it('should preserve directory structure', () => {
@@ -90,6 +90,19 @@ describe('FileUtils', () => {
         it('should trim whitespace from custom name', () => {
             const settings = { mySetting: 'default', defaultNewFileName: '  custom  ' };
             expect(FileUtils.getChildPath('test.md', undefined, settings)).toBe('test.custom.md');
+        });
+
+        it('should always create child notes with .md extension regardless of parent extension', () => {
+            // Test various file types as parents
+            expect(FileUtils.getChildPath('document.pdf')).toBe('document.untitled.md');
+            expect(FileUtils.getChildPath('script.js')).toBe('script.untitled.md');
+            expect(FileUtils.getChildPath('data.json')).toBe('data.untitled.md');
+            expect(FileUtils.getChildPath('image.png')).toBe('image.untitled.md');
+            expect(FileUtils.getChildPath('archive.zip')).toBe('archive.untitled.md');
+
+            // Test with paths
+            expect(FileUtils.getChildPath('folder/document.docx')).toBe('folder/document.untitled.md');
+            expect(FileUtils.getChildPath('/path/to/file.txt')).toBe('/path/to/file.untitled.md');
         });
     });
 
