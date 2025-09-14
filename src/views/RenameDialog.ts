@@ -82,7 +82,7 @@ export class RenameDialog extends Modal {
                 {
                     validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
                     validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim())
+                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
                 }
             );
             this.autocompleteState = getAutocompleteState();
@@ -98,7 +98,7 @@ export class RenameDialog extends Modal {
                 setAutocompleteState: (state) => { this.autocompleteState = state; },
                 validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
                 validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim())
+                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
             });
 
             // Trigger initial suggestions display (shows empty state message)
@@ -135,7 +135,7 @@ export class RenameDialog extends Modal {
             setAutocompleteState: (state) => { this.autocompleteState = state; },
             validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
             validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-            updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim())
+            updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
         });
 
         // Extension display (inline with name)
@@ -166,17 +166,18 @@ export class RenameDialog extends Modal {
                     data: this.data,
                     modeSelection: this.modeSelection,
                     pathValue: this.pathInput.value.trim(),
-                    nameValue: this.nameInput.value.trim()
+                    nameValue: this.nameInput.value.trim(),
+                    app: this.app
                 }),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim())
+                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
             }
         );
 
         // Update children previews when inputs change
         const childrenList = childrenContainer.querySelector('.rename-children-list') as HTMLElement;
         if (childrenList) {
-            this.pathInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim()));
-            this.nameInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim()));
+            this.pathInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app));
+            this.nameInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app));
         }
 
         // Mode selection after the files list (only show for files with children)
@@ -188,7 +189,7 @@ export class RenameDialog extends Modal {
                     onModeChange: (value) => {
                         this.modeSelection = value ? RenameMode.FILE_AND_CHILDREN : RenameMode.FILE_ONLY;
                     },
-                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim())
+                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
                 }
             );
         }
@@ -233,7 +234,7 @@ export class RenameDialog extends Modal {
 
         debug('Rename options:', {
             originalPath: this.data.path,
-            newPath: constructNewPath(pathValue, nameValue, this.data.extension || '', this.data.path),
+            newPath: constructNewPath(pathValue, nameValue, this.data.extension || '', this.data.path, this.app),
             newTitle: nameValue,
             mode: shouldShowModeSelectionUtil(this.data) ? this.modeSelection : RenameMode.FILE_ONLY,
             kind: this.data.kind

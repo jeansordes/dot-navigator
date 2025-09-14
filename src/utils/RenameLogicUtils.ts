@@ -56,7 +56,7 @@ export async function handleRename(
     }
 
     // Construct new path using the same logic as in constructNewPath
-    const newPath = constructNewPath(pathValue, nameValue, extension, data.path);
+    const newPath = constructNewPath(pathValue, nameValue, extension, data.path, params.app);
 
     // Check if there are any actual changes
     if (newPath === data.path) {

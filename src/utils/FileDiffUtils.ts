@@ -2,6 +2,7 @@
  * Utility functions for managing file diff display in rename dialogs
  */
 
+import { App } from 'obsidian';
 import { RenameMode, RenameDialogData } from '../types';
 import { createInlineDiff } from './DiffUtils';
 import { constructNewPath, parsePath } from './PathUtils';
@@ -11,6 +12,7 @@ export interface FileDiffContext {
     modeSelection: RenameMode;
     pathValue: string;
     nameValue: string;
+    app: App;
 }
 
 /**
@@ -22,13 +24,13 @@ export function updateFileDiff(
     isMainFile: boolean,
     context: FileDiffContext
 ): void {
-    const { data, modeSelection, pathValue, nameValue } = context;
+    const { data, modeSelection, pathValue, nameValue, app } = context;
 
     let newPath: string;
 
     if (isMainFile) {
         const extension = data.extension || '';
-        newPath = constructNewPath(pathValue, nameValue, extension, data.path);
+        newPath = constructNewPath(pathValue, nameValue, extension, data.path, app);
     } else {
         // For children, calculate new path based on mode selection
         if (modeSelection === RenameMode.FILE_AND_CHILDREN) {
@@ -41,7 +43,7 @@ export function updateFileDiff(
             // Replace the parent path part in child
             const parentPathWithoutExt = data.path.replace(data.extension || '', '');
             const childSuffix = originalPath.replace(parentPathWithoutExt, '');
-            const newParentPath = constructNewPath(newBasePath, newBaseName, '', data.path);
+            const newParentPath = constructNewPath(newBasePath, newBaseName, '', data.path, app);
             newPath = newParentPath + childSuffix;
         } else {
             newPath = originalPath; // No change for children when only renaming main file
@@ -62,7 +64,8 @@ export function updateAllFileItems(
     data: RenameDialogData,
     modeSelection: RenameMode,
     pathValue: string,
-    nameValue: string
+    nameValue: string,
+    app: App
 ): void {
     const fileItems = childrenList.querySelectorAll('.rename-child-item');
 
@@ -71,7 +74,7 @@ export function updateAllFileItems(
         const mainItem = fileItems[0];
         const diffContainer = mainItem.querySelector('.rename-file-diff');
         if (diffContainer instanceof HTMLElement) {
-            updateFileDiff(diffContainer, data.path, true, { data, modeSelection, pathValue, nameValue });
+            updateFileDiff(diffContainer, data.path, true, { data, modeSelection, pathValue, nameValue, app });
         }
     }
 
@@ -91,7 +94,7 @@ export function updateAllFileItems(
             }
 
             if (diffContainer instanceof HTMLElement) {
-                updateFileDiff(diffContainer, data.children[i - 1], false, { data, modeSelection, pathValue, nameValue });
+                updateFileDiff(diffContainer, data.children[i - 1], false, { data, modeSelection, pathValue, nameValue, app });
             }
         }
     }

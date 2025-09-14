@@ -22,11 +22,25 @@ export function parsePath(fullPath: string, extension?: string): ParsedPath {
     // Check for directory separator first (directory-based paths take precedence)
     const lastSlashIndex = pathWithoutExt.lastIndexOf('/');
     if (lastSlashIndex !== -1) {
-        // This is a directory-based path like "Assets/image"
-        return {
-            directory: pathWithoutExt.substring(0, lastSlashIndex),
-            name: pathWithoutExt.substring(lastSlashIndex + 1)
-        };
+        const directory = pathWithoutExt.substring(0, lastSlashIndex);
+        const potentialName = pathWithoutExt.substring(lastSlashIndex + 1);
+
+        // Check if the potential name is hierarchical (has multiple dots indicating a hierarchy)
+        const dotCount = (potentialName.match(/\./g) || []).length;
+        if (dotCount > 1) {
+            // For hierarchical names, split on the last dot to separate path from leaf name
+            const lastDotIndex = potentialName.lastIndexOf('.');
+            return {
+                directory: directory + '/' + potentialName.substring(0, lastDotIndex),
+                name: potentialName.substring(lastDotIndex + 1)
+            };
+        } else {
+            // Single dot or no dots, treat as regular filename
+            return {
+                directory: directory,
+                name: potentialName
+            };
+        }
     }
 
     // No directory separator, check for hierarchical dot notation
@@ -46,21 +60,28 @@ export function parsePath(fullPath: string, extension?: string): ParsedPath {
 /**
  * Construct a new path from path, name, and extension components
  */
-export function constructNewPath(pathValue: string, nameValue: string, extension: string, originalPath: string): string {
+export function constructNewPath(pathValue: string, nameValue: string, extension: string, originalPath: string, app: App): string {
     let newPath: string;
 
     if (pathValue) {
-        // Check if the original path was directory-based (contains /)
-        // by looking at the original path structure
-        const originalPathWithoutExt = originalPath.replace(extension || '', '');
-        const isDirectoryBased = originalPathWithoutExt.includes('/');
+        // Handle special case: if pathValue ends with "/", it's clearly a folder path
+        let cleanPathValue = pathValue;
+        let forceDirectorySeparator = false;
 
-        if (isDirectoryBased) {
-            // Directory-based path: use slash separator
-            newPath = `${pathValue}/${nameValue}`;
+        if (pathValue.endsWith('/')) {
+            cleanPathValue = pathValue.slice(0, -1); // Remove trailing slash
+            forceDirectorySeparator = true;
+        }
+
+        // Check if the path exists as a folder in the vault
+        const isExistingFolder = cleanPathValue && app.vault.getAbstractFileByPath(cleanPathValue);
+
+        // Use directory separator if it's an existing folder or explicitly marked with trailing slash
+        if (isExistingFolder || forceDirectorySeparator) {
+            newPath = `${cleanPathValue}/${nameValue}`;
         } else {
-            // Hierarchical path: use dot separator
-            newPath = `${pathValue}.${nameValue}`;
+            // Use dot separator for hierarchical paths
+            newPath = `${cleanPathValue}.${nameValue}`;
         }
     } else {
         newPath = nameValue;

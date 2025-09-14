@@ -25,7 +25,7 @@ export function checkFileExists(
     if (!nameValue) return false;
 
     // Construct the new path to check
-    const newPath = constructNewPath(pathValue, nameValue, extension, originalPath);
+    const newPath = constructNewPath(pathValue, nameValue, extension, originalPath, app);
 
     // Don't warn if it's the same as the current path (no actual change)
     if (newPath === originalPath) return false;
