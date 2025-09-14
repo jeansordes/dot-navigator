@@ -1,4 +1,4 @@
-import { App, ButtonComponent, PluginSettingTab, Setting } from 'obsidian';
+import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin } from '../types';
 import { CommandSuggestModal } from './CommandSuggest';
@@ -32,16 +32,13 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       const card = builtinWrap.createEl('div', { cls: 'dotn_settings-card' });
       const header = new Setting(card);
       
-      // Manually create the name element with badge
+      // Manually create the name element with icon
       const nameEl = header.nameEl;
       nameEl.empty();
-      nameEl.createSpan({ text: `${index + 1}. ` });
-      
+
       if (item.type === 'builtin') {
-        nameEl.createSpan({
-          cls: 'dotn_builtin-badge',
-          text: 'Built-in'
-        });
+        const iconSpan = nameEl.createSpan({ cls: 'dotn-builtin-icon' });
+        setIcon(iconSpan, item.icon || 'copy-plus');
         nameEl.createSpan({ text: ` ${this.getBuiltinDisplayName(item)}` });
       } else {
         nameEl.createSpan({ text: this.describeItem(item) });

@@ -404,9 +404,26 @@
     margin: 10px 0;
 }
 
-.dotn_settings-card .setting-item {
-    margin: 0;
-}
+    .dotn_settings-card .setting-item {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Built-in item icons in settings */
+    .dotn-builtin-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        color: var(--text-muted);
+    }
+
+    .dotn-builtin-icon svg {
+        width: 14px;
+        height: 14px;
+    }
 
 .dotn_settings-card .setting-item+.setting-item {
     border-top: 1px solid var(--background-modifier-border);
@@ -612,28 +629,27 @@
         border-radius: 6px;
         background: var(--background-secondary);
         cursor: pointer;
-    }
 
-    /* Style the Obsidian Setting component inside the rename mode container */
-    .rename-mode-container .setting-item {
-        padding: 12px;
-        border: none;
-        background: transparent;
-    }
+        .setting-item {
+            padding: 12px;
+            border: none;
+            background: transparent;
+        }
 
-    .rename-mode-container .setting-item-info {
-        margin-right: 12px;
-    }
-
-    .rename-mode-container .setting-item-name {
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    .rename-mode-container .setting-item-description {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 4px;
+        .setting-item-info {
+            margin-right: 12px;
+        }
+    
+        .setting-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+    
+        .setting-item-description {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
     }
 
     .rename-path-hint {
@@ -896,19 +912,6 @@
         margin: 0;
     }
 
-    /* Built-in badge for settings */
-    .dotn_builtin-badge {
-        display: inline-block;
-        background: var(--interactive-accent);
-        color: var(--text-on-accent);
-        font-size: 0.65rem;
-        font-weight: 500;
-        padding: 2px 6px;
-        border-radius: 10px;
-        margin-right: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
 }
 
 .is-mobile .modal:has(.rename-dialog-content) {

@@ -29,7 +29,7 @@ export function buildMoreMenu(app: App, path: string, items?: MoreMenuItem[], re
       if (it.builtin === 'create-child') {
         menu.addItem((mi) => {
           mi.setTitle(t('commandCreateChildNote'))
-            .setIcon(it.icon || 'rotate-cw-square')
+            .setIcon(it.icon || 'copy-plus')
             .onClick(async () => { await FileUtils.createChildNote(app, path); });
         });
       } else if (it.builtin === 'delete') {

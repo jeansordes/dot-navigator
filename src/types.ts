@@ -100,7 +100,7 @@ export const DEFAULT_MORE_MENU: MoreMenuItem[] = [
         id: 'builtin-create-child',
         type: 'builtin',
         builtin: 'create-child',
-        icon: 'rotate-cw-square',
+        icon: 'copy-plus',
         showFor: ['file', 'folder', 'virtual']
     },
     {
