@@ -1,3 +1,9 @@
+## [1.15.7](https://github.com/jeansordes/dot-navigator/compare/1.15.6...1.15.7) (2025-09-14)
+
+### Features
+
+* **styles:** add new text color variables for improved theming ([62c0748](https://github.com/jeansordes/dot-navigator/commit/62c07480e5e6e57295107be6300aeb46d965557f))
+
 ## [1.15.6](https://github.com/jeansordes/dot-navigator/compare/1.15.5...1.15.6) (2025-09-14)
 
 ### Features
