@@ -1,3 +1,9 @@
+## [1.15.1](https://github.com/jeansordes/dot-navigator/compare/1.15.0...1.15.1) (2025-09-14)
+
+### Bug Fixes
+
+* replace 'any' type with proper TFolder mock in PathUtils test ([544684a](https://github.com/jeansordes/dot-navigator/commit/544684afd1b0fa1d126c1c744e6afd057342adeb))
+
 # [1.15.0](https://github.com/jeansordes/dot-navigator/compare/1.14.7...1.15.0) (2025-09-14)
 
 ### Bug Fixes
