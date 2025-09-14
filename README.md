@@ -1,6 +1,6 @@
 # Dot Navigator
 
-<img width="1878" height="1316" alt="CleanShot 2025-09-10 at 03 02 33@2x" src="https://github.com/user-attachments/assets/34114bbf-de6c-49ab-8d19-db82b8ebb027" />
+<img width="1720" height="1646" src="https://github.com/user-attachments/assets/a1a8e313-69d3-45a0-8856-67a2de1eb69b" />
 
 A hierarchical note management system with Dendron-like features.
 
@@ -20,41 +20,37 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Performance optimized for large vaults**, meaning you can expand all 10K notes of your vault at once on your phone, it will still run and scroll smoothly 👌
 - **Optimized for mobile as well as desktop**, (e.g. the top menu on desktop is at the bottom of the screen on mobile for easier access)
 
-(Img coming soon)
+<img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
 
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
 - **UI for renaming a note and its children** with a nice UI
 
-(Img coming soon)
+<img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
 
-- **Undo the last rename operation** that was done in the rename dialog of the plugin
+- **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI or with a command dedicated for that)
 
-(Img coming soon)
+<img width="943" height="714" src="https://github.com/user-attachments/assets/dcf1fefe-16aa-4641-bb1a-deb2fce0f805" />
 
 - **Customizable context menus** (click the "…" button or do a right click on a file or folder)
 
-<img width="2810" height="2339" alt="CleanShot 2025-09-10 at 03 15 52@2x" src="https://github.com/user-attachments/assets/f7528d55-758f-4656-a54b-d828614e86bb" />
+<img width="2411" height="1464" alt="image" src="https://github.com/user-attachments/assets/90575bc4-7665-4767-9e0e-baf19bbf35a8" />
 
-- **Easy access to global commands in UI** so that you can create new file, new folder, expand / collapse all nodes, reveal active file and open the plugin settings
+- **Easy access to global commands in UI**
 
-(Img coming soon)
+<img width="1080" height="446" alt="CleanShot 2025-09-14 at 22 30 49@2x" src="https://github.com/user-attachments/assets/841125f6-d321-40a1-bfe2-a7a834ff177e" />
 
 - **Support for all file types** with appropriate icons and extensions
 
-(Img coming soon)
+<img width="606" height="628" src="https://github.com/user-attachments/assets/89e6195e-0a52-43dc-8f7e-c71b50914123" />
 
 - **Theme-aware styling** with proper dark mode support
 
-(Img coming soon)
+<img width="3097" height="1897" src="https://github.com/user-attachments/assets/dfff2d5c-0ff1-447c-9b8e-8e0c700b0abc" />
 
 - **YAML title support** - displays custom titles from frontmatter instead of filenames (e.g. `prj.md` with the property `title = "Projects"` will be displayed as `Projects` in the tree view)
 
-(Img coming soon)
-
-- **Support for custom commands** in the context menu (e.g. you can add a custom command to the context menu of a file or folder)
-
-(Img coming soon)
+<img width="1178" height="432" src="https://github.com/user-attachments/assets/8f3da2eb-6fb4-4ae9-b893-141539fb10e9" />
 
 - **Internationalization support**, based on the language set in the settings, defaulting to English. (As of now, only English and French 🇫🇷 are supported, you can request a new language by creating an issue)
 
