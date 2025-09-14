@@ -2,6 +2,7 @@ import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind } from '../types';
 import { RenameDialog } from '../views/RenameDialog';
+import { ViewLayout } from '../core/ViewLayout';
 import { t } from '../i18n';
 import createDebug from 'debug';
 
@@ -11,9 +12,18 @@ export class RenameManager {
     private app: App;
     private undoStack: RenameOperation[][] = [];
     private maxUndoStackSize = 10;
+    private layout?: ViewLayout;
 
-    constructor(app: App) {
+    constructor(app: App, layout?: ViewLayout) {
         this.app = app;
+        this.layout = layout;
+    }
+
+    /**
+     * Set the layout instance for notifications
+     */
+    setLayout(layout: ViewLayout): void {
+        this.layout = layout;
     }
 
     /**
@@ -134,6 +144,16 @@ export class RenameManager {
                 if (finalProgress.errors.length > 3) {
                     new Notice(`... and ${finalProgress.errors.length - 3} more errors`, 3000);
                 }
+            }
+
+            // Show rename notification in the UI
+            if (this.layout && finalProgress.successful > 0) {
+                this.layout.showRenameNotification(
+                    finalProgress.successful,
+                    finalProgress.failed,
+                    () => this.undoLastRename(),
+                    () => this.layout?.hideRenameNotification()
+                );
             }
 
         } catch (error) {

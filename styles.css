@@ -195,22 +195,6 @@
         background-color: var(--dotn_border-color);
     }
 
-    /* Hover effect for the vertical line (clickable area) */
-    .dotn_tree-item-children::before {
-        content: '';
-        position: absolute;
-        left: -11px;
-        top: 0;
-        width: 20px;
-        height: 100%;
-        cursor: pointer;
-        z-index: 1;
-    }
-
-    /* Class to be applied via JavaScript when hovering the line */
-    .dotn_tree-item-children.dotn_line-hover::after {
-        background-color: var(--dotn_accent-color);
-    }
 
     /* Highlight for the last collapsed toggle arrow */
     .dotn_button-icon[data-action="toggle"].dotn_last-collapsed {
@@ -358,6 +342,99 @@
         color: var(--dotn_text-on-accent);
         background-color: var(--dotn_accent-color);
     }
+
+    /* Rename Notification Styles */
+    .dotn_rename-notification {
+        border-bottom: 1px solid var(--dotn_border-color);
+        padding: var(--dotn_view-padding);
+        margin: var(--dotn_view-padding);
+        margin-bottom: 0;
+        animation: slideIn 0.3s ease-out;
+        position: relative;
+        z-index: 10;
+        border-left: 4px solid var(--color-green);
+        border-radius: 6px;
+        background-color: var(--background-secondary);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        max-width: 400px;
+    }
+
+    .dotn_rename-notification-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .dotn_rename-notification-buttons {
+        display: flex;
+        gap: var(--dotn_gap);
+        flex-shrink: 0;
+    }
+
+    .dotn_rename-notification-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--size-4-1);
+        min-width: var(--dotn_button-size);
+        height: var(--dotn_button-size);
+        padding: 0 10px;
+        border-radius: var(--dotn_border-radius);
+        background-color: var(--dotn_bg-hover);
+        color: var(--dotn_color-text-clickable);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .dotn_rename-notification-btn:hover {
+        background-color: var(--dotn_bg);
+    }
+
+    .dotn_rename-notification-btn:active {
+        transform: translateY(1px);
+    }
+
+    .dotn_rename-notification-undo {
+        padding: 0 var(--size-4-2);
+        text-transform: uppercase;
+        border: none;
+        background-color: var(--interactive-accent-hover);
+        color: var(--text-on-accent);
+    }
+
+    .dotn_rename-notification-undo:hover {
+        background-color: var(--interactive-accent);
+        color: var(--text-on-accent);
+    }
+    
+    .dotn_rename-notification-close {
+        padding: 0 var(--size-4-1);
+    }
+
+    .dotn_rename-notification-close:hover {
+        background-color: hsla(0, 100%, 50%, 0.12); /* light red */
+    }
+
+    .dotn_rename-notification-icon {
+        width: var(--dotn_button-icon-size);
+        height: var(--dotn_button-icon-size);
+        flex-shrink: 0;
+    }
+
+    .dotn_rename-notification-icon-success {
+        width: 16px;
+        height: 16px;
+        color: var(--color-green);
+        flex-shrink: 0;
+    }
+
+    .dotn_rename-notification-text {
+        font-size: var(--dotn_font-size-small);
+        font-weight: 600;
+    }
 }
 
 /* Mobile */
@@ -373,7 +450,6 @@
         border-top: 1px solid var(--dotn_border-color);
         border-bottom: none;
         padding: var(--dotn_button-size);
-        flex-direction: row-reverse;
     }
 }
 
@@ -404,26 +480,26 @@
     margin: 10px 0;
 }
 
-    .dotn_settings-card .setting-item {
-        margin: 0;
-        padding: 0;
-    }
+.dotn_settings-card .setting-item {
+    margin: 0;
+    padding: 0;
+}
 
-    /* Built-in item icons in settings */
-    .dotn-builtin-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 16px;
-        height: 16px;
-        margin-right: 6px;
-        color: var(--text-muted);
-    }
+/* Built-in item icons in settings */
+.dotn-builtin-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    color: var(--text-muted);
+}
 
-    .dotn-builtin-icon svg {
-        width: 14px;
-        height: 14px;
-    }
+.dotn-builtin-icon svg {
+    width: 14px;
+    height: 14px;
+}
 
 .dotn_settings-card .setting-item+.setting-item {
     border-top: 1px solid var(--background-modifier-border);
@@ -639,12 +715,12 @@
         .setting-item-info {
             margin-right: 12px;
         }
-    
+
         .setting-item-name {
             font-size: 14px;
             font-weight: 500;
         }
-    
+
         .setting-item-description {
             font-size: 12px;
             color: var(--text-muted);
@@ -919,4 +995,38 @@
     right: var(--size-4-3) !important;
     width: auto !important;
     max-height: min(700px, calc(100vh - var(--safe-area-inset-top) - var(--header-height) - var(--size-4-4)* 2));
+}
+
+/* Mobile adjustments */
+.dotn_view-mobile .dotn_rename-notification-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dotn_gap);
+}
+
+.dotn_view-mobile .dotn_rename-notification-buttons {
+    justify-content: flex-end;
+}
+
+.dotn_view-mobile .dotn_rename-notification-btn {
+    min-width: var(--dotn_button-size);
+    height: var(--dotn_button-size);
+    padding: 0 var(--size-4-1);
+}
+
+.dotn_view-mobile .dotn_rename-notification-text {
+    display: none;
+}
+
+/* Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

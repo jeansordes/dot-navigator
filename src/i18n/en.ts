@@ -20,6 +20,7 @@ export default {
     tooltipRevealActiveFile: 'Reveal current file in tree',
     tooltipCreateNewFile: 'Create new file',
     tooltipCreateNewFolder: 'Create new folder',
+    tooltipOpenSettings: 'Open settings',
     tooltipFolder: 'Folder',
     tooltipCreateNote: 'Create note: {{path}}',
     tooltipCreateChildNote: 'Create child note: {{path}}',
@@ -69,6 +70,15 @@ export default {
     noticeRenameCompleted: 'Rename completed: {{successful}} successful, {{failed}} failed',
     noticeRenameCancelled: 'Rename operation cancelled',
     noticeRenameUndone: 'Rename operation undone',
+
+    // Rename notification
+    renameNotificationSuccess: 'Successfully renamed {{count}} file(s)',
+    renameNotificationFailed: 'Failed to rename {{count}} file(s)',
+    renameNotificationPartial: 'Renamed {{success}} file(s), {{failed}} failed',
+    renameNotificationUndo: 'Undo',
+
+    // Common
+    commonClose: 'Close',
 
     // Rename dialog hints
     renameDialogHintNavigate: 'to navigate through suggestions',

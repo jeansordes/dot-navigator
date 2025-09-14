@@ -1,5 +1,6 @@
 import { Platform, setIcon } from 'obsidian';
 import { t } from '../i18n';
+import { RenameNotification } from '../views/RenameNotification';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:view-layout');
 const debugError = debug.extend('error');
@@ -8,9 +9,12 @@ export class ViewLayout {
   private root: HTMLElement;
   private headerEl: HTMLElement | null = null;
   private treeContainer: HTMLElement | null = null;
+  private notificationContainer: HTMLElement | null = null;
+  private renameNotification: RenameNotification | null = null;
   private createHandlers: {
     onCreateFile?: () => void;
     onCreateFolder?: () => void;
+    onSettingsClick?: () => void;
   } = {};
 
   constructor(root: HTMLElement) {
@@ -41,6 +45,19 @@ export class ViewLayout {
       bodyEl.className = 'dotn_view-body';
       container.appendChild(bodyEl);
     }
+
+    // Create notification container right after header
+    const existingNotification = container.querySelector('.dotn_view-notifications');
+    if (existingNotification instanceof HTMLElement) {
+      this.notificationContainer = existingNotification;
+    } else {
+      this.notificationContainer = document.createElement('div');
+      this.notificationContainer.className = 'dotn_view-notifications';
+      container.insertBefore(this.notificationContainer, bodyEl);
+    }
+
+    // Initialize rename notification
+    this.renameNotification = new RenameNotification(container);
 
     // Ensure tree container exists under body
     const existingTree = bodyEl.querySelector('.dotn_view-tree');
@@ -95,6 +112,11 @@ export class ViewLayout {
     this._attachCreateFolderHandler();
   }
 
+  onSettingsClick(handler: () => void): void {
+    this.createHandlers.onSettingsClick = handler;
+    this._attachSettingsHandler();
+  }
+
   private _attachCreateFileHandler(): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_create-file');
@@ -119,6 +141,18 @@ export class ViewLayout {
     }
   }
 
+  private _attachSettingsHandler(): void {
+    const header = this.headerEl;
+    const btn = header?.querySelector('.dotn_settings-button');
+    if (btn instanceof HTMLElement && this.createHandlers.onSettingsClick) {
+      const cloned = btn.cloneNode(true);
+      if (cloned instanceof HTMLElement) {
+        btn.replaceWith(cloned);
+        cloned.addEventListener('click', () => this.createHandlers.onSettingsClick?.());
+      }
+    }
+  }
+
   updateToggleDisplay(anyExpanded: boolean): void {
     const header = this.headerEl;
     const toggleButton: HTMLElement | null = header?.querySelector('.dotn_tree-toggle-button') || null;
@@ -139,6 +173,24 @@ export class ViewLayout {
   }
 
   getTreeContainer(): HTMLElement | null { return this.treeContainer; }
+
+  /**
+   * Show rename notification
+   */
+  showRenameNotification(successCount: number, failCount: number, onUndo?: () => void, onClose?: () => void): void {
+    if (this.renameNotification) {
+      this.renameNotification.show(successCount, failCount, onUndo, onClose);
+    }
+  }
+
+  /**
+   * Hide rename notification
+   */
+  hideRenameNotification(): void {
+    if (this.renameNotification) {
+      this.renameNotification.hide();
+    }
+  }
 
   private ensureHeaderControls(header: HTMLElement): void {
     // Create file button
@@ -181,8 +233,22 @@ export class ViewLayout {
       header.appendChild(revealBtn);
     }
 
+    const spacer = document.createElement('div');
+    spacer.className = 'dotn_spacer';
+    header.appendChild(spacer);
+
+    // Settings button
+    if (!header.querySelector('.dotn_settings-button')) {
+      const settingsBtn = document.createElement('div');
+      settingsBtn.className = 'dotn_button-icon dotn_settings-button';
+      setIcon(settingsBtn, 'settings');
+      settingsBtn.setAttribute('title', t('tooltipOpenSettings'));
+      header.appendChild(settingsBtn);
+    }
+
     // Attach handlers if they exist
     this._attachCreateFileHandler();
     this._attachCreateFolderHandler();
+    this._attachSettingsHandler();
   }
 }

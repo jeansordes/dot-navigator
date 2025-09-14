@@ -20,6 +20,7 @@ export default {
     tooltipRevealActiveFile: 'Afficher le fichier actif dans l\'arborescence',
     tooltipCreateNewFile: 'Créer un nouveau fichier',
     tooltipCreateNewFolder: 'Créer un nouveau dossier',
+    tooltipOpenSettings: 'Ouvrir les paramètres',
     tooltipFolder: 'Dossier',
     tooltipCreateNote: 'Créer une note : {{path}}',
     tooltipCreateChildNote: 'Créer une note enfant : {{path}}',
@@ -69,6 +70,15 @@ export default {
     noticeRenameCompleted: 'Renommage terminé : {{successful}} réussis, {{failed}} échoués',
     noticeRenameCancelled: 'Opération de renommage annulée',
     noticeRenameUndone: 'Opération de renommage annulée',
+
+    // Rename notification
+    renameNotificationSuccess: '{{count}} fichier(s) renommé(s) avec succès',
+    renameNotificationFailed: 'Échec du renommage de {{count}} fichier(s)',
+    renameNotificationPartial: '{{success}} fichier(s) renommé(s), {{failed}} échoué(s)',
+    renameNotificationUndo: 'Annuler',
+
+    // Common
+    commonClose: 'Fermer',
 
     // Rename dialog hints
     renameDialogHintNavigate: 'pour naviguer entre les suggestions',

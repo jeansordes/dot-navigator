@@ -1,4 +1,11 @@
-import { ItemView, TFile, WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, TFile, WorkspaceLeaf, Notice, App } from 'obsidian';
+
+interface ObsidianInternalApp extends App {
+  setting?: {
+    open(): Promise<void>;
+    openTabById(id: string): void;
+  };
+}
 import { t } from '../i18n';
 import { FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON } from '../types';
 import { DendronEventHandler } from '../utils/EventHandler';
@@ -85,6 +92,11 @@ export default class PluginMainPanel extends ItemView {
         this.layout = new ViewLayout(viewRoot);
         this.layout.init();
 
+        // Set the layout on the rename manager if available
+        if (this.renameManager && this.layout) {
+            this.renameManager.setLayout(this.layout);
+        }
+
         // Wait for CSS to be loaded by checking if the styles are applied
         await this.waitForCSSLoad();
 
@@ -118,6 +130,9 @@ export default class PluginMainPanel extends ItemView {
         });
         this.layout.onCreateFolderClick(() => {
             this.createNewFolder();
+        });
+        this.layout.onSettingsClick(async () => {
+            await this.openSettings();
         });
 
         // Highlight current file once initial render is ready
@@ -313,6 +328,23 @@ export default class PluginMainPanel extends ItemView {
     public expandAllNodes(): void {
         if (this.vtManager) this.vtManager.expandAll();
         else if (this.virtualTree) this.virtualTree.expandAll();
+    }
+
+    /**
+     * Open the plugin settings
+     */
+    private async openSettings(): Promise<void> {
+        try {
+            const setting = (this.app as ObsidianInternalApp).setting;
+            if (setting && typeof setting.open === 'function') {
+                await setting.open();
+                if (typeof setting.openTabById === 'function') {
+                    setting.openTabById('dot-navigator');
+                }
+            }
+        } catch (error) {
+            debugError('Failed to open settings:', error);
+        }
     }
 
     /**
