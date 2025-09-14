@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/jeansordes/dot-navigator/compare/1.15.4...1.15.5) (2025-09-14)
+
+### Features
+
+* **ui:** add file extension badges and improve file type icons ([c4d167a](https://github.com/jeansordes/dot-navigator/commit/c4d167a508916c9005b72db34d8a7beddc93b2ef))
+* **ui:** always use .md extension for child notes and improve UI icons ([3d011ff](https://github.com/jeansordes/dot-navigator/commit/3d011ff114188f3f7c6dfe2c7a0f66548b2f23ea))
+
 ## [1.15.4](https://github.com/jeansordes/dot-navigator/compare/1.15.3...1.15.4) (2025-09-14)
 
 ### Features
