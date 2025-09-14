@@ -86,11 +86,11 @@ export function createTitleElement(item: RowItem): HTMLElement {
 
     const separator = document.createElement('span');
     separator.textContent = '·';
-    separator.className = 'yaml-filename mx-2';
+    separator.className = 'yaml-filename';
 
     const filename = document.createElement('span');
     filename.textContent = item.name;
-    filename.className = 'yaml-filename font-italic';
+    filename.className = 'yaml-filename';
 
     title.appendChild(customTitle);
     title.appendChild(separator);
