@@ -291,6 +291,7 @@
         font-size: 0.7rem;
         font-weight: 600;
         background-color: var(--dotn_bg);
+        color: var(--dotn_color-text-hover);
         border-radius: 3px;
         padding: 1px 4px;
         margin-left: var(--dotn_gap);

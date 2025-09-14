@@ -50,6 +50,7 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   else if (ext === 'excalidraw' || item.name.endsWith('excalidraw')) iconName = 'pen-tool';
   else if (ext === 'canvas') iconName = 'layout-dashboard';
   else if (ext === 'pdf') iconName = 'file-text';
+  else if (ext === 'base') iconName = 'layout-list';
   else iconName = 'file-question';
 
   const icon = document.createElement('div');
