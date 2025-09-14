@@ -1,5 +1,5 @@
 import { parsePath, constructNewPath } from '../src/utils/PathUtils';
-import { createMockApp } from './setup';
+import { createMockApp, createMockFolder } from './setup';
 
 describe('PathUtils', () => {
     describe('parsePath', () => {
@@ -73,7 +73,7 @@ describe('PathUtils', () => {
 
         it('should construct directory-based paths with slash separator when folder exists', () => {
             // Mock that 'Notes' folder exists
-            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue({} as any);
+            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue(createMockFolder('Notes'));
             const result = constructNewPath('Notes', 'test', '.md', 'Notes/old.md', mockApp);
             expect(result).toBe('Notes/test.md');
         });
