@@ -1,3 +1,14 @@
+# [1.15.0](https://github.com/jeansordes/dot-navigator/compare/1.14.7...1.15.0) (2025-09-14)
+
+### Bug Fixes
+
+* **rename:** improve path separator logic in rename modal ([315d679](https://github.com/jeansordes/dot-navigator/commit/315d6799453aef93cd308f8dbba0a9491770bf88))
+
+### Features
+
+* **file-creation:** add customization for new files ([9a12edf](https://github.com/jeansordes/dot-navigator/commit/9a12edf41c1daa776f003233b39e3cc5f615b9be))
+* **ui:** add rename notification with undo/close buttons ([285557b](https://github.com/jeansordes/dot-navigator/commit/285557bf83637eb56fb57dab56c0c71e76ab8a80))
+
 ## [1.14.7](https://github.com/jeansordes/dot-navigator/compare/1.14.6...1.14.7) (2025-09-14)
 
 ### Bug Fixes
