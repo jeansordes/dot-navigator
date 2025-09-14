@@ -1,3 +1,9 @@
+## [1.15.8](https://github.com/jeansordes/dot-navigator/compare/1.15.7...1.15.8) (2025-09-14)
+
+### Features
+
+* **ui:** improve ui with an ultra minor font-weight change ([f99886a](https://github.com/jeansordes/dot-navigator/commit/f99886aee80e9dc008956f790c05c0d5ad886a20))
+
 ## [1.15.7](https://github.com/jeansordes/dot-navigator/compare/1.15.6...1.15.7) (2025-09-14)
 
 ### Features
