@@ -1,3 +1,2 @@
 1. Add the files you modified (with git add) for the feature / fix that was done in the current discussion.
-2. Then run the cursor command "/commitizen" to generate the commit message
-3. Do a git commit with the result of the cursor command "/commitizen"
+2. Then create a commit message based on instructions in the .cursor/commands/get-commitizen-msg.md file
