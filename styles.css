@@ -285,6 +285,22 @@
         padding: 0 4px;
     }
 
+    /* Extension badge inline with title text */
+    .dotn_extension-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background-color: var(--dotn_bg);
+        border-radius: 3px;
+        padding: 1px 4px;
+        margin-left: var(--dotn_gap);
+        text-transform: uppercase;
+        line-height: 1.2;
+        white-space: nowrap;
+        align-self: center;
+        border: 1px solid var(--dotn_border-color);
+    }
+
     /* Even spacing between toggle ⇄ icon ⇄ title in both renderers */
     .dotn_tree-item-self .dotn_button-icon+.dotn_icon,
     .dotn_tree-item-self .dotn_button-icon+.dotn_file-badge,

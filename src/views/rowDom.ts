@@ -49,20 +49,14 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   else if (videoExts.has(ext)) iconName = 'file-video';
   else if (ext === 'excalidraw' || item.name.endsWith('excalidraw')) iconName = 'pen-tool';
   else if (ext === 'canvas') iconName = 'layout-dashboard';
+  else if (ext === 'pdf') iconName = 'file-text';
+  else iconName = 'file-question';
 
-  if (iconName) {
-    const icon = document.createElement('div');
-    icon.className = 'dotn_icon';
-    icon.setAttribute('data-icon-name', iconName);
-    setIcon(icon, iconName);
-    return icon;
-  }
-
-  // Unknown extension: show a small badge in the icon slot
-  const badge = document.createElement('div');
-  badge.className = 'dotn_file-badge';
-  badge.textContent = (ext || '?').slice(0, 4).toUpperCase();
-  return badge;
+  const icon = document.createElement('div');
+  icon.className = 'dotn_icon';
+  icon.setAttribute('data-icon-name', iconName);
+  setIcon(icon, iconName);
+  return icon;
 }
 
 export function createTitleElement(item: RowItem): HTMLElement {
@@ -97,6 +91,17 @@ export function createTitleElement(item: RowItem): HTMLElement {
     title.appendChild(filename);
   } else {
     title.textContent = item.name;
+  }
+
+  // Add extension badge for files
+  if (item.kind === 'file' && item.extension) {
+    const ext = item.extension.toLowerCase();
+    if (ext && ext !== 'md' && !item.name.endsWith('excalidraw')) { // Don't show .md extension
+      const extBadge = document.createElement('span');
+      extBadge.className = 'dotn_extension-badge';
+      extBadge.textContent = '.' + ext.toUpperCase();
+      title.appendChild(extBadge);
+    }
   }
 
   return title;
