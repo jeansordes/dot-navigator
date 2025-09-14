@@ -1,0 +1,1 @@
+Can you examine the issue provided with the command and add a comment in the issue with the plan about how we should solve the issue ? Use the mcp context7 to be sure about how to do that, and use the mcp github to handle the github actions.
