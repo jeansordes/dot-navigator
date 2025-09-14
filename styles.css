@@ -358,17 +358,47 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
+    /* Desktop layout: close button | text | undo button */
     .dotn_rename-notification-content {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        position: relative;
     }
 
+    .dotn_rename-notification-message {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        white-space: nowrap;
+        max-width: calc(100% - 2 * var(--dotn_button-size) - 4 * var(--dotn_gap));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+
+    /* Position buttons on left and right sides */
+    .dotn_rename-notification-close {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+    }
+
+    .dotn_rename-notification-undo {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+    }
+
+    /* Hide the old buttons container for desktop */
     .dotn_rename-notification-buttons {
-        display: flex;
-        gap: var(--dotn_gap);
-        flex-shrink: 0;
+        display: none;
     }
 
     .dotn_rename-notification-btn {
@@ -463,9 +493,6 @@
         box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
     }
 
-    .dotn_rename-notification-undo {
-        margin-left: auto;
-    }
 }
 
 /* Mobile dark mode */
@@ -1019,8 +1046,31 @@
     gap: var(--dotn_gap);
 }
 
+/* Mobile: show buttons container and position buttons vertically */
 .dotn_view-mobile .dotn_rename-notification-buttons {
-    flex-flow: row-reverse;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dotn_gap);
+    order: 2; /* Put buttons after message */
+}
+
+.dotn_view-mobile .dotn_rename-notification-message {
+    position: static;
+    transform: none;
+    text-align: center;
+    order: 1; /* Put message first */
+}
+
+.dotn_view-mobile .dotn_rename-notification-close {
+    position: static;
+    transform: none;
+    order: 0; /* Put close button first */
+}
+
+.dotn_view-mobile .dotn_rename-notification-undo {
+    position: static;
+    transform: none;
+    order: 3; /* Put undo button last */
 }
 
 .dotn_view-mobile .dotn_rename-notification-btn {

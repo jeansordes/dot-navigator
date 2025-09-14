@@ -49,13 +49,27 @@ export class RenameNotification {
             });
         }
 
-        // Create buttons container
-        const buttonsEl = document.createElement('div');
-        buttonsEl.className = 'dotn_rename-notification-buttons';
 
-        // Undo button (only show if there were successful operations and undo callback provided)
+        // Close button (left side)
+        const closeBtn = document.createElement('div');
+        closeBtn.className = 'dotn_rename-notification-btn dotn_rename-notification-close dotn_button-icon';
+        closeBtn.setAttribute('title', t('commonClose'));
+
+        const closeIcon = document.createElement('div');
+        closeIcon.className = 'dotn_rename-notification-icon';
+        setIcon(closeIcon, 'check');
+
+        closeBtn.appendChild(closeIcon);
+        closeBtn.addEventListener('click', () => {
+            debug('Close button clicked');
+            this.onClose?.();
+            this.hide();
+        });
+
+        // Undo button (right side, only show if there were successful operations and undo callback provided)
+        let undoBtn: HTMLElement | null = null;
         if (successCount > 0 && onUndo) {
-            const undoBtn = document.createElement('div');
+            undoBtn = document.createElement('div');
             undoBtn.className = 'dotn_rename-notification-btn dotn_rename-notification-undo dotn_button-icon';
             undoBtn.setAttribute('title', t('renameNotificationUndo'));
 
@@ -74,31 +88,14 @@ export class RenameNotification {
                 this.onUndo?.();
                 this.hide();
             });
-
-            buttonsEl.appendChild(undoBtn);
         }
 
-        // Close button
-        const closeBtn = document.createElement('div');
-        closeBtn.className = 'dotn_rename-notification-btn dotn_rename-notification-close dotn_button-icon';
-        closeBtn.setAttribute('title', t('commonClose'));
-
-        const closeIcon = document.createElement('div');
-        closeIcon.className = 'dotn_rename-notification-icon';
-        setIcon(closeIcon, 'check');
-
-        closeBtn.appendChild(closeIcon);
-        closeBtn.addEventListener('click', () => {
-            debug('Close button clicked');
-            this.onClose?.();
-            this.hide();
-        });
-
-        buttonsEl.appendChild(closeBtn);
-
-        // Assemble notification
+        // Assemble notification: close button | message | undo button
+        contentEl.appendChild(closeBtn);
         contentEl.appendChild(messageEl);
-        contentEl.appendChild(buttonsEl);
+        if (undoBtn) {
+            contentEl.appendChild(undoBtn);
+        }
         this.notificationEl.appendChild(contentEl);
 
         // Insert after the header
