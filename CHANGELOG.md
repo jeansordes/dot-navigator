@@ -1,3 +1,9 @@
+# [1.16.0](https://github.com/jeansordes/dot-navigator/compare/1.15.8...1.16.0) (2025-09-16)
+
+### Features
+
+* auto-open rename dialog for child notes ([1391b93](https://github.com/jeansordes/dot-navigator/commit/1391b931cb2e6bad0b9f816d8ba90984c4941dca))
+
 ## [1.15.8](https://github.com/jeansordes/dot-navigator/compare/1.15.7...1.15.8) (2025-09-14)
 
 ### Features
