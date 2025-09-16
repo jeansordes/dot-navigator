@@ -38,7 +38,7 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
   } else if (action === 'create-child') {
     // @ts-expect-error - plugins registry exists at runtime
     const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-    FileUtils.createChildNote(app, id, plugin?.settings);
+    FileUtils.createChildNote(app, id, plugin?.settings, plugin?.renameManager);
   } else if (action === 'more') {
     const menu = new Menu();
 
@@ -61,7 +61,7 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
               .onClick(async () => {
                 // @ts-expect-error - plugins registry exists at runtime
                 const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-                await FileUtils.createChildNote(app, id, plugin?.settings);
+                await FileUtils.createChildNote(app, id, plugin?.settings, plugin?.renameManager);
               });
           });
         } else if (it.builtin === 'delete') {

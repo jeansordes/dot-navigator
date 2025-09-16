@@ -35,6 +35,18 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
           });
       });
 
+    // Auto-open rename dialog for child notes
+    new Setting(containerEl)
+      .setName('Auto-open rename dialog for child notes')
+      .setDesc('Automatically open the rename dialog when creating new child notes')
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.autoOpenRenameDialog ?? true)
+          .onChange(async (value) => {
+            this.plugin.settings.autoOpenRenameDialog = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
     // More menu section
     const moreMenuHeader = containerEl.createEl('h3', { text: 'More Menu' });
     moreMenuHeader.id = 'dotnav-more-menu';

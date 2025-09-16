@@ -33,7 +33,7 @@ export function buildMoreMenu(app: App, path: string, items?: MoreMenuItem[], re
             .onClick(async () => {
               // @ts-expect-error - plugins registry exists at runtime
               const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-              await FileUtils.createChildNote(app, path, plugin?.settings);
+              await FileUtils.createChildNote(app, path, plugin?.settings, plugin?.renameManager);
             });
         });
       } else if (it.builtin === 'delete') {

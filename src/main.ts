@@ -141,7 +141,7 @@ export default class DotNavigatorPlugin extends Plugin {
                 if (!activeFile) return false;
 
                 if (!checking) {
-                    FileUtils.createChildNote(this.app, activeFile.path, this.settings);
+                    FileUtils.createChildNote(this.app, activeFile.path, this.settings, this.renameManager);
                 }
 
                 return true;

@@ -14,6 +14,7 @@ export interface PluginSettings {
     userMenuItems?: MoreMenuItemCommand[]; // only custom command items
     viewWasOpen?: boolean; // Whether the view was open when plugin was unloaded
     defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
+    autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -23,7 +24,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     builtinMenuOrder: undefined,
     userMenuItems: [],
     viewWasOpen: true, // Auto-open the panel on first install
-    defaultNewFileName: '' // Empty string means use i18n default
+    defaultNewFileName: '', // Empty string means use i18n default
+    autoOpenRenameDialog: true // Automatically open rename dialog when creating child notes
 }
 
 export enum TreeNodeType {
