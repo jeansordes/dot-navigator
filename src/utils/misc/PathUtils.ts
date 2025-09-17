@@ -25,9 +25,9 @@ export function parsePath(fullPath: string, extension?: string): ParsedPath {
         const directory = pathWithoutExt.substring(0, lastSlashIndex);
         const potentialName = pathWithoutExt.substring(lastSlashIndex + 1);
 
-        // Check if the potential name is hierarchical (has multiple dots indicating a hierarchy)
+        // Check if the potential name is hierarchical (has dots indicating a hierarchy)
         const dotCount = (potentialName.match(/\./g) || []).length;
-        if (dotCount > 1) {
+        if (dotCount >= 1) {
             // For hierarchical names, split on the last dot to separate path from leaf name
             const lastDotIndex = potentialName.lastIndexOf('.');
             return {
@@ -35,7 +35,7 @@ export function parsePath(fullPath: string, extension?: string): ParsedPath {
                 name: potentialName.substring(lastDotIndex + 1)
             };
         } else {
-            // Single dot or no dots, treat as regular filename
+            // No dots, treat as regular filename
             return {
                 directory: directory,
                 name: potentialName

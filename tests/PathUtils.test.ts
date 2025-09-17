@@ -27,19 +27,35 @@ describe('PathUtils', () => {
             });
         });
 
-        it('should handle single dot in filename as regular name', () => {
+        it('should handle single dot in filename by splitting on last dot for hierarchical names', () => {
             const result = parsePath('Notes/simple.test.md', '.md');
             expect(result).toEqual({
-                directory: 'Notes',
-                name: 'simple.test'
+                directory: 'Notes/simple',
+                name: 'test'
             });
         });
 
-        it('should handle paths without directories', () => {
+        it('should handle paths without directories with hierarchical names', () => {
             const result = parsePath('simple.test.md', '.md');
             expect(result).toEqual({
                 directory: 'simple',
                 name: 'test'
+            });
+        });
+
+        it('should correctly parse user example: Notes/prj.rename-wizard.md', () => {
+            const result = parsePath('Notes/prj.rename-wizard.md', '.md');
+            expect(result).toEqual({
+                directory: 'Notes/prj',
+                name: 'rename-wizard'
+            });
+        });
+
+        it('should correctly parse user example: Notes/prj.ideas.edursenal.md', () => {
+            const result = parsePath('Notes/prj.ideas.edursenal.md', '.md');
+            expect(result).toEqual({
+                directory: 'Notes/prj.ideas',
+                name: 'edursenal'
             });
         });
 
