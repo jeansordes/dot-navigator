@@ -1,4 +1,4 @@
-import { parsePath, constructNewPath } from '../src/utils/PathUtils';
+import { parsePath, constructNewPath } from '../src/utils/misc/PathUtils';
 import { createMockApp, createMockFolder } from './setup';
 
 describe('PathUtils', () => {

@@ -1,6 +1,6 @@
 import { Platform, setIcon } from 'obsidian';
 import { t } from '../i18n';
-import { RenameNotification } from '../views/RenameNotification';
+import { RenameNotification } from '../views/rename/RenameNotification';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:view-layout');
 const debugError = debug.extend('error');

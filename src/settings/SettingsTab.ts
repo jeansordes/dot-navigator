@@ -2,7 +2,7 @@ import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from 'obsidi
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, DashTransformation, FILE_TREE_VIEW_TYPE } from '../types';
 import { CommandSuggestModal } from './CommandSuggest';
-import PluginMainPanel from '../views/PluginMainPanel';
+import PluginMainPanel from '../views/components/PluginMainPanel';
 
 export class DotNavigatorSettingTab extends PluginSettingTab {
   plugin: DotNavigatorPlugin;

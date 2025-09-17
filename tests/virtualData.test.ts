@@ -6,7 +6,7 @@ import { App } from 'obsidian';
 const mockApp = {} as App;
 
 // Mock the YamlTitleUtils module
-jest.mock('../src/utils/YamlTitleUtils', () => ({
+jest.mock('../src/utils/misc/YamlTitleUtils', () => ({
   getYamlTitle: jest.fn().mockReturnValue(undefined)
 }));
 

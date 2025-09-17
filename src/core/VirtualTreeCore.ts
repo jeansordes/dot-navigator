@@ -9,7 +9,7 @@ import {
   observeElementRect,
 } from '@tanstack/virtual-core';
 import { VirtualTreeBaseItem, VirtualTreeItem, VirtualTreeOptions } from '../types';
-import { setRowIndentation, scrollIntoView } from '../utils/rowState';
+import { setRowIndentation, scrollIntoView } from '../utils/misc/rowState';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:virtual-tree');
 const debugError = debug.extend('error');

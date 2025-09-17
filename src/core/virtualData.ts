@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
-import { FileUtils } from '../utils/FileUtils';
+import { FileUtils } from '../utils/file/FileUtils';
 import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
-import { getYamlTitle } from '../utils/YamlTitleUtils';
+import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
 
 export type Kind = 'folder' | 'file' | 'virtual';
 

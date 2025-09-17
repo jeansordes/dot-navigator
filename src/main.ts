@@ -1,11 +1,11 @@
 import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { t } from './i18n';
 import { DEFAULT_SETTINGS, FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON, MoreMenuItemCommand } from './types';
-import { FileUtils } from './utils/FileUtils';
-import PluginMainPanel from './views/PluginMainPanel';
+import { FileUtils } from './utils/file/FileUtils';
+import PluginMainPanel from './views/components/PluginMainPanel';
 import createDebug from 'debug';
 import { DotNavigatorSettingTab } from './settings/SettingsTab';
-import { RenameManager } from './utils/RenameManager';
+import { RenameManager } from './utils/rename/RenameManager';
 
 const debug = createDebug('dot-navigator:main');
 

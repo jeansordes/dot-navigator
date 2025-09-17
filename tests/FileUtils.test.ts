@@ -1,5 +1,5 @@
 import { App, Notice, WorkspaceLeaf } from 'obsidian';
-import { FileUtils } from '../src/utils/FileUtils';
+import { FileUtils } from '../src/utils/file/FileUtils';
 import { createMockApp, createMockFile } from './setup';
 
 // Mock the i18n function

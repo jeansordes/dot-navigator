@@ -1,5 +1,5 @@
 import { TFile, TFolder } from 'obsidian';
-import { TreeBuilder } from '../src/utils/TreeBuilder';
+import { TreeBuilder } from '../src/utils/tree/TreeBuilder';
 import { TreeNodeType } from '../src/types';
 import { createMockFile, createMockFolder } from './setup';
 import createDebug from 'debug';

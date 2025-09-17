@@ -1,13 +1,13 @@
 import { App } from 'obsidian';
-import { ComplexVirtualTree } from '../views/VirtualizedTree';
-import { TreeBuilder } from '../utils/TreeBuilder';
+import { ComplexVirtualTree } from '../views/tree/VirtualizedTree';
+import { TreeBuilder } from '../utils/tree/TreeBuilder';
 import { buildVirtualizedData } from './virtualData';
-import { RenameManager } from '../utils/RenameManager';
+import { RenameManager } from '../utils/rename/RenameManager';
 import { PluginSettings } from '../types';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
-import { computeGap, computeRowHeight } from '../utils/measure';
+import { computeGap, computeRowHeight } from '../utils/misc/measure';
 
 export class VirtualTreeManager {
   private app: App;
