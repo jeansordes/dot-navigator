@@ -1,6 +1,6 @@
 import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from 'obsidian';
 import DotNavigatorPlugin from '../main';
-import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin } from '../types';
+import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, DashTransformation } from '../types';
 import { CommandSuggestModal } from './CommandSuggest';
 
 export class DotNavigatorSettingTab extends PluginSettingTab {
@@ -43,6 +43,21 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.autoOpenRenameDialog ?? true)
           .onChange(async (value) => {
             this.plugin.settings.autoOpenRenameDialog = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Transform dashes in note names
+    new Setting(containerEl)
+      .setName('Transform dashes in note names')
+      .setDesc('Choose how to transform note names with dashes for better readability in the tree view')
+      .addDropdown((dropdown) => {
+        dropdown.addOption(DashTransformation.NONE, 'No changes')
+          .addOption(DashTransformation.SPACES, 'Remove dashes')
+          .addOption(DashTransformation.TITLE_CASE, 'Remove dashes + capitalize words')
+          .setValue(this.plugin.settings.transformDashesToSpaces ?? DashTransformation.TITLE_CASE)
+          .onChange(async (value: DashTransformation) => {
+            this.plugin.settings.transformDashesToSpaces = value;
             await this.plugin.saveSettings();
           });
       });

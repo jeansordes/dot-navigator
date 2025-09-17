@@ -107,7 +107,7 @@ export default class PluginMainPanel extends ItemView {
         this.vtManager = new VirtualTreeManager(this.app, () => {
             this._syncHeaderToggle();
             this._persistExpandedNodesDebounced();
-        }, this.renameManager);
+        }, this.renameManager, this.settings);
         this.vtManager.init(viewRoot, this.settings?.expandedNodes);
         // Access internal instance for highlight calls
         this.virtualTree = this.vtManager.getInstance();

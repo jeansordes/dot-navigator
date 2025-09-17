@@ -4,6 +4,12 @@ import { TFile, TFolder } from 'obsidian';
 export const FILE_TREE_VIEW_TYPE = 'dot-navigator-view';
 export const TREE_VIEW_ICON = 'folder-git-2';
 
+export enum DashTransformation {
+    NONE = 'none', // No changes to dashes
+    SPACES = 'spaces', // Transform dashes to spaces
+    TITLE_CASE = 'title-case' // Transform dashes to spaces and capitalize first letter of each word
+}
+
 export interface PluginSettings {
     mySetting: string;
     expandedNodes?: string[]; // Array of node paths that are expanded
@@ -15,6 +21,7 @@ export interface PluginSettings {
     viewWasOpen?: boolean; // Whether the view was open when plugin was unloaded
     defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
     autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
+    transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -25,7 +32,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     userMenuItems: [],
     viewWasOpen: true, // Auto-open the panel on first install
     defaultNewFileName: '', // Empty string means use i18n default
-    autoOpenRenameDialog: true // Automatically open rename dialog when creating child notes
+    autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
+    transformDashesToSpaces: DashTransformation.TITLE_CASE // Transform dashes to spaces and capitalize words in note names for better readability
 }
 
 export enum TreeNodeType {

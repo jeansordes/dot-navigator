@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import { FileUtils } from '../utils/FileUtils';
-import { TreeNode, TreeNodeType } from '../types';
+import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
 import { getYamlTitle } from '../utils/YamlTitleUtils';
 
 export type Kind = 'folder' | 'file' | 'virtual';
@@ -33,14 +33,39 @@ export function extOf(path: string): string | undefined {
   return idx > -1 ? path.slice(idx + 1) : undefined;
 }
 
-export function buildVirtualizedData(app: App, root: TreeNode): VirtualizedData {
+export function buildVirtualizedData(app: App, root: TreeNode, settings?: PluginSettings): VirtualizedData {
   const parentMap = new Map<string, string | undefined>();
+
+  function transformName(name: string): string {
+    const transformation = settings?.transformDashesToSpaces ?? DashTransformation.TITLE_CASE;
+
+    if (transformation === DashTransformation.NONE) {
+      return name;
+    }
+
+    // Replace dashes with spaces
+    let transformed = name.replace(/-/g, ' ');
+
+    if (transformation === DashTransformation.TITLE_CASE) {
+      // Capitalize first letter of each word
+      transformed = transformed.replace(/\b\w/g, (l) => l.toUpperCase());
+    }
+
+    return transformed;
+  }
 
   function rawName(node: TreeNode): string {
     const base = FileUtils.basename(node.path);
-    if (node.nodeType === TreeNodeType.FOLDER) return base.replace(/ \(\d+\)$/u, '');
-    const matched = base.match(/([^.]+)\.[^.]+$/u);
-    return (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
+    let name: string;
+
+    if (node.nodeType === TreeNodeType.FOLDER) {
+      name = base.replace(/ \(\d+\)$/u, '');
+    } else {
+      const matched = base.match(/([^.]+)\.[^.]+$/u);
+      name = (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
+    }
+
+    return transformName(name);
   }
 
   function sortKey(node: TreeNode): string {

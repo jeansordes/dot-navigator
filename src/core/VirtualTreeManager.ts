@@ -3,6 +3,7 @@ import { ComplexVirtualTree } from '../views/VirtualizedTree';
 import { TreeBuilder } from '../utils/TreeBuilder';
 import { buildVirtualizedData } from './virtualData';
 import { RenameManager } from '../utils/RenameManager';
+import { PluginSettings } from '../types';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
@@ -14,11 +15,13 @@ export class VirtualTreeManager {
   private onExpansionChange?: () => void;
   private rootContainer?: HTMLElement;
   private renameManager?: RenameManager;
+  private settings?: PluginSettings;
 
-  constructor(app: App, onExpansionChange?: () => void, renameManager?: RenameManager) {
+  constructor(app: App, onExpansionChange?: () => void, renameManager?: RenameManager, settings?: PluginSettings) {
     this.app = app;
     this.onExpansionChange = onExpansionChange;
     this.renameManager = renameManager;
+    this.settings = settings;
   }
 
   init(rootContainer: HTMLElement, expanded?: string[]): void {
@@ -27,7 +30,7 @@ export class VirtualTreeManager {
     const files = this.app.vault.getFiles();
     const tb = new TreeBuilder();
     const root = tb.buildDendronStructure(folders, files);
-    const { data, parentMap } = buildVirtualizedData(this.app, root);
+    const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 
     const gap = computeGap(rootContainer) ?? 4;
     const rowHeight = computeRowHeight(rootContainer) || (24 + gap);
@@ -67,7 +70,7 @@ export class VirtualTreeManager {
     const files = this.app.vault.getFiles();
     const tb = new TreeBuilder();
     const root = tb.buildDendronStructure(folders, files);
-    const { data, parentMap } = buildVirtualizedData(this.app, root);
+    const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
     try {
       this.vt.updateData(data, parentMap);
       this.onExpansionChange?.();
