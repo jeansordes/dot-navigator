@@ -1,10 +1,47 @@
-## Steps to follow
-1. Run "npm run ci" to see if tests, build and lint are successful
-2. If the "ci" command is not successful, fix the issues before trying to commit again
-    1. lint issues : run the .cursor/commands/fix-lint.md, and run "npm run lint" to see if the issues are fixed
-    2. build issues : run "npm run build" to see if the build is successful
-    3. test issues : run "npm run test" to see if the tests are successful
-3. If the "ci" command is successful, commit the changes with the following steps:
-    1. Add the files you modified (with git add) for the feature / fix that was done in the current discussion.
-    2. Then create a commit message based on instructions in the .cursor/commands/get-commitizen-msg.md file
-    3. If the commit can't go through because of lint / build errors, go back to step 3 and fix the issues
+## Commit Workflow for Current Discussion
+
+Follow these steps to safely commit your changes:
+
+### 1. Verify CI
+- Run:
+  ```bash
+  npm run ci
+  ```
+- This checks **lint**, **build**, and **tests** in one command.
+
+### 2. Fix Issues if CI Fails
+- **Lint errors**  
+  - Run the command file: `.cursor/commands/fix-lint.md`  
+  - Recheck with:
+    ```bash
+    npm run lint
+    ```
+- **Build errors**  
+  - Run:
+    ```bash
+    npm run build
+    ```
+- **Test errors**  
+  - Run:
+    ```bash
+    npm run test
+    ```
+
+Repeat `npm run ci` until it passes.
+
+### 3. Commit the Changes
+1. Stage your changes:
+   ```bash
+   git add <modified-files>
+   ```
+   (only the files relevant to this feature/fix)
+2. Generate a commit message using:
+   `.cursor/commands/get-commitizen-msg.md`
+3. Create the commit:
+   ```bash
+   git commit
+   ```
+
+### 4. If Commit Fails
+- If the commit is blocked due to lint/build/test issues:  
+  → Go back to **Step 2** (Fix Issues) and try again.
