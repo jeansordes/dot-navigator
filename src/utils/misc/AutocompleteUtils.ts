@@ -25,7 +25,7 @@ export interface AutocompleteState {
  * Set up path autocomplete functionality for an input element
  */
 export function setupPathAutocomplete(
-    input: HTMLInputElement,
+    input: HTMLTextAreaElement,
     container: HTMLElement,
     allDirectories: string[],
     callbacks: AutocompleteCallbacks
@@ -158,7 +158,7 @@ export function setupPathAutocomplete(
 export function navigateSuggestions(
     direction: 'up' | 'down',
     state: AutocompleteState,
-    input: HTMLInputElement,
+    input: HTMLTextAreaElement,
     callbacks: AutocompleteCallbacks,
     container: HTMLElement
 ): AutocompleteState {

@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, Platform } from 'obsidian';
 import { RenameDialogData, RenameMode, RenameOptions } from '../../types';
 import { parsePath } from '../../utils/misc/PathUtils';
 import { validateInputs } from '../../utils/validation/ValidationUtils';
@@ -20,8 +20,8 @@ import { setupInputNavigation, setupKeyboardNavigation } from '../../utils/misc/
 export class RenameDialog extends Modal {
     private data: RenameDialogData;
     private onRename: (options: RenameOptions) => Promise<void>;
-    private pathInput: HTMLInputElement;
-    private nameInput: HTMLInputElement;
+    private pathInput: HTMLTextAreaElement;
+    private nameInput: HTMLTextAreaElement;
     private extensionEl: HTMLElement;
     private modeSelection: RenameMode = RenameMode.FILE_AND_CHILDREN;
     private modeContainer: HTMLElement;
@@ -62,12 +62,13 @@ export class RenameDialog extends Modal {
         if (this.data.kind !== 'folder') {
             // Position the path container for autocomplete
             const pathContainer = inputContainer.createEl('div', { cls: 'rename-path-container' });
-            this.pathInput = pathContainer.createEl('input', {
-                type: 'text',
+            this.pathInput = pathContainer.createEl('textarea', {
                 cls: 'rename-path-input',
                 placeholder: pathParts.directory,
-                value: pathParts.directory
+                attr: { rows: '1' }
             });
+            this.pathInput.value = pathParts.directory;
+            autoResize(this.pathInput);
             this.pathInput.addEventListener('input', () => {
                 validatePath(this.pathInput.value, this.app, contentEl);
                 autoResize(this.pathInput);
@@ -91,19 +92,21 @@ export class RenameDialog extends Modal {
                 this.pathInput.dispatchEvent(event);
             }, 50);
         } else {
-            // For folders, create a dummy path input that's hidden
-            this.pathInput = document.createElement('input');
+            // For folders, create a dummy path textarea that's hidden
+            this.pathInput = document.createElement('textarea');
+            this.pathInput.setAttribute('rows', '1');
             this.pathInput.value = pathParts.directory;
             this.pathInput.classList.add('is-hidden');
         }
 
         // Name input (inline with path for files, standalone for folders)
-        this.nameInput = inputContainer.createEl('input', {
-            type: 'text',
+        this.nameInput = inputContainer.createEl('textarea', {
             cls: 'rename-name-input',
             placeholder: pathParts.name,
-            value: pathParts.name
+            attr: { rows: '1' }
         });
+        this.nameInput.value = pathParts.name;
+        autoResize(this.nameInput);
         this.nameInput.addEventListener('input', () => {
             validateInputs(this.nameInput.value.trim());
             autoResize(this.nameInput);
@@ -197,6 +200,20 @@ export class RenameDialog extends Modal {
 
         // Hints at the bottom
         createHints(contentEl);
+
+        // Add submit button on mobile for better usability
+        if (Platform.isMobile) {
+            const buttonContainer = contentEl.createEl('div', { cls: 'rename-submit-container' });
+            const submitButton = buttonContainer.createEl('button', {
+                text: 'Rename',
+                cls: 'mod-cta rename-submit-button'
+            });
+            submitButton.addEventListener('click', () => {
+                if (this.shouldProceedWithRename()) {
+                    this.handleRename();
+                }
+            });
+        }
 
         // Focus the name input after a small delay to ensure everything is set up
         setTimeout(() => {

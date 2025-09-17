@@ -3,23 +3,25 @@
  */
 
 /**
- * Auto-resize an input element based on its content
+ * Auto-resize a textarea element based on its content
  */
-export function autoResize(input: HTMLInputElement): void {
-    // Create a temporary span to measure text width
-    const tempSpan = document.createElement('span');
-    tempSpan.className = 'dotn-measure-span';
-    tempSpan.style.setProperty('--dotn-measure-font', getComputedStyle(input).font);
-    tempSpan.textContent = input.value || input.placeholder;
+export function autoResize(textarea: HTMLTextAreaElement): void {
+    // Calculate the proper height based on content
+    const computedStyle = getComputedStyle(textarea);
+    const lineHeight = parseFloat(computedStyle.lineHeight);
+    const fontSize = parseFloat(computedStyle.fontSize);
 
-    document.body.appendChild(tempSpan);
-    const textWidth = tempSpan.offsetWidth;
-    document.body.removeChild(tempSpan);
+    // Calculate single line height (font-size * line-height + padding)
+    const paddingTop = parseFloat(computedStyle.paddingTop);
+    const paddingBottom = parseFloat(computedStyle.paddingBottom);
+    const singleLineHeight = fontSize * (isNaN(lineHeight) ? 1.2 : lineHeight / fontSize) + paddingTop + paddingBottom;
 
-    // Add some padding and set minimum width
-    const minWidth = input.placeholder.length * 8; // Rough estimate
-    const newWidth = Math.max(minWidth, textWidth + 36); // Add padding (20px + 1rem = 16px)
-    input.style.width = `${newWidth}px`;
+    // Reset height to auto to measure content
+    textarea.style.height = 'auto';
+    const scrollHeight = textarea.scrollHeight;
+
+    // Use the larger of scrollHeight or single-line height
+    textarea.style.height = `${Math.max(scrollHeight, singleLineHeight)}px`;
 }
 
 /**

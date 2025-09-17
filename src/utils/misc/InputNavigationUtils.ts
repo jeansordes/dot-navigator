@@ -4,7 +4,7 @@
 
 import { Scope } from 'obsidian';
 import { RenameMode, RenameDialogData } from '../../types';
-import { AutocompleteState } from './AutocompleteUtils';
+import { AutocompleteState, navigateSuggestions } from './AutocompleteUtils';
 
 // Extend HTMLElement to include our custom property for event listener storage
 declare global {
@@ -20,8 +20,8 @@ export interface NavigationCallbacks {
 }
 
 export interface NavigationContext {
-    pathInput: HTMLInputElement;
-    nameInput: HTMLInputElement;
+    pathInput: HTMLTextAreaElement;
+    nameInput: HTMLTextAreaElement;
     contentEl: HTMLElement;
     data: RenameDialogData;
     modeSelection: RenameMode;
@@ -36,7 +36,7 @@ export interface NavigationContext {
  * Set up keyboard navigation between input fields
  */
 export function setupInputNavigation(
-    input: HTMLInputElement,
+    input: HTMLTextAreaElement,
     context: NavigationContext
 ): void {
     const { pathInput, nameInput } = context;
@@ -70,6 +70,68 @@ export function setupInputNavigation(
                 pathInput.focus();
                 const pathLength = pathInput.value.length;
                 pathInput.setSelectionRange(pathLength, pathLength);
+            }
+        } else if (e.key === 'ArrowUp' && isPathInput) {
+            // Up arrow in path input: navigate suggestions and update input instantly
+            e.preventDefault();
+            if (context.autocompleteState) {
+                // Get the current state (either from object or function)
+                const currentState = typeof context.autocompleteState === 'function'
+                    ? context.autocompleteState()
+                    : context.autocompleteState;
+
+                if (!currentState) {
+                    return; // State is null, skip navigation
+                }
+
+                const newState = navigateSuggestions(
+                    'up',
+                    currentState,
+                    input,
+                    {
+                        validatePath: context.validatePath,
+                        validateAndShowWarning: context.validateAndShowWarning,
+                        updateAllFileItems: context.updateAllFileItems
+                    },
+                    context.contentEl
+                );
+                context.setAutocompleteState(newState);
+
+                // Ensure input maintains focus after navigation
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
+            }
+        } else if (e.key === 'ArrowDown' && isPathInput) {
+            // Down arrow in path input: navigate suggestions and update input instantly
+            e.preventDefault();
+            if (context.autocompleteState) {
+                // Get the current state (either from object or function)
+                const currentState = typeof context.autocompleteState === 'function'
+                    ? context.autocompleteState()
+                    : context.autocompleteState;
+
+                if (!currentState) {
+                    return; // State is null, skip navigation
+                }
+
+                const newState = navigateSuggestions(
+                    'down',
+                    currentState,
+                    input,
+                    {
+                        validatePath: context.validatePath,
+                        validateAndShowWarning: context.validateAndShowWarning,
+                        updateAllFileItems: context.updateAllFileItems
+                    },
+                    context.contentEl
+                );
+                context.setAutocompleteState(newState);
+
+                // Ensure input maintains focus after navigation
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
             }
         }
     };
