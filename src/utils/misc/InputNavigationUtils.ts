@@ -4,7 +4,14 @@
 
 import { Scope } from 'obsidian';
 import { RenameMode, RenameDialogData } from '../../types';
-import { AutocompleteState, navigateSuggestions } from './AutocompleteUtils';
+import { AutocompleteState } from './AutocompleteUtils';
+
+// Extend HTMLElement to include our custom property for event listener storage
+declare global {
+    interface HTMLElement {
+        _navigationListener?: (e: KeyboardEvent) => void;
+    }
+}
 
 export interface NavigationCallbacks {
     close: () => void;
@@ -34,7 +41,13 @@ export function setupInputNavigation(
 ): void {
     const { pathInput, nameInput } = context;
 
-    input.addEventListener('keydown', (e) => {
+    // Remove any existing navigation event listener to prevent duplicates
+    const existingListener = input._navigationListener;
+    if (existingListener) {
+        input.removeEventListener('keydown', existingListener);
+    }
+
+    const navigationHandler = (e: KeyboardEvent) => {
         const isPathInput = input === pathInput;
         const isNameInput = input === nameInput;
 
@@ -58,70 +71,13 @@ export function setupInputNavigation(
                 const pathLength = pathInput.value.length;
                 pathInput.setSelectionRange(pathLength, pathLength);
             }
-        } else if (e.key === 'ArrowUp' && isPathInput) {
-            // Up arrow in path input: navigate suggestions and update input instantly
-            e.preventDefault();
-            if (context.autocompleteState) {
-                // Get the current state (either from object or function)
-                const currentState = typeof context.autocompleteState === 'function'
-                    ? context.autocompleteState()
-                    : context.autocompleteState;
-
-                if (!currentState) {
-                    return; // State is null, skip navigation
-                }
-
-                const newState = navigateSuggestions(
-                    'up',
-                    currentState,
-                    input,
-                    {
-                        validatePath: context.validatePath,
-                        validateAndShowWarning: context.validateAndShowWarning,
-                        updateAllFileItems: context.updateAllFileItems
-                    },
-                    context.contentEl
-                );
-                context.setAutocompleteState(newState);
-
-                // Ensure input maintains focus after navigation
-                if (document.activeElement !== input) {
-                    input.focus();
-                }
-            }
-        } else if (e.key === 'ArrowDown' && isPathInput) {
-            // Down arrow in path input: navigate suggestions and update input instantly
-            e.preventDefault();
-            if (context.autocompleteState) {
-                // Get the current state (either from object or function)
-                const currentState = typeof context.autocompleteState === 'function'
-                    ? context.autocompleteState()
-                    : context.autocompleteState;
-
-                if (!currentState) {
-                    return; // State is null, skip navigation
-                }
-
-                const newState = navigateSuggestions(
-                    'down',
-                    currentState,
-                    input,
-                    {
-                        validatePath: context.validatePath,
-                        validateAndShowWarning: context.validateAndShowWarning,
-                        updateAllFileItems: context.updateAllFileItems
-                    },
-                    context.contentEl
-                );
-                context.setAutocompleteState(newState);
-
-                // Ensure input maintains focus after navigation
-                if (document.activeElement !== input) {
-                    input.focus();
-                }
-            }
         }
-    });
+    };
+
+    // Store reference to the event listener for cleanup
+    input._navigationListener = navigationHandler;
+
+    input.addEventListener('keydown', navigationHandler);
 }
 
 /**

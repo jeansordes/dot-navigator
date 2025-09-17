@@ -1,7 +1,6 @@
 import { App, Modal } from 'obsidian';
 import { RenameDialogData, RenameMode, RenameOptions } from '../../types';
-import createDebug from 'debug';
-import { parsePath, constructNewPath } from '../../utils/misc/PathUtils';
+import { parsePath } from '../../utils/misc/PathUtils';
 import { validateInputs } from '../../utils/validation/ValidationUtils';
 import { autoResize } from '../../utils/ui/UIUtils';
 import { loadDirectories } from '../../utils/misc/PathLoadingUtils';
@@ -17,7 +16,6 @@ import {
 import { updateFileDiff, updateAllFileItems } from '../../utils/file/FileDiffUtils';
 import { setupInputNavigation, setupKeyboardNavigation } from '../../utils/misc/InputNavigationUtils';
 
-const debug = createDebug('dot-navigator:rename-dialog');
 
 export class RenameDialog extends Modal {
     private data: RenameDialogData;
@@ -87,20 +85,6 @@ export class RenameDialog extends Modal {
             );
             this.autocompleteState = getAutocompleteState();
 
-            // Set up navigation for path input before triggering focus
-            setupInputNavigation(this.pathInput, {
-                pathInput: this.pathInput,
-                nameInput: this.nameInput, // This will be undefined but navigation will handle it
-                contentEl,
-                data: this.data,
-                modeSelection: this.modeSelection,
-                autocompleteState: () => this.autocompleteState, // Use getter to always get current state
-                setAutocompleteState: (state) => { this.autocompleteState = state; },
-                validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
-                validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-            });
-
             // Trigger initial suggestions display (shows empty state message)
             setTimeout(() => {
                 const event = new Event('focus');
@@ -125,6 +109,7 @@ export class RenameDialog extends Modal {
             autoResize(this.nameInput);
             validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
         });
+
         setupInputNavigation(this.nameInput, {
             pathInput: this.pathInput,
             nameInput: this.nameInput,
@@ -137,6 +122,22 @@ export class RenameDialog extends Modal {
             validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
             updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
         });
+
+        // Also set up navigation for the path input (for ArrowRight key)
+        if (this.data.kind !== 'folder') {
+            setupInputNavigation(this.pathInput, {
+                pathInput: this.pathInput,
+                nameInput: this.nameInput,
+                contentEl,
+                data: this.data,
+                modeSelection: this.modeSelection,
+                autocompleteState: () => this.autocompleteState, // Use getter to always get current state
+                setAutocompleteState: (state) => { this.autocompleteState = state; },
+                validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
+                validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
+                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
+            });
+        }
 
         // Extension display (inline with name)
         if (this.data.extension) {
@@ -232,13 +233,6 @@ export class RenameDialog extends Modal {
         const pathValue = this.pathInput.value.trim();
         const nameValue = this.nameInput.value.trim();
 
-        debug('Rename options:', {
-            originalPath: this.data.path,
-            newPath: constructNewPath(pathValue, nameValue, this.data.extension || '', this.data.path, this.app),
-            newTitle: nameValue,
-            mode: shouldShowModeSelectionUtil(this.data) ? this.modeSelection : RenameMode.FILE_ONLY,
-            kind: this.data.kind
-        });
 
         try {
             await handleRename({
@@ -250,8 +244,7 @@ export class RenameDialog extends Modal {
                 app: this.app
             }, this.onRename);
             this.close();
-        } catch (error) {
-            debug('Rename failed:', error);
+        } catch {
             // Error handling is done in the onRename callback
         }
     }
