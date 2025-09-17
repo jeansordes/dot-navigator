@@ -74,6 +74,28 @@ export class RenameDialog extends Modal {
                 autoResize(this.pathInput);
                 validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
             });
+            this.pathInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Let the existing keyboard navigation handle the Enter key for submission
+                }
+            });
+            this.pathInput.addEventListener('paste', (e) => {
+                // Prevent pasting multi-line content
+                const paste = e.clipboardData?.getData('text') || '';
+                if (paste.includes('\n') || paste.includes('\r')) {
+                    e.preventDefault();
+                    // Insert only the first line, replacing newlines with spaces
+                    const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
+                    const start = this.pathInput.selectionStart;
+                    const end = this.pathInput.selectionEnd;
+                    this.pathInput.value = this.pathInput.value.substring(0, start) + singleLine + this.pathInput.value.substring(end);
+                    this.pathInput.selectionStart = this.pathInput.selectionEnd = start + singleLine.length;
+                    autoResize(this.pathInput);
+                    validatePath(this.pathInput.value, this.app, contentEl);
+                    validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
+                }
+            });
             const getAutocompleteState = setupPathAutocomplete(
                 this.pathInput,
                 contentEl,
@@ -111,6 +133,28 @@ export class RenameDialog extends Modal {
             validateInputs(this.nameInput.value.trim());
             autoResize(this.nameInput);
             validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
+        });
+        this.nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Let the existing keyboard navigation handle the Enter key for submission
+            }
+        });
+        this.nameInput.addEventListener('paste', (e) => {
+            // Prevent pasting multi-line content
+            const paste = e.clipboardData?.getData('text') || '';
+            if (paste.includes('\n') || paste.includes('\r')) {
+                e.preventDefault();
+                // Insert only the first line, replacing newlines with spaces
+                const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
+                const start = this.nameInput.selectionStart;
+                const end = this.nameInput.selectionEnd;
+                this.nameInput.value = this.nameInput.value.substring(0, start) + singleLine + this.nameInput.value.substring(end);
+                this.nameInput.selectionStart = this.nameInput.selectionEnd = start + singleLine.length;
+                autoResize(this.nameInput);
+                validateInputs(this.nameInput.value.trim());
+                validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
+            }
         });
 
         setupInputNavigation(this.nameInput, {
