@@ -11,7 +11,7 @@ Follow these steps to safely commit your changes:
 
 ### 2. Fix Issues if CI Fails
 - **Lint errors**  
-  - Run the command file: `.cursor/commands/fix-lint.md`  
+  - Follow the instructions in the file: `.cursor/commands/fix-ci.md`  
   - Recheck with:
     ```bash
     npm run lint
@@ -35,7 +35,7 @@ Repeat `npm run ci` until it passes.
    git add <modified-files>
    ```
    (only the files relevant to this feature/fix)
-2. Generate a commit message using:
+2. Generate a commit message using instructions in the file:
    `.cursor/commands/get-commitizen-msg.md`
 3. Create the commit:
    ```bash
