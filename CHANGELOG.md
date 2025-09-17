@@ -1,3 +1,9 @@
+## [1.17.1](https://github.com/jeansordes/dot-navigator/compare/1.17.0...1.17.1) (2025-09-17)
+
+### Bug Fixes
+
+* make some settings change having an immediate effect ([47a5fb4](https://github.com/jeansordes/dot-navigator/commit/47a5fb4169b36452a8f86c8178192cd9f126bc29))
+
 # [1.17.0](https://github.com/jeansordes/dot-navigator/compare/1.16.0...1.17.0) (2025-09-17)
 
 ### Features
