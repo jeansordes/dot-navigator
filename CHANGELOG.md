@@ -1,3 +1,9 @@
+# [1.17.0](https://github.com/jeansordes/dot-navigator/compare/1.16.0...1.17.0) (2025-09-17)
+
+### Features
+
+* add dash transformation for improved note name readability ([9d41836](https://github.com/jeansordes/dot-navigator/commit/9d41836cb637fedd173faea36b8e27bae8082210))
+
 # [1.16.0](https://github.com/jeansordes/dot-navigator/compare/1.15.8...1.16.0) (2025-09-16)
 
 ### Features
