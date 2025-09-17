@@ -1,4 +1,4 @@
-import { ItemView, TFile, WorkspaceLeaf, Notice, App } from 'obsidian';
+import { ItemView, TFile, WorkspaceLeaf, App } from 'obsidian';
 
 interface ObsidianInternalApp extends App {
   setting?: {
@@ -13,7 +13,10 @@ import { ComplexVirtualTree } from './VirtualizedTree';
 import { ViewLayout } from '../core/ViewLayout';
 import { VirtualTreeManager } from '../core/VirtualTreeManager';
 import { RenameManager } from '../utils/RenameManager';
-import { FileUtils } from '../utils/FileUtils';
+import { FileOperations } from './FileOperations';
+import { PersistenceManager } from './PersistenceManager';
+import { ViewInitialization } from './ViewInitialization';
+import { TreeOperations } from './TreeOperations';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -32,10 +35,9 @@ export default class PluginMainPanel extends ItemView {
     private layout: ViewLayout | null = null;
     private vtManager: VirtualTreeManager | null = null;
     private renameManager?: RenameManager;
-    // Debounced saver for expanded state persistence
-    private _saveTimer: number | null = null;
-    // Snapshot of last known expanded paths to survive VT teardown
-    private _lastExpandedSnapshot: string[] = [];
+    private fileOperations: FileOperations;
+    private persistenceManager: PersistenceManager;
+    private treeOperations: TreeOperations;
 
     // Track initialization to avoid duplicate onOpen work
     private _onOpenCalled: boolean = false;
@@ -45,6 +47,24 @@ export default class PluginMainPanel extends ItemView {
         this.instanceId = ++PluginMainPanel.instanceCounter;
         this.settings = settings;
         this.renameManager = renameManager;
+
+        // Initialize file operations
+        this.fileOperations = new FileOperations(this.app, this.renameManager);
+
+        // Initialize persistence manager
+        this.persistenceManager = new PersistenceManager(
+            this.app,
+            this.settings,
+            this.getExpandedNodesForSettings.bind(this)
+        );
+
+        // Initialize tree operations
+        this.treeOperations = new TreeOperations(
+            this.vtManager,
+            this.virtualTree,
+            this.persistenceManager,
+            this.settings
+        );
 
         // Lower debounce to make updates feel snappier; structural ops still coalesce
         this.eventHandler = new DendronEventHandler(this.app, this.refresh.bind(this), 120);
@@ -79,7 +99,7 @@ export default class PluginMainPanel extends ItemView {
         });
 
         // Wait for the container to be properly initialized
-        await this.waitForContainerReady();
+        await ViewInitialization.waitForContainerReady(this);
 
         // Use containerEl directly as the root container
         const viewRoot = this.containerEl;
@@ -98,7 +118,7 @@ export default class PluginMainPanel extends ItemView {
         }
 
         // Wait for CSS to be loaded by checking if the styles are applied
-        await this.waitForCSSLoad();
+        await ViewInitialization.waitForCSSLoad(this);
 
         // Register workspace + vault events
         this._registerEventHandlers();
@@ -106,17 +126,20 @@ export default class PluginMainPanel extends ItemView {
         // Initialize virtualized tree
         this.vtManager = new VirtualTreeManager(this.app, () => {
             this._syncHeaderToggle();
-            this._persistExpandedNodesDebounced();
+            this.persistenceManager.persistExpandedNodesDebounced();
         }, this.renameManager, this.settings);
         this.vtManager.init(viewRoot, this.settings?.expandedNodes);
         // Access internal instance for highlight calls
         this.virtualTree = this.vtManager.getInstance();
 
+        // Update tree operations with initialized managers
+        this.treeOperations.updateManagers(this.vtManager, this.virtualTree);
+
         // Header actions
         this.layout.onToggleClick(() => {
             const expandedCount = this.vtManager?.getExpandedPaths().length ?? 0;
-            if (expandedCount === 0) this.vtManager?.expandAll();
-            else this.vtManager?.collapseAll();
+            if (expandedCount === 0) this.treeOperations.expandAllNodes();
+            else this.treeOperations.collapseAllNodes();
             this._syncHeaderToggle();
         });
         this.layout.onRevealClick(() => {
@@ -126,10 +149,14 @@ export default class PluginMainPanel extends ItemView {
 
         // Create buttons
         this.layout.onCreateFileClick(() => {
-            this.createNewFile();
+            this.fileOperations.createNewFile().then(() => {
+                this.refresh();
+            });
         });
         this.layout.onCreateFolderClick(() => {
-            this.createNewFolder();
+            this.fileOperations.createNewFolder().then(() => {
+                this.refresh();
+            });
         });
         this.layout.onSettingsClick(async () => {
             await this.openSettings();
@@ -143,81 +170,7 @@ export default class PluginMainPanel extends ItemView {
         debug('onOpen completed successfully');
     }
 
-    /**
-     * Debounced persistence of expanded node paths to plugin settings
-     */
-    private _persistExpandedNodesDebounced(): void {
-        if (this._saveTimer) {
-            window.clearTimeout(this._saveTimer);
-            this._saveTimer = null;
-        }
-        // Persist after a short idle to coalesce rapid toggles
-        this._saveTimer = window.setTimeout(() => {
-            this._saveTimer = null;
-            this._persistExpandedNodesImmediate();
-        }, 250);
-    }
-
-    private _persistExpandedNodesImmediate(): void {
-        try {
-            const expanded = this.getExpandedNodesForSettings();
-            this.settings.expandedNodes = expanded;
-            this._lastExpandedSnapshot = Array.isArray(expanded) ? [...expanded] : [];
-            // Save through the plugin instance if available
-            const pluginsObj = (this.app as unknown as { plugins?: { getPlugin?: (id: string) => unknown } })?.plugins;
-            const plugin = pluginsObj?.getPlugin?.('dot-navigator');
-            if (plugin && typeof (plugin as { saveSettings?: () => unknown }).saveSettings === 'function') {
-                // Fire and forget; Obsidian handles persistence
-                void (plugin as { saveSettings: () => unknown }).saveSettings();
-            }
-        } catch (e) {
-            debugError('Failed to persist expanded nodes', e);
-        }
-    }
-
-    /**
-     * Wait for the container to be properly initialized
-     */
-    private waitForContainerReady(): Promise<void> {
-        return new Promise((resolve) => {
-            const checkContainer = () => {
-                // Check if containerEl exists and is an HTMLElement
-                if (this.containerEl && this.containerEl instanceof HTMLElement) {
-                    resolve();
-                    return;
-                }
-
-                // If not ready, check again in a short while
-                setTimeout(checkContainer, 10);
-            };
-            checkContainer();
-        });
-    }
-
-    /**
-     * Wait for CSS to be loaded by checking if the styles are applied
-     */
-    private waitForCSSLoad(): Promise<void> {
-        return new Promise((resolve) => {
-            const checkCSS = () => {
-                // Check if the main container has the dotn_view class and CSS is loaded
-                if (this.containerEl && this.containerEl.classList.contains('dotn_view')) {
-                    const computedStyle = window.getComputedStyle(this.containerEl);
-                    if (computedStyle.getPropertyValue('--dotn_css-is-loaded')) {
-                        resolve();
-                        return;
-                    }
-                }
-
-                // If not ready, check again in a short while
-                setTimeout(checkCSS, 10);
-            };
-            checkCSS();
-        });
-    }
-
     // Header/body containers are handled by ViewLayout
-
     private _addRevealActiveButton(_header: HTMLElement): void { /* handled by ViewLayout */ }
 
     private _registerEventHandlers(): void {
@@ -263,8 +216,6 @@ export default class PluginMainPanel extends ItemView {
 
     // Legacy highlighter removed
 
-    // Expanded state persistence handled by VirtualTreeManager
-
     async refresh() {
         if (!this.containerEl) return;
         if (this.vtManager) {
@@ -278,56 +229,39 @@ export default class PluginMainPanel extends ItemView {
 
     // Incremental refresh and legacy rebuild paths removed; manager handles updates
 
-    // Legacy full refresh/tree builders removed in favor of VirtualTreeManager
-
     private _syncHeaderToggle(): void {
         if (!this.layout) return;
         const expandedCount = this.vtManager?.getExpandedPaths().length ?? 0;
         this.layout.updateToggleDisplay(expandedCount > 0);
     }
 
-    // computeRowHeight/computeGap live in src/utils/measure.ts
 
     /**
      * Get expanded nodes for saving in settings
      */
     public getExpandedNodesForSettings(): string[] {
-        try {
-            // Prefer live data when VT is active
-            if (this.vtManager?.isActive()) {
-                return this.vtManager.getExpandedPaths();
-            }
-            if (this.virtualTree) return this.virtualTree.getExpandedPaths();
-        } catch {
-            // ignore and fall through to snapshot/settings
-        }
-        // Fallback to the last known snapshot or settings
-        if (this._lastExpandedSnapshot && this._lastExpandedSnapshot.length >= 0) return this._lastExpandedSnapshot;
-        return this.settings?.expandedNodes ?? [];
+        return this.treeOperations.getExpandedNodesForSettings();
     }
 
     /**
      * Restore expanded nodes from settings
      */
     public restoreExpandedNodesFromSettings(nodes: string[]): void {
-        if (this.vtManager) this.vtManager.setExpandedPaths(nodes);
-        else if (this.virtualTree) this.virtualTree.setExpanded(nodes);
+        this.treeOperations.restoreExpandedNodesFromSettings(nodes);
     }
 
     /**
      * Collapse all nodes in the tree
      */
     public collapseAllNodes(): void {
-        if (this.vtManager) this.vtManager.collapseAll();
-        else if (this.virtualTree) this.virtualTree.collapseAll();
+        this.treeOperations.collapseAllNodes();
     }
 
     /**
      * Expand all nodes in the tree
      */
     public expandAllNodes(): void {
-        if (this.vtManager) this.vtManager.expandAll();
-        else if (this.virtualTree) this.virtualTree.expandAll();
+        this.treeOperations.expandAllNodes();
     }
 
     /**
@@ -362,7 +296,11 @@ export default class PluginMainPanel extends ItemView {
         // No observers or timers to clean up anymore
 
         // Persist expanded nodes immediately before teardown
-        this._persistExpandedNodesImmediate();
+        this.persistenceManager.persistExpandedNodesDebounced();
+        // Force immediate persistence
+        if (this.persistenceManager.persistExpandedNodesDebounced) {
+            setTimeout(() => this.persistenceManager.persistExpandedNodesDebounced(), 0);
+        }
 
         // Clear references
         if (this.vtManager) this.vtManager.destroy();
@@ -372,99 +310,14 @@ export default class PluginMainPanel extends ItemView {
     }
 
     /**
-     * Create a new file and immediately open rename dialog
+     * Update settings and refresh the tree view
      */
-    private async createNewFile(): Promise<void> {
-        try {
-            debug('Creating new file');
-            
-            // Generate a unique filename
-            let counter = 1;
-            const fileName = t('untitledPath');
-            let fullPath = `${fileName}.md`;
-            
-            while (this.app.vault.getAbstractFileByPath(fullPath)) {
-                fullPath = `${fileName} ${counter}.md`;
-                counter++;
-            }
-            
-            // Create the file
-            const newFile = await this.app.vault.create(fullPath, '');
-            debug('Created file:', fullPath);
-            
-            // Open the file before showing rename dialog
-            await FileUtils.openFile(this.app, newFile);
-            
-            // Refresh the tree to show the new file
-            await this.refresh();
-            
-            // Trigger rename dialog
-            if (this.renameManager) {
-                // Use a small delay to ensure the tree has been refreshed
-                setTimeout(() => {
-                    this.renameManager?.showRenameDialog(fullPath, 'file');
-                }, 100);
-            }
-            
-            new Notice(t('noticeCreatedNote', { path: fullPath }));
-            
-        } catch (error) {
-            debugError('Failed to create new file:', error);
-            new Notice(t('noticeFailedCreateNote', { path: 'new file' }));
+    public updateSettings(newSettings: PluginSettings): void {
+        this.settings = newSettings;
+        if (this.vtManager) {
+            this.vtManager.updateSettings(newSettings);
         }
-    }
-
-    /**
-     * Create a new folder and immediately open rename dialog
-     */
-    private async createNewFolder(): Promise<void> {
-        try {
-            debug('Creating new folder');
-            
-            // Generate a unique folder name
-            let counter = 1;
-            const folderName = t('untitledPath');
-            let fullPath = folderName;
-            
-            while (this.app.vault.getAbstractFileByPath(fullPath)) {
-                fullPath = `${folderName} ${counter}`;
-                counter++;
-            }
-            
-            // Create the folder
-            await this.app.vault.createFolder(fullPath);
-            debug('Created folder:', fullPath);
-            
-            // Ensure the folder is properly registered in the vault before proceeding
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
-            // Verify the folder exists before refreshing
-            const createdFolder = this.app.vault.getAbstractFileByPath(fullPath);
-            if (!createdFolder) {
-                throw new Error(`Failed to create folder: ${fullPath}`);
-            }
-            
-            // Refresh the tree to show the new folder
-            await this.refresh();
-            
-            // Trigger rename dialog with a longer delay to ensure everything is ready
-            if (this.renameManager) {
-                setTimeout(() => {
-                    // Double-check the folder still exists before showing rename dialog
-                    const folderCheck = this.app.vault.getAbstractFileByPath(fullPath);
-                    if (folderCheck) {
-                        this.renameManager?.showRenameDialog(fullPath, 'folder');
-                    } else {
-                        debugError('Folder disappeared before rename dialog could open:', fullPath);
-                    }
-                }, 150);
-            }
-            
-            new Notice(`Created folder: ${fullPath}`);
-            
-        } catch (error) {
-            debugError('Failed to create new folder:', error);
-            new Notice(`Failed to create folder: ${error instanceof Error ? error.message : String(error)}`);
-        }
+        // Update persistence manager with new settings
+        this.persistenceManager.updateSettings(newSettings);
     }
 } 

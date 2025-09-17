@@ -64,7 +64,7 @@ describe('buildVirtualizedData', () => {
       expect(result.data[0].name).toBe('note with dashes');
     });
 
-    it('transforms dashes to spaces and capitalizes words when set to TITLE_CASE', () => {
+    it('transforms dashes to spaces and capitalizes first letter when set to SENTENCE_CASE', () => {
       const rootNode: TreeNode = {
         path: '',
         nodeType: TreeNodeType.VIRTUAL,
@@ -84,7 +84,7 @@ describe('buildVirtualizedData', () => {
 
       const settings: PluginSettings = {
         mySetting: 'default',
-        transformDashesToSpaces: DashTransformation.TITLE_CASE
+        transformDashesToSpaces: DashTransformation.SENTENCE_CASE
       };
 
       const result = buildVirtualizedData(mockApp, rootNode, settings);
@@ -92,11 +92,11 @@ describe('buildVirtualizedData', () => {
       expect(result.data).toHaveLength(2);
       // Sort by name to ensure consistent order
       const sortedData = result.data.sort((a, b) => a.name.localeCompare(b.name));
-      expect(sortedData[0].name).toBe('Another Note');
-      expect(sortedData[1].name).toBe('Note With Dashes');
+      expect(sortedData[0].name).toBe('Another note');
+      expect(sortedData[1].name).toBe('Note with dashes');
     });
 
-    it('uses TITLE_CASE as default when setting is undefined', () => {
+    it('uses SENTENCE_CASE as default when setting is undefined', () => {
       const rootNode: TreeNode = {
         path: '',
         nodeType: TreeNodeType.VIRTUAL,
@@ -112,10 +112,10 @@ describe('buildVirtualizedData', () => {
       const result = buildVirtualizedData(mockApp, rootNode);
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe('Note With Dashes');
+      expect(result.data[0].name).toBe('Note with dashes');
     });
 
-    it('handles multiple dashes correctly with TITLE_CASE', () => {
+    it('handles multiple dashes correctly with SENTENCE_CASE', () => {
       const rootNode: TreeNode = {
         path: '',
         nodeType: TreeNodeType.VIRTUAL,
@@ -130,16 +130,16 @@ describe('buildVirtualizedData', () => {
 
       const settings: PluginSettings = {
         mySetting: 'default',
-        transformDashesToSpaces: DashTransformation.TITLE_CASE
+        transformDashesToSpaces: DashTransformation.SENTENCE_CASE
       };
 
       const result = buildVirtualizedData(mockApp, rootNode, settings);
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe('Note With Multiple Dashes');
+      expect(result.data[0].name).toBe('Note with multiple dashes');
     });
 
-    it('handles folders with dashes and TITLE_CASE', () => {
+    it('handles folders with dashes and SENTENCE_CASE', () => {
       const rootNode: TreeNode = {
         path: '',
         nodeType: TreeNodeType.VIRTUAL,
@@ -154,16 +154,16 @@ describe('buildVirtualizedData', () => {
 
       const settings: PluginSettings = {
         mySetting: 'default',
-        transformDashesToSpaces: DashTransformation.TITLE_CASE
+        transformDashesToSpaces: DashTransformation.SENTENCE_CASE
       };
 
       const result = buildVirtualizedData(mockApp, rootNode, settings);
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe('Folder With Dashes');
+      expect(result.data[0].name).toBe('Folder with dashes');
     });
 
-    it('handles complex title case transformations', () => {
+    it('handles complex first letter capitalization transformations', () => {
       const rootNode: TreeNode = {
         path: '',
         nodeType: TreeNodeType.VIRTUAL,
@@ -178,13 +178,13 @@ describe('buildVirtualizedData', () => {
 
       const settings: PluginSettings = {
         mySetting: 'default',
-        transformDashesToSpaces: DashTransformation.TITLE_CASE
+        transformDashesToSpaces: DashTransformation.SENTENCE_CASE
       };
 
       const result = buildVirtualizedData(mockApp, rootNode, settings);
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].name).toBe('My Awesome Note Title');
+      expect(result.data[0].name).toBe('My awesome note title');
     });
   });
 });

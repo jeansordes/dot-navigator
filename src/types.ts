@@ -7,7 +7,7 @@ export const TREE_VIEW_ICON = 'folder-git-2';
 export enum DashTransformation {
     NONE = 'none', // No changes to dashes
     SPACES = 'spaces', // Transform dashes to spaces
-    TITLE_CASE = 'title-case' // Transform dashes to spaces and capitalize first letter of each word
+    SENTENCE_CASE = 'sentence-case' // Transform dashes to spaces and capitalize first letter of the string
 }
 
 export interface PluginSettings {
@@ -33,7 +33,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     viewWasOpen: true, // Auto-open the panel on first install
     defaultNewFileName: '', // Empty string means use i18n default
     autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
-    transformDashesToSpaces: DashTransformation.TITLE_CASE // Transform dashes to spaces and capitalize words in note names for better readability
+    transformDashesToSpaces: DashTransformation.SENTENCE_CASE // Transform dashes to spaces and capitalize first letter of note names for better readability
 }
 
 export enum TreeNodeType {

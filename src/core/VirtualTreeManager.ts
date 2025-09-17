@@ -93,4 +93,15 @@ export class VirtualTreeManager {
 
   // Expose the current ComplexVirtualTree instance (read-only access)
   getInstance(): ComplexVirtualTree | null { return this.vt; }
+
+  /**
+   * Update settings and refresh the tree data if needed
+   */
+  updateSettings(newSettings: PluginSettings): void {
+    this.settings = newSettings;
+    if (this.vt && this.rootContainer) {
+      // Rebuild the tree data with new settings
+      this.updateOnVaultChange();
+    }
+  }
 }

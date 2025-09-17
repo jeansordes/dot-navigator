@@ -1,7 +1,8 @@
 import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from 'obsidian';
 import DotNavigatorPlugin from '../main';
-import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, DashTransformation } from '../types';
+import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, DashTransformation, FILE_TREE_VIEW_TYPE } from '../types';
 import { CommandSuggestModal } from './CommandSuggest';
+import PluginMainPanel from '../views/PluginMainPanel';
 
 export class DotNavigatorSettingTab extends PluginSettingTab {
   plugin: DotNavigatorPlugin;
@@ -9,6 +10,19 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   constructor(app: App, plugin: DotNavigatorPlugin) {
     super(app, plugin);
     this.plugin = plugin;
+  }
+
+  /**
+   * Update the tree view when settings change
+   */
+  private updateTreeView(): void {
+    const leaves = this.app.workspace.getLeavesOfType(FILE_TREE_VIEW_TYPE);
+    if (leaves.length > 0) {
+      const view = leaves[0].view;
+      if (view instanceof PluginMainPanel) {
+        view.updateSettings(this.plugin.settings);
+      }
+    }
   }
 
   display(): void {
@@ -54,11 +68,13 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       .addDropdown((dropdown) => {
         dropdown.addOption(DashTransformation.NONE, 'No changes')
           .addOption(DashTransformation.SPACES, 'Remove dashes')
-          .addOption(DashTransformation.TITLE_CASE, 'Remove dashes + capitalize words')
-          .setValue(this.plugin.settings.transformDashesToSpaces ?? DashTransformation.TITLE_CASE)
+          .addOption(DashTransformation.SENTENCE_CASE, 'Remove dashes + capitalize first letter')
+          .setValue(this.plugin.settings.transformDashesToSpaces ?? DashTransformation.SENTENCE_CASE)
           .onChange(async (value: DashTransformation) => {
             this.plugin.settings.transformDashesToSpaces = value;
             await this.plugin.saveSettings();
+            // Update the tree view immediately to reflect the change
+            this.updateTreeView();
           });
       });
 

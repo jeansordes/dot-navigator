@@ -37,7 +37,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
   const parentMap = new Map<string, string | undefined>();
 
   function transformName(name: string): string {
-    const transformation = settings?.transformDashesToSpaces ?? DashTransformation.TITLE_CASE;
+    const transformation = settings?.transformDashesToSpaces ?? DashTransformation.SENTENCE_CASE;
 
     if (transformation === DashTransformation.NONE) {
       return name;
@@ -46,9 +46,9 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     // Replace dashes with spaces
     let transformed = name.replace(/-/g, ' ');
 
-    if (transformation === DashTransformation.TITLE_CASE) {
-      // Capitalize first letter of each word
-      transformed = transformed.replace(/\b\w/g, (l) => l.toUpperCase());
+    if (transformation === DashTransformation.SENTENCE_CASE) {
+      // Capitalize only the first letter of the string
+      transformed = transformed.charAt(0).toUpperCase() + transformed.slice(1);
     }
 
     return transformed;
