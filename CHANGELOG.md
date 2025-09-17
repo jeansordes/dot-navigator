@@ -1,3 +1,14 @@
+# [1.18.0](https://github.com/jeansordes/dot-navigator/compare/1.17.2...1.18.0) (2025-09-17)
+
+### Bug Fixes
+
+* **rename:** fix path splitting for hierarchical filenames at all levels ([b4e1a23](https://github.com/jeansordes/dot-navigator/commit/b4e1a230c4be4c3f8ae5faecdeca1d39685d67f8))
+* **rename:** restore bidirectional arrow key navigation between path and name inputs ([abd7927](https://github.com/jeansordes/dot-navigator/commit/abd7927a325c8df1c3c18982a7a984f2b08201d4))
+
+### Features
+
+* **ui:** improve rename modal with auto-expanding textareas ([b29efec](https://github.com/jeansordes/dot-navigator/commit/b29efeca7c5a3f5b8aa56df00a1fcb671ea7d8d1)), closes [#36](https://github.com/jeansordes/dot-navigator/issues/36)
+
 ## [1.17.2](https://github.com/jeansordes/dot-navigator/compare/1.17.1...1.17.2) (2025-09-17)
 
 ## [1.17.1](https://github.com/jeansordes/dot-navigator/compare/1.17.0...1.17.1) (2025-09-17)
