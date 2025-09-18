@@ -1,6 +1,5 @@
 import { Platform, setIcon } from 'obsidian';
 import { t } from '../i18n';
-import { RenameNotification } from '../views/rename/RenameNotification';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:view-layout');
 const debugError = debug.extend('error');
@@ -9,8 +8,6 @@ export class ViewLayout {
   private root: HTMLElement;
   private headerEl: HTMLElement | null = null;
   private treeContainer: HTMLElement | null = null;
-  private notificationContainer: HTMLElement | null = null;
-  private renameNotification: RenameNotification | null = null;
   private createHandlers: {
     onCreateFile?: () => void;
     onCreateFolder?: () => void;
@@ -46,18 +43,8 @@ export class ViewLayout {
       container.appendChild(bodyEl);
     }
 
-    // Create notification container right after header
-    const existingNotification = container.querySelector('.dotn_view-notifications');
-    if (existingNotification instanceof HTMLElement) {
-      this.notificationContainer = existingNotification;
-    } else {
-      this.notificationContainer = document.createElement('div');
-      this.notificationContainer.className = 'dotn_view-notifications';
-      container.insertBefore(this.notificationContainer, bodyEl);
-    }
-
-    // Initialize rename notification
-    this.renameNotification = new RenameNotification(container);
+    // Note: Removed notification container and rename notification initialization
+    // Progress and undo are now handled within the rename modal
 
     // Ensure tree container exists under body
     const existingTree = bodyEl.querySelector('.dotn_view-tree');
@@ -175,22 +162,9 @@ export class ViewLayout {
   getTreeContainer(): HTMLElement | null { return this.treeContainer; }
 
   /**
-   * Show rename notification
+   * Note: Removed rename notification methods
+   * Progress and undo are now handled within the rename modal
    */
-  showRenameNotification(successCount: number, failCount: number, onUndo?: () => void, onClose?: () => void): void {
-    if (this.renameNotification) {
-      this.renameNotification.show(successCount, failCount, onUndo, onClose);
-    }
-  }
-
-  /**
-   * Hide rename notification
-   */
-  hideRenameNotification(): void {
-    if (this.renameNotification) {
-      this.renameNotification.hide();
-    }
-  }
 
   private ensureHeaderControls(header: HTMLElement): void {
     // Create file button

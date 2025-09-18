@@ -19,6 +19,7 @@ export interface AutocompleteState {
     currentSuggestionIndex: number;
     originalTypedValue: string;
     allDirectories: string[];
+    isEnabled: boolean;
 }
 
 /**
@@ -36,7 +37,8 @@ export function setupPathAutocomplete(
         suggestionElements: [],
         currentSuggestionIndex: -1,
         originalTypedValue: '',
-        allDirectories
+        allDirectories,
+        isEnabled: true
     };
 
     // Create suggestions container
@@ -55,6 +57,11 @@ export function setupPathAutocomplete(
 
     const showSuggestions = (query: string) => {
         if (!state.suggestionsContainer) {
+            return;
+        }
+
+        if (!state.isEnabled) {
+            state.suggestionsContainer.empty();
             return;
         }
 
@@ -114,6 +121,10 @@ export function setupPathAutocomplete(
             state.suggestionElements.push(suggestion);
 
             suggestion.addEventListener('click', () => {
+                if (!state.isEnabled) {
+                    return;
+                }
+
                 input.value = matchResult.item;
                 callbacks.validatePath();
                 autoResize(input);
@@ -126,12 +137,18 @@ export function setupPathAutocomplete(
                 if (childrenList instanceof HTMLElement) {
                     callbacks.updateAllFileItems(childrenList);
                 }
+
+                input.dispatchEvent(new Event('input'));
             });
         });
     };
 
     // Set up event listeners
     input.addEventListener('input', () => {
+        if (!state.isEnabled) {
+            return;
+        }
+
         // Reset suggestion navigation when user types (but not when navigating)
         if (!input.hasAttribute('data-navigating')) {
             state.currentSuggestionIndex = -1;
@@ -141,6 +158,9 @@ export function setupPathAutocomplete(
     });
 
     input.addEventListener('focus', () => {
+        if (!state.isEnabled) {
+            return;
+        }
         // Always show suggestions on focus, even if input is empty
         showSuggestions(input.value);
     });
@@ -163,6 +183,10 @@ export function navigateSuggestions(
     container: HTMLElement
 ): AutocompleteState {
     const { suggestionElements, currentSuggestionIndex } = state;
+
+    if (!state.isEnabled) {
+        return state;
+    }
 
     if (suggestionElements.length === 0) {
         return state;
@@ -223,6 +247,8 @@ export function navigateSuggestions(
 
     // Reset navigating flag after navigation is complete
     input.removeAttribute('data-navigating');
+
+    input.dispatchEvent(new Event('input'));
 
     return state;
 }

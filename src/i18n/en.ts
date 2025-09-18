@@ -57,13 +57,24 @@ export default {
     renameDialogModeFileOnly: 'Rename only this file',
     renameDialogModeFileOnlyHint: 'If this option is off, only this file will be renamed',
     renameDialogModeFileAndChildren: 'Rename sub-files as well',
-    renameDialogCancel: 'Cancel',
     renameDialogConfirm: 'Rename',
     renameDialogPathNotExists: 'Path does not exist (folders will be created)',
     renameDialogFoldersWillBeCreated: 'The following folders will be created: {{folders}}',
     renameDialogPathSuggestions: 'Paths suggestions',
     renameDialogChildrenPreview: 'Files to be renamed ({{count}})',
     renameDialogProgress: 'Renaming done: {{completed}}/{{total}} ({{percent}}%) ✓{{successful}} ✗{{failed}}',
+
+    // Rename dialog progress
+    renameDialogProgressInitializing: 'Initializing...',
+    renameDialogProgressStarting: 'Starting...',
+    renameDialogProgressCompleted: 'Completed',
+    renameDialogProgressFailed: 'Failed',
+    renameDialogProgressPreparingDirectories: 'Preparing directories...',
+    renameDialogProgressCancelling: 'Cancelling...',
+    renameDialogProgressCancelled: 'Cancelled',
+    renameDialogProgressCancelIssues: 'Cancelled with issues',
+    renameDialogUndo: 'Undo',
+    renameDialogCancel: 'Cancel',
     
     // Rename notices
     noticeRenameStarted: 'Starting rename operation...',
@@ -90,6 +101,10 @@ export default {
     renameDialogFileExists: 'A file with this name already exists',
     renameDialogFileExistsDesc: 'Choose a different name to avoid conflicts',
 
+    // Rename dialog info
+    renameDialogNoChangesTitle: 'No changes detected',
+    renameDialogNoChangesDesc: 'Update the name or path before confirming the rename',
+
     // Untitled
     untitledPath: 'untitled',
-}; 
+};

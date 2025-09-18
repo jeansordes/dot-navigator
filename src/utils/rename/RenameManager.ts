@@ -10,7 +10,7 @@ const debug = createDebug('dot-navigator:rename-manager');
 
 export class RenameManager {
     private app: App;
-    private undoStack: RenameOperation[][] = [];
+    private undoStack: Array<{ operations: RenameOperation[]; options: RenameOptions }> = [];
     private maxUndoStackSize = 10;
     private layout?: ViewLayout;
 
@@ -33,11 +33,13 @@ export class RenameManager {
         debug('Showing rename dialog for:', path, kind);
 
         const dialogData = this.prepareDialogData(path, kind);
-        
-        const dialog = new RenameDialog(
+
+        const dialog: RenameDialog = new RenameDialog(
             this.app,
             dialogData,
-            (options) => this.performRename(options)
+            (options: RenameOptions) => this.performRename(options, dialog),
+            (onProgress?: (progress: RenameProgress) => void): Promise<string | null> =>
+                this.undoLastRename(onProgress)
         );
 
         dialog.open();
@@ -82,36 +84,36 @@ export class RenameManager {
     }
 
     /**
-     * Perform the rename operation with progress tracking
+     * Perform the rename operation with progress tracking in modal
      */
-    private async performRename(options: RenameOptions): Promise<void> {
+    private async performRename(options: RenameOptions, dialog: RenameDialog): Promise<void> {
         debug('Performing rename:', options);
 
-        let progressNotice: Notice | undefined;
-        let currentProgress: RenameProgress | null = null;
+        const onProgress = (progress: RenameProgress): void => {
+            // Update progress in the modal instead of showing notifications
+            dialog.updateProgress(progress);
 
-        const onProgress = (progress: RenameProgress) => {
-            currentProgress = progress;
-            const percent = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
-            const message = t('renameDialogProgress', {
-                completed: String(progress.completed),
-                total: String(progress.total),
-                percent: String(percent),
-                successful: String(progress.successful),
-                failed: String(progress.failed)
-            });
+            // For the first progress update, initialize all blocks as pending
+            if (progress.total > 0 && !dialog.hasProgressBlocks()) {
+                dialog.initializeProgressBlocks(progress.total);
+            }
 
-            if (progressNotice) {
-                progressNotice.setMessage(message);
-            } else {
-                progressNotice = new Notice(message, 0); // 0 = don't auto-hide
+            // Update individual progress blocks in real-time
+            if (progress.lastOperation) {
+                const { index, success } = progress.lastOperation;
+                let state: 'success' | 'error' | 'reverted';
+
+                if (progress.phase === 'undo' || progress.phase === 'rollback') {
+                    state = success ? 'reverted' : 'error';
+                } else {
+                    state = success ? 'success' : 'error';
+                }
+
+                dialog.updateProgressBlock(index, state);
             }
         };
 
         try {
-            // Show initial notice
-            new Notice(t('noticeRenameStarted'));
-
             // Perform the rename
             const operations = await RenameUtils.renameWithProgress(
                 this.app,
@@ -119,51 +121,38 @@ export class RenameManager {
                 onProgress
             );
 
-            // Hide progress notice
-            if (progressNotice) {
-                progressNotice.hide();
-                progressNotice = undefined;
-            }
-
             // Add to undo stack
-            this.addToUndoStack(operations);
+            this.addToUndoStack(operations, options);
 
-            // Show completion notice
-            const finalProgress = currentProgress!;
-            const message = t('noticeRenameCompleted', {
-                successful: String(finalProgress.successful),
-                failed: String(finalProgress.failed)
+            // Refresh dialog inputs to reflect new state when rename succeeded
+            if (operations.some(op => op.success)) {
+                dialog.refreshDialogState(options.newPath, options.newTitle);
+            }
+
+            // Update all progress blocks with final states
+            operations.forEach((op, index) => {
+                const state = op.success ? 'success' : 'error';
+                dialog.updateProgressBlock(index, state);
             });
-            new Notice(message);
 
-            // Show errors if any
-            if (finalProgress.errors.length > 0) {
-                for (const error of finalProgress.errors.slice(0, 3)) { // Show max 3 errors
-                    new Notice(`Failed to rename ${error.path}: ${error.error}`, 5000);
-                }
-                if (finalProgress.errors.length > 3) {
-                    new Notice(`... and ${finalProgress.errors.length - 3} more errors`, 3000);
-                }
-            }
-
-            // Show rename notification in the UI
-            if (this.layout && finalProgress.successful > 0) {
-                this.layout.showRenameNotification(
-                    finalProgress.successful,
-                    finalProgress.failed,
-                    () => this.undoLastRename(),
-                    () => this.layout?.hideRenameNotification()
-                );
-            }
+            // Show final progress update
+            const finalProgress: RenameProgress = {
+                total: operations.length,
+                completed: operations.length,
+                successful: operations.filter(op => op.success).length,
+                failed: operations.filter(op => !op.success).length,
+                errors: operations.filter(op => !op.success).map(op => ({
+                    path: op.originalPath,
+                    error: op.error || 'Unknown error'
+                })),
+                phase: 'forward'
+            };
+            dialog.updateProgress(finalProgress);
+            dialog.markOperationCompleted();
 
         } catch (error) {
-            // Hide progress notice on error
-            if (progressNotice) {
-                progressNotice.hide();
-            }
-
             debug('Rename operation failed:', error);
-            new Notice(`Rename operation failed: ${error instanceof Error ? error.message : String(error)}`);
+            // Error handling is done in the RenameDialog.handleRename method
             throw error;
         }
     }
@@ -171,13 +160,13 @@ export class RenameManager {
     /**
      * Add operations to the undo stack
      */
-    private addToUndoStack(operations: RenameOperation[]): void {
+    private addToUndoStack(operations: RenameOperation[], options: RenameOptions): void {
         // Only add if there were successful operations
         const successfulOps = operations.filter(op => op.success);
         if (successfulOps.length === 0) return;
 
-        this.undoStack.push(operations);
-        
+        this.undoStack.push({ operations, options });
+
         // Limit stack size
         if (this.undoStack.length > this.maxUndoStackSize) {
             this.undoStack.shift();
@@ -189,43 +178,23 @@ export class RenameManager {
     /**
      * Undo the last rename operation
      */
-    async undoLastRename(): Promise<void> {
+    async undoLastRename(onProgress?: (progress: RenameProgress) => void): Promise<string | null> {
         if (this.undoStack.length === 0) {
             new Notice('No rename operations to undo');
-            return;
+            return null;
         }
 
-        const operations = this.undoStack.pop()!;
+        const { operations, options } = this.undoStack.pop()!;
         debug('Undoing rename operations:', operations);
 
-        let progressNotice: Notice | undefined;
-
-        const onProgress = (progress: RenameProgress) => {
-            const percent = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
-            const message = `Undoing rename: ${progress.completed}/${progress.total} (${percent}%)`;
-
-            if (progressNotice) {
-                progressNotice.setMessage(message);
-            } else {
-                progressNotice = new Notice(message, 0);
-            }
-        };
-
         try {
-            await RenameUtils.undoRenames(this.app, operations, onProgress);
-            
-            if (progressNotice) {
-                progressNotice.hide();
-            }
-
+            await RenameUtils.revertOperations(this.app, operations, onProgress);
             new Notice(t('noticeRenameUndone'));
+            return options.originalPath;
         } catch (error) {
-            if (progressNotice) {
-                progressNotice.hide();
-            }
-
             debug('Undo operation failed:', error);
             new Notice(`Undo failed: ${error instanceof Error ? error.message : String(error)}`);
+            throw error; // Re-throw so the dialog can handle it
         }
     }
 

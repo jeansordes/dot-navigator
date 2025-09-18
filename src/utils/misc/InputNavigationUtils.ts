@@ -17,6 +17,7 @@ export interface NavigationCallbacks {
     close: () => void;
     shouldProceedWithRename: () => boolean;
     handleRename: () => void;
+    showNoChangesMessage: () => void;
 }
 
 export interface NavigationContext {
@@ -158,10 +159,10 @@ export function setupKeyboardNavigation(
         if (callbacks.shouldProceedWithRename()) {
             callbacks.handleRename();
         } else {
-            // No changes detected, just close the modal
+            // No changes detected, keep modal open and let the dialog inform the user
             evt.preventDefault();
             evt.stopPropagation();
-            callbacks.close();
+            callbacks.showNoChangesMessage();
         }
     });
 

@@ -1,277 +1,145 @@
-import { App, Modal, Platform } from 'obsidian';
-import { RenameDialogData, RenameMode, RenameOptions } from '../../types';
-import { parsePath } from '../../utils/misc/PathUtils';
-import { validateInputs } from '../../utils/validation/ValidationUtils';
-import { autoResize } from '../../utils/ui/UIUtils';
+import { App, Modal } from 'obsidian';
+import { RenameDialogData, RenameMode, RenameOptions, RenameProgress as RenameProgressData } from '../../types';
 import { loadDirectories } from '../../utils/misc/PathLoadingUtils';
-import { shouldProceedWithRename, handleRename } from '../../utils/rename/RenameLogicUtils';
-import { setupPathAutocomplete, AutocompleteState } from '../../utils/misc/AutocompleteUtils';
-import { validatePath, hideWarning, validateAndShowWarning } from '../../utils/validation/PathValidationUtils';
+import { shouldProceedWithRename } from '../../utils/rename/RenameLogicUtils';
+import { hideWarning } from '../../utils/validation/PathValidationUtils';
+import { shouldShowModeSelection as shouldShowModeSelectionUtil } from '../../utils/rename/RenameDialogUIUtils';
+import { RenameProgress } from './RenameProgress';
+import { setupRenameDialogContent } from './RenameDialogContent';
+import type { AutocompleteState } from '../../utils/misc/AutocompleteUtils';
+import { showNoChangesMessage as showNoChangesMessageHelper, hideInfoMessage as hideInfoMessageHelper } from './RenameDialogMessages';
 import {
-    createModeSelection,
-    createChildrenList,
-    createHints,
-    shouldShowModeSelection as shouldShowModeSelectionUtil
-} from '../../utils/rename/RenameDialogUIUtils';
-import { updateFileDiff, updateAllFileItems } from '../../utils/file/FileDiffUtils';
-import { setupInputNavigation, setupKeyboardNavigation } from '../../utils/misc/InputNavigationUtils';
+    showProgress as showProgressHelper,
+    hideProgress as hideProgressHelper,
+    leaveRenamingState as leaveRenamingStateHelper,
+    handlePostOperationInteraction as handlePostOperationInteractionHelper,
+    type ProgressContext
+} from './RenameDialogProgressUtils';
+import { executeRename, performRevert } from './RenameDialogOperations';
+import { refreshDialogState as refreshDialogStateHelper } from './RenameDialogStateUtils';
 
 
 export class RenameDialog extends Modal {
     private data: RenameDialogData;
     private onRename: (options: RenameOptions) => Promise<void>;
-    private pathInput: HTMLTextAreaElement;
-    private nameInput: HTMLTextAreaElement;
-    private extensionEl: HTMLElement;
+    private onUndo?: (onProgress?: (progress: RenameProgressData) => void) => Promise<string | null>;
+    private pathInput!: HTMLTextAreaElement;
+    private nameInput!: HTMLTextAreaElement;
+    private extensionEl?: HTMLElement;
     private modeSelection: RenameMode = RenameMode.FILE_AND_CHILDREN;
-    private modeContainer: HTMLElement;
-    private currentSelectedIndex = 0;
+    private modeContainer?: HTMLElement;
     private allDirectories: string[] = [];
     private autocompleteState: AutocompleteState | null = null;
+    private renameProgress: RenameProgress | null = null;
+    private isRenaming = false;
+    private shouldHideProgressOnInteraction = false;
+    private childrenListEl: HTMLElement | null = null;
 
     constructor(
         app: App,
         data: RenameDialogData,
-        onRename: (options: RenameOptions) => Promise<void>
+        onRename: (options: RenameOptions) => Promise<void>,
+        onUndo?: (onProgress?: (progress: RenameProgressData) => void) => Promise<string | null>
     ) {
         super(app);
         this.data = data;
         this.onRename = onRename;
+        this.onUndo = onUndo;
         this.loadDirectories();
 
         // Remove the close button
         this.titleEl.addClass('is-hidden');
+
+        // Initialize progress component
+        this.renameProgress = new RenameProgress({
+            onRevert: (trigger) => this.handleRevert(trigger),
+            onClose: () => this.close()
+        });
     }
 
-    private loadDirectories(): void {
+    private loadDirectories(): string[] {
         this.allDirectories = loadDirectories(this.app);
+        return this.allDirectories;
     }
 
     onOpen(): void {
-        const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass('rename-dialog-content');
-
-        // Parse current path
-        const pathParts = parsePath(this.data.path, this.data.extension);
-
-        // Create input container for single line layout
-        const inputContainer = contentEl.createEl('div', { cls: 'rename-input-container' });
-
-        // For folders, only show name input; for files, show both path and name
-        if (this.data.kind !== 'folder') {
-            // Position the path container for autocomplete
-            const pathContainer = inputContainer.createEl('div', { cls: 'rename-path-container' });
-            this.pathInput = pathContainer.createEl('textarea', {
-                cls: 'rename-path-input',
-                placeholder: pathParts.directory,
-                attr: { rows: '1' }
-            });
-            this.pathInput.value = pathParts.directory;
-            autoResize(this.pathInput);
-            this.pathInput.addEventListener('input', () => {
-                validatePath(this.pathInput.value, this.app, contentEl);
-                autoResize(this.pathInput);
-                validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
-            });
-            this.pathInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    // Let the existing keyboard navigation handle the Enter key for submission
-                }
-            });
-            this.pathInput.addEventListener('paste', (e) => {
-                // Prevent pasting multi-line content
-                const paste = e.clipboardData?.getData('text') || '';
-                if (paste.includes('\n') || paste.includes('\r')) {
-                    e.preventDefault();
-                    // Insert only the first line, replacing newlines with spaces
-                    const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-                    const start = this.pathInput.selectionStart;
-                    const end = this.pathInput.selectionEnd;
-                    this.pathInput.value = this.pathInput.value.substring(0, start) + singleLine + this.pathInput.value.substring(end);
-                    this.pathInput.selectionStart = this.pathInput.selectionEnd = start + singleLine.length;
-                    autoResize(this.pathInput);
-                    validatePath(this.pathInput.value, this.app, contentEl);
-                    validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
-                }
-            });
-            const getAutocompleteState = setupPathAutocomplete(
-                this.pathInput,
-                contentEl,
-                this.allDirectories,
-                {
-                    validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
-                    validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-                }
-            );
-            this.autocompleteState = getAutocompleteState();
-
-            // Trigger initial suggestions display (shows empty state message)
-            setTimeout(() => {
-                const event = new Event('focus');
-                this.pathInput.dispatchEvent(event);
-            }, 50);
-        } else {
-            // For folders, create a dummy path textarea that's hidden
-            this.pathInput = document.createElement('textarea');
-            this.pathInput.setAttribute('rows', '1');
-            this.pathInput.value = pathParts.directory;
-            this.pathInput.classList.add('is-hidden');
-        }
-
-        // Name input (inline with path for files, standalone for folders)
-        this.nameInput = inputContainer.createEl('textarea', {
-            cls: 'rename-name-input',
-            placeholder: pathParts.name,
-            attr: { rows: '1' }
-        });
-        this.nameInput.value = pathParts.name;
-        autoResize(this.nameInput);
-        this.nameInput.addEventListener('input', () => {
-            validateInputs(this.nameInput.value.trim());
-            autoResize(this.nameInput);
-            validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
-        });
-        this.nameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                // Let the existing keyboard navigation handle the Enter key for submission
-            }
-        });
-        this.nameInput.addEventListener('paste', (e) => {
-            // Prevent pasting multi-line content
-            const paste = e.clipboardData?.getData('text') || '';
-            if (paste.includes('\n') || paste.includes('\r')) {
-                e.preventDefault();
-                // Insert only the first line, replacing newlines with spaces
-                const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-                const start = this.nameInput.selectionStart;
-                const end = this.nameInput.selectionEnd;
-                this.nameInput.value = this.nameInput.value.substring(0, start) + singleLine + this.nameInput.value.substring(end);
-                this.nameInput.selectionStart = this.nameInput.selectionEnd = start + singleLine.length;
-                autoResize(this.nameInput);
-                validateInputs(this.nameInput.value.trim());
-                validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
-            }
-        });
-
-        setupInputNavigation(this.nameInput, {
-            pathInput: this.pathInput,
-            nameInput: this.nameInput,
-            contentEl,
+        const {
+            pathInput,
+            nameInput,
+            extensionEl,
+            modeContainer,
+            childrenListEl,
+            autocompleteState
+        } = setupRenameDialogContent({
+            app: this.app,
             data: this.data,
+            contentEl: this.contentEl,
+            scope: this.scope,
+            allDirectories: this.allDirectories,
             modeSelection: this.modeSelection,
-            autocompleteState: this.autocompleteState,
-            setAutocompleteState: (state) => { this.autocompleteState = state; },
-            validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
-            validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-            updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-        });
-
-        // Also set up navigation for the path input (for ArrowRight key)
-        if (this.data.kind !== 'folder') {
-            setupInputNavigation(this.pathInput, {
-                pathInput: this.pathInput,
-                nameInput: this.nameInput,
-                contentEl,
-                data: this.data,
-                modeSelection: this.modeSelection,
-                autocompleteState: () => this.autocompleteState, // Use getter to always get current state
-                setAutocompleteState: (state) => { this.autocompleteState = state; },
-                validatePath: () => validatePath(this.pathInput.value, this.app, contentEl),
-                validateAndShowWarning: () => validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-            });
-        }
-
-        // Extension display (inline with name)
-        if (this.data.extension) {
-            this.extensionEl = inputContainer.createEl('span', {
-                text: this.data.extension,
-                cls: 'rename-extension-display'
-            });
-        }
-
-        // Setup keyboard navigation
-        setupKeyboardNavigation(this.scope, {
-            close: () => this.close(),
+            renameProgress: this.renameProgress,
+            handlePostOperationInteraction: (force) => this.handlePostOperationInteraction(force),
             shouldProceedWithRename: () => this.shouldProceedWithRename(),
-            handleRename: () => this.handleRename()
+            handleRename: () => this.handleRename(),
+            showNoChangesMessage: () => this.showNoChangesMessage(),
+            updateModeSelection: (mode) => { this.modeSelection = mode; },
+            getModeSelection: () => this.modeSelection,
+            getAutocompleteState: () => this.autocompleteState,
+            setAutocompleteState: (state) => { this.autocompleteState = state; },
+            closeModal: () => this.close()
         });
 
-        // Set up auto-resize for inputs
-        autoResize(this.pathInput);
-        autoResize(this.nameInput);
-
-        // Always create the files list (includes main file diff)
-        const childrenContainer = createChildrenList(
-            contentEl,
-            this.data,
-            {
-                updateFileDiff: (diffContainer, originalPath, isMainFile) => updateFileDiff(diffContainer, originalPath, isMainFile, {
-                    data: this.data,
-                    modeSelection: this.modeSelection,
-                    pathValue: this.pathInput.value.trim(),
-                    nameValue: this.nameInput.value.trim(),
-                    app: this.app
-                }),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-            }
-        );
-
-        // Update children previews when inputs change
-        const childrenList = childrenContainer.querySelector('.rename-children-list') as HTMLElement;
-        if (childrenList) {
-            this.pathInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app));
-            this.nameInput.addEventListener('input', () => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app));
-        }
-
-        // Mode selection after the files list (only show for files with children)
-        if (shouldShowModeSelectionUtil(this.data)) {
-            this.modeContainer = createModeSelection(
-                contentEl,
-                this.modeSelection,
-                {
-                    onModeChange: (value) => {
-                        this.modeSelection = value ? RenameMode.FILE_AND_CHILDREN : RenameMode.FILE_ONLY;
-                    },
-                    updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, this.data, this.modeSelection, this.pathInput.value.trim(), this.nameInput.value.trim(), this.app)
-                }
-            );
-        }
-
-        // Hints at the bottom
-        createHints(contentEl);
-
-        // Add submit button on mobile for better usability
-        if (Platform.isMobile) {
-            const buttonContainer = contentEl.createEl('div', { cls: 'rename-submit-container' });
-            const submitButton = buttonContainer.createEl('button', {
-                text: 'Rename',
-                cls: 'mod-cta rename-submit-button'
-            });
-            submitButton.addEventListener('click', () => {
-                if (this.shouldProceedWithRename()) {
-                    this.handleRename();
-                }
-            });
-        }
-
-        // Focus the name input after a small delay to ensure everything is set up
-        setTimeout(() => {
-            this.nameInput.focus();
-            // Position cursor at the end of the input instead of selecting all text
-            this.nameInput.setSelectionRange(this.nameInput.value.length, this.nameInput.value.length);
-            // Trigger initial validation to check if the current path conflicts
-            validateAndShowWarning(this.pathInput.value.trim(), this.nameInput.value.trim(), this.data.extension || '', this.data.path, this.app, contentEl);
-        }, 0);
+        this.pathInput = pathInput;
+        this.nameInput = nameInput;
+        this.extensionEl = extensionEl ?? undefined;
+        this.modeContainer = modeContainer ?? undefined;
+        this.childrenListEl = childrenListEl;
+        this.autocompleteState = autocompleteState;
     }
 
+    private getProgressContext(): ProgressContext {
+        return {
+            renameProgress: this.renameProgress,
+            contentEl: this.contentEl,
+            pathInput: this.pathInput,
+            nameInput: this.nameInput,
+            modeContainer: this.modeContainer,
+            autocompleteState: this.autocompleteState,
+            isRenaming: this.isRenaming,
+            setIsRenaming: (value) => { this.isRenaming = value; },
+            shouldHideProgressOnInteraction: this.shouldHideProgressOnInteraction,
+            setShouldHideProgressOnInteraction: (value) => { this.shouldHideProgressOnInteraction = value; }
+        };
+    }
 
+    private showProgress(options: { reset?: boolean } = {}): void {
+        showProgressHelper(this.getProgressContext(), options);
+    }
 
+    private hideProgress(): void {
+        hideProgressHelper(this.getProgressContext());
+    }
 
+    private leaveRenamingState(keepProgressVisible: boolean): void {
+        leaveRenamingStateHelper(this.getProgressContext(), keepProgressVisible);
+    }
+
+    private showNoChangesMessage(): void {
+        showNoChangesMessageHelper(this.contentEl);
+    }
+
+    private hideInfoMessage(): void {
+        hideInfoMessageHelper(this.contentEl);
+    }
+
+    private handlePostOperationInteraction(force = false): void {
+        handlePostOperationInteractionHelper(
+            this.getProgressContext(),
+            force,
+            () => this.hideProgress(),
+            () => this.hideInfoMessage()
+        );
+    }
 
     /**
      * Check if there are any changes that warrant proceeding with rename
@@ -294,27 +162,126 @@ export class RenameDialog extends Modal {
         const pathValue = this.pathInput.value.trim();
         const nameValue = this.nameInput.value.trim();
 
-
-        try {
-            await handleRename({
+        await executeRename(
+            {
                 data: this.data,
-                pathValue,
-                nameValue,
                 modeSelection: this.modeSelection,
-                shouldShowModeSelection: () => shouldShowModeSelectionUtil(this.data),
-                app: this.app
-            }, this.onRename);
-            this.close();
-        } catch {
-            // Error handling is done in the onRename callback
+                app: this.app,
+                onRename: this.onRename,
+                renameProgress: this.renameProgress,
+                showProgress: (options) => this.showProgress(options),
+                leaveRenamingState: (keepVisible) => this.leaveRenamingState(keepVisible),
+                hideProgress: () => this.hideProgress(),
+                handlePostOperationInteraction: (force) => this.handlePostOperationInteraction(force)
+            },
+            pathValue,
+            nameValue
+        );
+    }
+
+    /**
+     * Handle revert operations (cancel or undo) from progress component
+     */
+    private async handleRevert(trigger: 'cancel' | 'undo'): Promise<void> {
+        await performRevert(
+            {
+                renameProgress: this.renameProgress,
+                onUndo: this.onUndo,
+                showProgress: (options) => this.showProgress(options),
+                hideProgress: () => this.hideProgress(),
+                leaveRenamingState: (keepVisible) => this.leaveRenamingState(keepVisible),
+                updateProgress: (progress) => this.updateProgress(progress),
+                updateProgressBlock: (index, state) => this.updateProgressBlock(index, state),
+                refreshDialogState: (path) => this.refreshDialogState(path),
+                setShouldHideProgressOnInteraction: (value) => { this.shouldHideProgressOnInteraction = value; }
+            },
+            trigger
+        );
+    }
+
+    /**
+     * Update progress display from external source (RenameManager)
+     */
+    updateProgress(progress: RenameProgressData): void {
+        if (this.renameProgress) {
+            this.renameProgress.updateProgress(progress);
         }
+    }
+
+    /**
+     * Notify the dialog that the current operation finished successfully
+     */
+    markOperationCompleted(): void {
+        this.leaveRenamingState(true);
+    }
+
+    /**
+     * Refresh dialog inputs and previews to reflect the current state of the vault
+     */
+    refreshDialogState(targetPath: string, newTitle?: string): void {
+        refreshDialogStateHelper(
+            {
+                app: this.app,
+                data: this.data,
+                extensionEl: this.extensionEl,
+                pathInput: this.pathInput,
+                nameInput: this.nameInput,
+                loadDirectories: () => this.loadDirectories(),
+                autocompleteState: this.autocompleteState,
+                childrenListEl: this.childrenListEl,
+                modeSelection: this.modeSelection,
+                contentEl: this.contentEl
+            },
+            targetPath,
+            newTitle
+        );
+    }
+
+    /**
+     * Check if the dialog is currently in renaming state
+     */
+    isInRenamingState(): boolean {
+        return this.isRenaming;
+    }
+
+    /**
+     * Initialize progress blocks for the given number of files
+     */
+    initializeProgressBlocks(totalFiles: number): void {
+        if (this.renameProgress) {
+            this.renameProgress.initializeProgressBlocks(totalFiles);
+        }
+    }
+
+    /**
+     * Update the state of a specific progress block
+     */
+    updateProgressBlock(index: number, state: 'pending' | 'success' | 'error' | 'reverted'): void {
+        if (this.renameProgress) {
+            this.renameProgress.updateProgressBlock(index, state);
+        }
+    }
+
+    /**
+     * Check if progress blocks have been initialized
+     */
+    hasProgressBlocks(): boolean {
+        return this.renameProgress ? this.renameProgress.hasProgressBlocks() : false;
     }
 
 
     onClose(): void {
         const { contentEl } = this;
         hideWarning(contentEl);
+        this.hideInfoMessage();
         this.autocompleteState = null;
+
+        // Clean up progress component
+        if (this.renameProgress) {
+            this.renameProgress.destroy();
+            this.renameProgress = null;
+        }
+
         contentEl.empty();
     }
 }

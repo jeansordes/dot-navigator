@@ -159,6 +159,13 @@ export interface RenameProgress {
     successful: number;
     failed: number;
     errors: Array<{ path: string; error: string }>;
+    lastOperation?: {
+        index: number;
+        success: boolean;
+        path: string;
+    };
+    phase?: 'forward' | 'undo' | 'rollback';
+    message?: string;
 }
 
 export interface RenameOperation {

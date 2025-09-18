@@ -64,6 +64,14 @@ export default {
     renameDialogPathSuggestions: 'Suggestions de chemins',
     renameDialogChildrenPreview: 'Fichiers à renommer ({{count}})',
     renameDialogProgress: 'Renommage terminé : {{completed}}/{{total}} ({{percent}}%) ✓{{successful}} ✗{{failed}}',
+    renameDialogProgressInitializing: 'Initialisation...',
+    renameDialogProgressStarting: 'Démarrage...',
+    renameDialogProgressCompleted: 'Terminé',
+    renameDialogProgressFailed: 'Échec',
+    renameDialogProgressPreparingDirectories: 'Préparation des dossiers...',
+    renameDialogProgressCancelling: 'Annulation...',
+    renameDialogProgressCancelled: 'Annulé',
+    renameDialogProgressCancelIssues: 'Annulé avec des erreurs',
     
     // Rename notices
     noticeRenameStarted: 'Début de l\'opération de renommage...',
@@ -90,6 +98,10 @@ export default {
     renameDialogFileExists: 'Un fichier avec ce nom existe déjà',
     renameDialogFileExistsDesc: 'Choisissez un nom différent pour éviter les conflits',
 
+    // Rename dialog info
+    renameDialogNoChangesTitle: 'Aucun changement détecté',
+    renameDialogNoChangesDesc: 'Modifiez le nom ou le chemin avant de valider le renommage',
+
     // Untitled
     untitledPath: 'sans-titre',
-}; 
+};
