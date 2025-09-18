@@ -109,17 +109,17 @@ export type MoreMenuItem = MoreMenuItemBuiltin | MoreMenuItemCommand;
 
 export const DEFAULT_MORE_MENU: MoreMenuItem[] = [
     {
-        id: 'builtin-create-child',
-        type: 'builtin',
-        builtin: 'create-child',
-        icon: 'copy-plus',
-        showFor: ['file', 'folder', 'virtual']
-    },
-    {
         id: 'builtin-rename',
         type: 'builtin',
         builtin: 'rename',
         icon: 'edit-3',
+        showFor: ['file', 'folder', 'virtual']
+    },
+    {
+        id: 'builtin-create-child',
+        type: 'builtin',
+        builtin: 'create-child',
+        icon: 'copy-plus',
         showFor: ['file', 'folder', 'virtual']
     },
     {

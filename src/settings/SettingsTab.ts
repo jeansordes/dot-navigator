@@ -3,6 +3,7 @@ import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, DashTransformation, FILE_TREE_VIEW_TYPE } from '../types';
 import { CommandSuggestModal } from './CommandSuggest';
 import PluginMainPanel from '../views/components/PluginMainPanel';
+import { t } from '../i18n';
 
 export class DotNavigatorSettingTab extends PluginSettingTab {
   plugin: DotNavigatorPlugin;
@@ -29,20 +30,20 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Dot Navigator Settings' });
+    containerEl.createEl('h2', { text: t('settingsHeader') });
 
     // File creation section
-    const fileCreationHeader = containerEl.createEl('h3', { text: 'File Creation' });
+    const fileCreationHeader = containerEl.createEl('h3', { text: t('settingsFileCreationHeader') });
     fileCreationHeader.id = 'dotnav-file-creation';
-    containerEl.createEl('p', { text: 'Customize how new files are created.' });
+    containerEl.createEl('p', { text: t('settingsFileCreationDescription') });
 
     // Default new file name
     new Setting(containerEl)
-      .setName('Default new file name')
-      .setDesc('The default name for new files (leave empty to use "untitled" or localized equivalent)')
+      .setName(t('settingsDefaultNewFileName'))
+      .setDesc(t('settingsDefaultNewFileNameDesc'))
       .addText((text) => {
         text.setValue(this.plugin.settings.defaultNewFileName || '')
-          .setPlaceholder('untitled')
+          .setPlaceholder(t('untitledPath'))
           .onChange(async (value) => {
             this.plugin.settings.defaultNewFileName = value;
             await this.plugin.saveSettings();
@@ -51,8 +52,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
     // Auto-open rename dialog for child notes
     new Setting(containerEl)
-      .setName('Auto-open rename dialog for child notes')
-      .setDesc('Automatically open the rename dialog when creating new child notes')
+      .setName(t('settingsAutoOpenRenameDialog'))
+      .setDesc(t('settingsAutoOpenRenameDialogDesc'))
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.settings.autoOpenRenameDialog ?? true)
           .onChange(async (value) => {
@@ -63,12 +64,12 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
     // Transform dashes in note names
     new Setting(containerEl)
-      .setName('Transform dashes in note names')
-      .setDesc('Choose how to transform note names with dashes for better readability in the tree view')
+      .setName(t('settingsTransformDashes'))
+      .setDesc(t('settingsTransformDashesDesc'))
       .addDropdown((dropdown) => {
-        dropdown.addOption(DashTransformation.NONE, 'No changes')
-          .addOption(DashTransformation.SPACES, 'Remove dashes')
-          .addOption(DashTransformation.SENTENCE_CASE, 'Remove dashes + capitalize first letter')
+        dropdown.addOption(DashTransformation.NONE, t('settingsDashTransformNone'))
+          .addOption(DashTransformation.SPACES, t('settingsDashTransformSpaces'))
+          .addOption(DashTransformation.SENTENCE_CASE, t('settingsDashTransformSentenceCase'))
           .setValue(this.plugin.settings.transformDashesToSpaces ?? DashTransformation.SENTENCE_CASE)
           .onChange(async (value: DashTransformation) => {
             this.plugin.settings.transformDashesToSpaces = value;
@@ -79,12 +80,12 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       });
 
     // More menu section
-    const moreMenuHeader = containerEl.createEl('h3', { text: 'More Menu' });
+    const moreMenuHeader = containerEl.createEl('h3', { text: t('settingsMoreMenuHeader') });
     moreMenuHeader.id = 'dotnav-more-menu';
-    containerEl.createEl('p', { text: 'Customize the three-dots menu. Built-in items cannot be removed; you can reorder them. You can add, remove, and reorder custom commands.' });
+    containerEl.createEl('p', { text: t('settingsMoreMenuDescription') });
 
     // Built-in items ordering
-    containerEl.createEl('h4', { text: 'Built-in Items' });
+    containerEl.createEl('h4', { text: t('settingsBuiltinItems') });
     const builtinList = this.getBuiltinItems();
     const builtinOrder = this.getBuiltinOrder();
     const builtinWrap = containerEl.createEl('div');
@@ -107,7 +108,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       
       header.addExtraButton((btn) => {
         btn.setIcon('arrow-up')
-          .setTooltip('Move up')
+          .setTooltip(t('settingsMoveUp'))
           .setDisabled(index === 0)
           .onClick(async () => {
             if (index === 0) return;
@@ -120,7 +121,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       });
       header.addExtraButton((btn) => {
         btn.setIcon('arrow-down')
-          .setTooltip('Move down')
+          .setTooltip(t('settingsMoveDown'))
           .setDisabled(index === builtinOrder.length - 1)
           .onClick(async () => {
             if (index >= builtinOrder.length - 1) return;
@@ -135,7 +136,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
 
     // Custom commands
-    containerEl.createEl('h4', { text: 'Custom Commands' });
+    containerEl.createEl('h4', { text: t('settingsCustomCommands') });
     const customItems = this.getUserItems();
     const customWrap = containerEl.createEl('div');
     customItems.forEach((item, index) => {
@@ -145,7 +146,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
       header.addExtraButton((btn) => {
         btn.setIcon('arrow-up')
-          .setTooltip('Move up')
+          .setTooltip(t('settingsMoveUp'))
           .setDisabled(index === 0)
           .onClick(async () => {
             if (index === 0) return;
@@ -158,7 +159,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       });
       header.addExtraButton((btn) => {
         btn.setIcon('arrow-down')
-          .setTooltip('Move down')
+          .setTooltip(t('settingsMoveDown'))
           .setDisabled(index === customItems.length - 1)
           .onClick(async () => {
             if (index >= customItems.length - 1) return;
@@ -171,7 +172,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       });
       header.addExtraButton((btn) => {
         btn.setIcon('trash')
-          .setTooltip('Remove')
+          .setTooltip(t('settingsRemove'))
           .onClick(async () => {
             const list = this.getUserItems();
             list.splice(index, 1);
@@ -181,8 +182,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
       // Fields for command item
       new Setting(card)
-        .setName('Label')
-        .setDesc('Text shown in the menu')
+        .setName(t('settingsLabel'))
+        .setDesc(t('settingsLabelDesc'))
         .addText((text) => {
           text.setValue(item.label || '')
             .onChange(async (v) => {
@@ -193,8 +194,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
             });
         });
       const cmdSetting = new Setting(card)
-        .setName('Command')
-        .setDesc('Pick a command from the palette');
+        .setName(t('settingsCommand'))
+        .setDesc(t('settingsCommandDesc'));
       cmdSetting.addText((text) => {
         const updateDisplay = () => {
           const value = item.commandId ? `${item.label || ''} (${item.commandId})` : '';
@@ -204,7 +205,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
         const inputEl = text.inputEl;
         if (inputEl instanceof HTMLInputElement) {
           inputEl.readOnly = true;
-          inputEl.placeholder = 'Select command…';
+          inputEl.placeholder = t('settingsSelectCommand');
           inputEl.classList.add('dotn_cursor-pointer');
         }
         const openPicker = () => {
@@ -227,8 +228,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
         });
       });
       new Setting(card)
-        .setName('Open file before executing')
-        .setDesc('Opens the clicked file before running the command (recommended)')
+        .setName(t('settingsOpenFileBeforeExecuting'))
+        .setDesc(t('settingsOpenFileBeforeExecutingDesc'))
         .addToggle((tg) => {
           tg.setValue(item.openBeforeExecute !== false)
             .onChange(async (v) => {
@@ -243,7 +244,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     // Actions row
     const actions = new Setting(containerEl);
     actions.addButton((btn: ButtonComponent) => {
-      btn.setButtonText('Add custom command')
+      btn.setButtonText(t('settingsAddCustomCommand'))
         .setCta()
         .onClick(async () => {
           const list = this.getUserItems();
@@ -252,13 +253,26 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
         });
     });
     actions.addButton((btn) => {
-      btn.setButtonText('Restore defaults')
+      btn.setButtonText(t('settingsRestoreDefaults'))
         .onClick(async () => {
           await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
           await this.updateUserItems([]);
           this.display();
         });
     });
+
+    // Tips section
+    const tipsHeader = containerEl.createEl('h3', { text: t('settingsTipsHeader') });
+    tipsHeader.id = 'dotnav-tips';
+    containerEl.createEl('p', { text: t('settingsTipsDescription') });
+
+    // Double-click to rename tip
+    const renameTip = containerEl.createEl('div', { cls: 'setting-item' });
+    const renameTipInfo = renameTip.createEl('div', { cls: 'setting-item-info' });
+    renameTipInfo.createEl('div', { text: t('settingsTipDoubleClickRenameTitle'), cls: 'setting-item-name' });
+    renameTipInfo.createEl('div', { text: t('settingsTipDoubleClickRenameDescription'), cls: 'setting-item-description' });
+
+    // Future tips can be added here
   }
 
   private describeItem(item: MoreMenuItem): string {
@@ -269,11 +283,11 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   }
 
   private getBuiltinDisplayName(item: MoreMenuItemBuiltin): string {
-    if (item.builtin === 'create-child') return 'Add child note';
-    if (item.builtin === 'rename') return 'Rename';
-    if (item.builtin === 'delete') return 'Delete';
-    if (item.builtin === 'open-closest-parent') return 'Open closest parent note';
-    return 'Unknown';
+    if (item.builtin === 'create-child') return t('settingsBuiltinAddChildNote');
+    if (item.builtin === 'rename') return t('settingsBuiltinRename');
+    if (item.builtin === 'delete') return t('settingsBuiltinDelete');
+    if (item.builtin === 'open-closest-parent') return t('settingsBuiltinOpenClosestParent');
+    return t('settingsBuiltinUnknown');
   }
 
   private getBuiltinItems(): MoreMenuItem[] {
