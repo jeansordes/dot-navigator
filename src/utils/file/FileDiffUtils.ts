@@ -112,9 +112,26 @@ export function updateAllFileItems(
 
     const container = childrenList.closest('.rename-children-container');
     if (container instanceof HTMLElement && data.kind === 'folder') {
+        const originalParts = parsePath(data.path, data.extension);
+        const isNameUnchanged = nameValue === originalParts.name;
+        const isPathUnchanged = pathValue === originalParts.directory;
+
         const diffContainers = Array.from(container.querySelectorAll('.rename-file-diff'));
         const hasVisibleDiff = diffContainers.some(diff => !diff.classList.contains('is-hidden'));
 
+        if (!isNameUnchanged || !isPathUnchanged) {
+            if (hasVisibleDiff) {
+                container.removeClass('is-hidden');
+            } else {
+                container.addClass('is-hidden');
+            }
+        } else {
+            container.addClass('is-hidden');
+        }
+    } else if (container instanceof HTMLElement && !container.classList.contains('is-hidden')) {
+        // Ensure non-folder dialogs keep previous behaviour when diffs exist
+        const diffContainers = Array.from(container.querySelectorAll('.rename-file-diff'));
+        const hasVisibleDiff = diffContainers.some(diff => !diff.classList.contains('is-hidden'));
         if (hasVisibleDiff) {
             container.removeClass('is-hidden');
         } else {
