@@ -1,3 +1,9 @@
+## [1.20.1](https://github.com/jeansordes/dot-navigator/compare/1.20.0...1.20.1) (2025-09-18)
+
+### Features
+
+* **touch:** add mobile touch support and original name preservation ([c37d5ef](https://github.com/jeansordes/dot-navigator/commit/c37d5ef4b17d0ea82ee5c04931d96dfc5b829750))
+
 # [1.20.0](https://github.com/jeansordes/dot-navigator/compare/1.19.1...1.20.0) (2025-09-18)
 
 ### Features
