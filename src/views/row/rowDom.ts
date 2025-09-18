@@ -84,7 +84,7 @@ export function createTitleElement(item: RowItem): HTMLElement {
     separator.className = 'yaml-filename';
 
     const filename = document.createElement('span');
-    filename.textContent = item.name;
+    filename.textContent = item.originalName ?? item.name;
     filename.className = 'yaml-filename';
 
     title.appendChild(customTitle);

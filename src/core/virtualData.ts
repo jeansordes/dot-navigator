@@ -8,6 +8,7 @@ export type Kind = 'folder' | 'file' | 'virtual';
 export interface VItem {
   id: string;
   name: string;
+  originalName?: string;
   title?: string;
   kind: Kind;
   extension?: string;
@@ -54,7 +55,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     return transformed;
   }
 
-  function rawName(node: TreeNode): string {
+  function baseName(node: TreeNode): string {
     const base = FileUtils.basename(node.path);
     let name: string;
 
@@ -65,20 +66,26 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
       name = (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
     }
 
-    return transformName(name);
+    return name;
+  }
+
+  function displayName(node: TreeNode): string {
+    return transformName(baseName(node));
   }
 
   function sortKey(node: TreeNode): string {
     const yaml = getYamlTitle(app, node.path);
-    return yaml ?? rawName(node);
+    return yaml ?? displayName(node);
   }
 
   function build(node: TreeNode, parentId?: string): VItem {
     parentMap.set(node.path, parentId);
     const yaml = getYamlTitle(app, node.path);
+    const originalName = baseName(node);
     const item: VItem = {
       id: node.path,
-      name: rawName(node),
+      name: displayName(node),
+      originalName,
       title: yaml ?? undefined,
       kind: nodeKind(node),
     };
@@ -108,4 +115,3 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
 
   return { data, parentMap };
 }
-

@@ -1263,7 +1263,6 @@
     left: var(--size-4-3) !important;
     right: var(--size-4-3) !important;
     width: auto !important;
-    max-height: min(500px, calc(100vh - var(--safe-area-inset-top) - var(--header-height) - var(--size-4-4)* 2));
 
     .prompt-instructions {
         display: none;

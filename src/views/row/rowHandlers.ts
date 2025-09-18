@@ -1,3 +1,4 @@
+import { Platform } from 'obsidian';
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { handleActionButtonClick, handleTitleClick } from './rowEvents';
@@ -8,6 +9,38 @@ const debugError = createDebug('dot-navigator:views:row-handlers:error');
 
 const FILE_CLICK_DELAY = 200;
 const pendingFileClicks = new Map<string, number>();
+const TOUCH_DOUBLE_TAP_DELAY = 350;
+const TOUCH_DOUBLE_TAP_DISTANCE = 24;
+const lastTouchTap = new Map<string, { time: number; x: number; y: number }>();
+
+function isTouchLikeEvent(e: MouseEvent): boolean {
+  const pointerEvent = e as PointerEvent & { sourceCapabilities?: { firesTouchEvents?: boolean } };
+  if (typeof pointerEvent.pointerType === 'string') {
+    return pointerEvent.pointerType === 'touch';
+  }
+  if (pointerEvent.sourceCapabilities?.firesTouchEvents) {
+    return true;
+  }
+  return Platform.isMobile;
+}
+
+function isTouchDoubleTap(id: string, e: MouseEvent): boolean {
+  if (!isTouchLikeEvent(e)) return false;
+  const now = Date.now();
+  const x = e.clientX ?? 0;
+  const y = e.clientY ?? 0;
+  const previous = lastTouchTap.get(id);
+  if (previous) {
+    const withinTime = now - previous.time <= TOUCH_DOUBLE_TAP_DELAY;
+    const withinDistance = Math.abs(previous.x - x) <= TOUCH_DOUBLE_TAP_DISTANCE && Math.abs(previous.y - y) <= TOUCH_DOUBLE_TAP_DISTANCE;
+    if (withinTime && withinDistance) {
+      lastTouchTap.delete(id);
+      return true;
+    }
+  }
+  lastTouchTap.set(id, { time: now, x, y });
+  return false;
+}
 
 export function bindRowHandlers(
   vt: VirtualTreeLike,
@@ -83,6 +116,14 @@ export function onRowClick(
     return true;
   };
 
+  const tryTouchDoubleTapRename = (): boolean => {
+    if (!isTouchDoubleTap(id, e)) return false;
+    clearPending();
+    if (!triggerRename()) return false;
+    applySelection();
+    return true;
+  };
+
   const applySelection = (): void => {
     if (kind === 'file') {
       vt.selectedIndex = idx;
@@ -104,6 +145,8 @@ export function onRowClick(
       return;
     }
 
+    if (tryTouchDoubleTapRename()) return;
+
     clearPending();
     const timeoutId = window.setTimeout(() => {
       pendingFileClicks.delete(id);
@@ -122,6 +165,8 @@ export function onRowClick(
     handleTitleClick(app, kind, id, idx, vt, setSelectedId);
     return;
   }
+
+  if (tryTouchDoubleTapRename()) return;
 
   handleTitleClick(app, kind, id, idx, vt, setSelectedId);
 }

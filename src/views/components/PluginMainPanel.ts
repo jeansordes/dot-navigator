@@ -170,9 +170,6 @@ export default class PluginMainPanel extends ItemView {
         debug('onOpen completed successfully');
     }
 
-    // Header/body containers are handled by ViewLayout
-    private _addRevealActiveButton(_header: HTMLElement): void { /* handled by ViewLayout */ }
-
     private _registerEventHandlers(): void {
         this.eventHandler.registerFileEvents();
         this.eventHandler.registerActiveFileEvents((file) => {

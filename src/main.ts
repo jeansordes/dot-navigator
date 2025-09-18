@@ -76,7 +76,7 @@ export default class DotNavigatorPlugin extends Plugin {
 
         // Auto-open the view on startup if it was previously open
         this.app.workspace.onLayoutReady(() => {
-            if (this.settings.viewWasOpen) {
+            if (this.settings.viewWasOpen && process.env.NODE_ENV !== 'production') {
                 this.activateView();
             }
         });
