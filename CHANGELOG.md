@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/jeansordes/dot-navigator/compare/1.19.1...1.20.0) (2025-09-18)
+
+### Features
+
+* **rename:** add double-click rename functionality with improved UX ([98a4dc2](https://github.com/jeansordes/dot-navigator/commit/98a4dc24767f39d50a10ba483d04ae19130a0d8d))
+* **settings:** add comprehensive i18n support and tips section ([3107780](https://github.com/jeansordes/dot-navigator/commit/3107780a249f694b007a4c0d3a38d0d2f3dae048))
+
 ## [1.19.1](https://github.com/jeansordes/dot-navigator/compare/1.19.0...1.19.1) (2025-09-18)
 
 ### Bug Fixes
