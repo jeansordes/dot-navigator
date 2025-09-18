@@ -17,6 +17,7 @@ export class RenameProgress {
     private progressTextEl: HTMLElement;
     private cancelButtonEl: HTMLElement;
     private undoButtonEl: HTMLElement;
+    private readonly DEFAULT_PROGRESS_TEXT = t('renameDialogProgressInitializing');
     private isCompleted = false;
     private totalFiles = 0;
     private callbacks: RenameProgressCallbacks;
@@ -28,6 +29,8 @@ export class RenameProgress {
         this.progressTextEl = this.progressEl.querySelector('.rename-progress-text') as HTMLElement;
         this.cancelButtonEl = this.progressEl.querySelector('.rename-progress-cancel') as HTMLElement;
         this.undoButtonEl = this.progressEl.querySelector('.rename-progress-undo') as HTMLElement;
+        this.setButtonState(this.cancelButtonEl, 'enabled');
+        this.setButtonState(this.undoButtonEl, 'hidden');
     }
 
     /**
@@ -48,7 +51,7 @@ export class RenameProgress {
         // Progress text (moved inside actions container)
         const progressText = document.createElement('div');
         progressText.className = 'rename-progress-text';
-        progressText.textContent = t('renameDialogProgressInitializing');
+        progressText.textContent = this.DEFAULT_PROGRESS_TEXT;
         actionButtons.appendChild(progressText);
 
         // Cancel button (shown during operation)
@@ -194,26 +197,17 @@ export class RenameProgress {
 
         this.progressTextEl.textContent = displayText ?? '';
 
-        if (phase === 'forward') {
-            if (completed === total && successful > 0) {
-                this.cancelButtonEl.addClass('rename-progress-btn-hidden');
-                this.undoButtonEl.addClass('rename-progress-btn-visible');
-                this.undoButtonEl.addClass('rename-progress-btn-enabled');
-            } else {
-                this.cancelButtonEl.addClass('rename-progress-btn-visible');
-                this.cancelButtonEl.addClass('rename-progress-btn-enabled');
-                this.undoButtonEl.addClass('rename-progress-btn-hidden');
-            }
-        } else if (phase === 'rollback') {
+        if (phase === 'rollback') {
             // Action buttons handled via explicit state helpers
-        } else if (completed === total && successful > 0) {
-            this.cancelButtonEl.addClass('rename-progress-btn-hidden');
-            this.undoButtonEl.addClass('rename-progress-btn-visible');
-            this.undoButtonEl.addClass('rename-progress-btn-enabled');
         } else {
-            this.cancelButtonEl.addClass('rename-progress-btn-visible');
-            this.cancelButtonEl.addClass('rename-progress-btn-enabled');
-            this.undoButtonEl.addClass('rename-progress-btn-hidden');
+            const canUndo = total > 0 && completed === total && successful > 0;
+            if (canUndo) {
+                this.setButtonState(this.cancelButtonEl, 'hidden');
+                this.setButtonState(this.undoButtonEl, 'enabled');
+            } else {
+                this.setButtonState(this.cancelButtonEl, 'enabled');
+                this.setButtonState(this.undoButtonEl, 'hidden');
+            }
         }
 
         this.isCompleted = completed === total;
@@ -235,9 +229,8 @@ export class RenameProgress {
         const primaryButton = trigger === 'cancel' ? this.cancelButtonEl : this.undoButtonEl;
         const secondaryButton = trigger === 'cancel' ? this.undoButtonEl : this.cancelButtonEl;
 
-        primaryButton.addClass('rename-progress-btn-disabled');
-        primaryButton.addClass('rename-progress-btn-visible');
-        secondaryButton.addClass('rename-progress-btn-hidden');
+        this.setButtonState(primaryButton, 'disabled');
+        this.setButtonState(secondaryButton, 'hidden');
 
         this.progressTextEl.textContent = t('renameDialogProgressCancelling');
     }
@@ -245,9 +238,8 @@ export class RenameProgress {
     showRevertCompleted(): void {
         debug('Revert completed');
 
-        this.cancelButtonEl.addClass('rename-progress-btn-hidden');
-
-        this.undoButtonEl.addClass('rename-progress-btn-hidden');
+        this.setButtonState(this.cancelButtonEl, 'hidden');
+        this.setButtonState(this.undoButtonEl, 'hidden');
 
         this.progressTextEl.textContent = t('renameDialogProgressCancelled');
     }
@@ -255,9 +247,8 @@ export class RenameProgress {
     showRevertCancelled(): void {
         debug('Revert cancelled');
 
-        this.cancelButtonEl.addClass('rename-progress-btn-hidden');
-
-        this.undoButtonEl.addClass('rename-progress-btn-hidden');
+        this.setButtonState(this.cancelButtonEl, 'hidden');
+        this.setButtonState(this.undoButtonEl, 'hidden');
 
         this.progressTextEl.textContent = t('renameDialogProgressCancelled');
     }
@@ -265,11 +256,8 @@ export class RenameProgress {
     showRevertFailed(): void {
         debug('Revert failed');
 
-        this.cancelButtonEl.addClass('rename-progress-btn-visible');
-        this.cancelButtonEl.addClass('rename-progress-btn-enabled');
-
-        this.undoButtonEl.addClass('rename-progress-btn-visible');
-        this.undoButtonEl.addClass('rename-progress-btn-enabled');
+        this.setButtonState(this.cancelButtonEl, 'enabled');
+        this.setButtonState(this.undoButtonEl, 'enabled');
 
         this.progressTextEl.textContent = t('renameDialogProgressCancelIssues');
     }
@@ -313,11 +301,9 @@ export class RenameProgress {
         this.progressBlocks = [];
         this.totalFiles = 0;
 
-        this.progressTextEl.textContent = t('renameDialogProgressInitializing');
-        this.cancelButtonEl.addClass('rename-progress-btn-visible');
-        this.cancelButtonEl.addClass('rename-progress-btn-enabled');
-        this.undoButtonEl.addClass('rename-progress-btn-hidden');
-        this.undoButtonEl.addClass('rename-progress-btn-enabled');
+        this.progressTextEl.textContent = this.DEFAULT_PROGRESS_TEXT;
+        this.setButtonState(this.cancelButtonEl, 'enabled');
+        this.setButtonState(this.undoButtonEl, 'hidden');
         this.isCompleted = false;
     }
 
@@ -329,5 +315,32 @@ export class RenameProgress {
             this.progressEl.remove();
         }
         this.callbacks = {};
+    }
+
+    private setButtonState(button: HTMLElement, state: 'hidden' | 'enabled' | 'disabled'): void {
+        const shouldHide = state === 'hidden';
+        const shouldEnable = state === 'enabled';
+        const shouldDisable = state === 'disabled';
+
+        if (shouldHide) {
+            button.addClass('rename-progress-btn-hidden');
+            button.addClass('is-hidden');
+            button.removeClass('rename-progress-btn-visible');
+        } else {
+            button.removeClass('rename-progress-btn-hidden');
+            button.removeClass('is-hidden');
+            button.addClass('rename-progress-btn-visible');
+        }
+
+        if (shouldEnable) {
+            button.addClass('rename-progress-btn-enabled');
+            button.removeClass('rename-progress-btn-disabled');
+        } else if (shouldDisable) {
+            button.addClass('rename-progress-btn-disabled');
+            button.removeClass('rename-progress-btn-enabled');
+        } else {
+            button.removeClass('rename-progress-btn-enabled');
+            button.removeClass('rename-progress-btn-disabled');
+        }
     }
 }

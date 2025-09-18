@@ -15,6 +15,9 @@ export function selectPath(vt: VirtualTreeLike, path: string): number | undefine
 export function collapseAll(vt: VirtualTreeLike): void {
   vt.expanded.clear();
   vt._recomputeVisible();
+  // Reset selection when collapsing all - folders should not remain selected
+  vt.selectedIndex = -1;
+  vt.focusedIndex = 0;
   vt._render();
 }
 
