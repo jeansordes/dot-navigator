@@ -1,3 +1,9 @@
+## [1.19.1](https://github.com/jeansordes/dot-navigator/compare/1.19.0...1.19.1) (2025-09-18)
+
+### Bug Fixes
+
+* **ui:** reset tree selection when collapsing all items ([930b549](https://github.com/jeansordes/dot-navigator/commit/930b5491fc7a3e4dda3a7be74d673099c95b67ef))
+
 # [1.19.0](https://github.com/jeansordes/dot-navigator/compare/1.18.0...1.19.0) (2025-09-18)
 
 ### Bug Fixes
