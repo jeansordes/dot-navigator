@@ -1,12 +1,17 @@
 import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
-import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind } from '../../types';
+import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameTriggerSource } from '../../types';
 import { RenameDialog } from '../../views/rename/RenameDialog';
 import { ViewLayout } from '../../core/ViewLayout';
 import { t } from '../../i18n';
 import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:rename-manager');
+
+export interface RenameDialogLaunchOptions {
+    source?: RenameTriggerSource;
+    anchorEl?: HTMLElement | null;
+}
 
 export class RenameManager {
     private app: App;
@@ -29,7 +34,7 @@ export class RenameManager {
     /**
      * Show rename dialog for a given path
      */
-    async showRenameDialog(path: string, kind: MenuItemKind): Promise<void> {
+    async showRenameDialog(path: string, kind: MenuItemKind, _options?: RenameDialogLaunchOptions): Promise<void> {
         debug('Showing rename dialog for:', path, kind);
 
         const dialogData = this.prepareDialogData(path, kind);
@@ -82,6 +87,7 @@ export class RenameManager {
             children
         };
     }
+
 
     /**
      * Perform the rename operation with progress tracking in modal

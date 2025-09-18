@@ -236,8 +236,11 @@ export function setupRenameDialogContent({
 
     const childrenListEl = childrenContainer.querySelector('.rename-children-list');
     if (childrenListEl) {
-        pathInput.addEventListener('input', () => updateAllFileItems(childrenListEl as HTMLElement, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app));
-        nameInput.addEventListener('input', () => updateAllFileItems(childrenListEl as HTMLElement, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app));
+        const refreshChildren = () => updateAllFileItems(childrenListEl as HTMLElement, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app);
+
+        refreshChildren();
+        pathInput.addEventListener('input', refreshChildren);
+        nameInput.addEventListener('input', refreshChildren);
     }
 
     let modeContainer: HTMLElement | undefined;
@@ -255,7 +258,7 @@ export function setupRenameDialogContent({
         );
     }
 
-    createHints(contentEl);
+    createHints(contentEl, data);
 
     if (Platform.isMobile) {
         const buttonContainer = contentEl.createEl('div', { cls: 'rename-submit-container' });

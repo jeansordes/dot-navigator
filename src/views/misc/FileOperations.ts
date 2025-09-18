@@ -44,7 +44,7 @@ export class FileOperations {
             if (this.renameManager) {
                 // Use a small delay to ensure the file has been opened
                 setTimeout(() => {
-                    this.renameManager?.showRenameDialog(fullPath, 'file');
+                    this.renameManager?.showRenameDialog(fullPath, 'file', { source: 'quick-create' });
                 }, 100);
             }
 
@@ -92,7 +92,7 @@ export class FileOperations {
                     // Double-check the folder still exists before showing rename dialog
                     const folderCheck = this.app.vault.getAbstractFileByPath(fullPath);
                     if (folderCheck) {
-                        this.renameManager?.showRenameDialog(fullPath, 'folder');
+                        this.renameManager?.showRenameDialog(fullPath, 'folder', { source: 'quick-create' });
                     } else {
                         debugError('Folder disappeared before rename dialog could open:', fullPath);
                     }

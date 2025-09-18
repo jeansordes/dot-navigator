@@ -50,8 +50,19 @@ export function updateFileDiff(
         }
     }
 
-    // Clear and create new inline diff
+    // Clear existing content before recalculating
     diffContainer.empty();
+
+    const hasChanges = originalPath !== newPath;
+    const shouldHide = !hasChanges && data.kind === 'folder' && !isMainFile;
+
+    if (shouldHide) {
+        diffContainer.addClass('is-hidden');
+        return;
+    }
+
+    diffContainer.removeClass('is-hidden');
+
     const inlineDiff = createInlineDiff(originalPath, newPath);
     diffContainer.appendChild(inlineDiff);
 }
@@ -96,6 +107,18 @@ export function updateAllFileItems(
             if (diffContainer instanceof HTMLElement) {
                 updateFileDiff(diffContainer, data.children[i - 1], false, { data, modeSelection, pathValue, nameValue, app });
             }
+        }
+    }
+
+    const container = childrenList.closest('.rename-children-container');
+    if (container instanceof HTMLElement && data.kind === 'folder') {
+        const diffContainers = Array.from(container.querySelectorAll('.rename-file-diff'));
+        const hasVisibleDiff = diffContainers.some(diff => !diff.classList.contains('is-hidden'));
+
+        if (hasVisibleDiff) {
+            container.removeClass('is-hidden');
+        } else {
+            container.addClass('is-hidden');
         }
     }
 

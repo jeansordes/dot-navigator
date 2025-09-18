@@ -182,3 +182,11 @@ export interface RenameDialogData {
     kind: MenuItemKind;
     children?: string[];
 }
+
+export type RenameTriggerSource =
+    | 'double-click'
+    | 'context-menu'
+    | 'command'
+    | 'auto-create'
+    | 'quick-create'
+    | 'other';

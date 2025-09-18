@@ -124,7 +124,7 @@ export function createFileItem(
 /**
  * Create the hints UI component
  */
-export function createHints(container: HTMLElement): HTMLElement {
+export function createHints(container: HTMLElement, data?: RenameDialogData): HTMLElement {
     const hintsContainer = container.createEl('div', { cls: 'prompt-instructions' });
 
     const hints = [
@@ -133,7 +133,7 @@ export function createHints(container: HTMLElement): HTMLElement {
         { key: 'esc', action: t('renameDialogHintClose') }
     ];
 
-    hints.forEach((hint) => {
+    hints.forEach((hint, index) => {
         const instruction = hintsContainer.createEl('div', { cls: 'prompt-instruction' });
         instruction.createEl('span', {
             text: hint.key,
@@ -143,7 +143,19 @@ export function createHints(container: HTMLElement): HTMLElement {
             text: hint.action,
             cls: 'prompt-instruction-text'
         });
+
+        // Hide the first instruction (navigation hint) when renaming a folder
+        if (index === 0 && data?.kind === 'folder') {
+            instruction.addClass('is-hidden');
+        }
     });
+
+    if (data?.kind === 'folder') {
+        const firstInstruction = hintsContainer.querySelector('.prompt-instruction');
+        if (firstInstruction instanceof HTMLElement) {
+            firstInstruction.addClass('is-hidden');
+        }
+    }
 
     return hintsContainer;
 }

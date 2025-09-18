@@ -116,7 +116,7 @@ export class FileUtils {
         if (settings?.autoOpenRenameDialog && renameManager) {
             // Small delay to ensure the file is created and opened before showing rename dialog
             setTimeout(() => {
-                renameManager.showRenameDialog(childPath, 'file');
+                renameManager.showRenameDialog(childPath, 'file', { source: 'auto-create' });
             }, 100);
         }
     }

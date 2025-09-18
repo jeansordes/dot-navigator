@@ -2,8 +2,12 @@ import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { handleActionButtonClick, handleTitleClick } from './rowEvents';
 import { RenameManager } from '../../utils/rename/RenameManager';
+import type { MenuItemKind } from '../../types';
 import createDebug from 'debug';
 const debugError = createDebug('dot-navigator:views:row-handlers:error');
+
+const FILE_CLICK_DELAY = 200;
+const pendingFileClicks = new Map<string, number>();
 
 export function bindRowHandlers(
   vt: VirtualTreeLike,
@@ -54,8 +58,72 @@ export function onRowClick(
   const titleEl = target.closest('.dotn_tree-item-title');
   if (!titleEl) return;
 
-  const kind = titleEl.getAttribute('data-node-kind');
-  if (kind) handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+  const kindAttr = titleEl.getAttribute('data-node-kind');
+  if (!kindAttr || !['file', 'folder', 'virtual'].includes(kindAttr)) return;
+
+  // Type predicate to safely narrow the type
+  const isMenuItemKind = (value: string): value is MenuItemKind => {
+    return ['file', 'folder', 'virtual'].includes(value);
+  };
+
+  if (!isMenuItemKind(kindAttr)) return;
+  const kind: MenuItemKind = kindAttr;
+
+  const clearPending = (): void => {
+    const timeoutId = pendingFileClicks.get(id);
+    if (timeoutId != null) {
+      window.clearTimeout(timeoutId);
+      pendingFileClicks.delete(id);
+    }
+  };
+
+  const triggerRename = (): boolean => {
+    if (!renameManager) return false;
+    void renameManager.showRenameDialog(id, kind);
+    return true;
+  };
+
+  const applySelection = (): void => {
+    if (kind === 'file') {
+      vt.selectedIndex = idx;
+      setSelectedId(id);
+    } else {
+      vt.focusedIndex = idx;
+    }
+    vt._render();
+  };
+
+  if (kind === 'file') {
+    if (e.detail >= 2) {
+      clearPending();
+      if (triggerRename()) {
+        applySelection();
+        return;
+      }
+      handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+      return;
+    }
+
+    clearPending();
+    const timeoutId = window.setTimeout(() => {
+      pendingFileClicks.delete(id);
+      handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+    }, FILE_CLICK_DELAY);
+    pendingFileClicks.set(id, timeoutId);
+    return;
+  }
+
+  if (e.detail >= 2) {
+    clearPending();
+    if (triggerRename()) {
+      applySelection();
+      return;
+    }
+    handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+    return;
+  }
+
+  handleTitleClick(app, kind, id, idx, vt, setSelectedId);
 }
 
 export function onRowContextMenu(app: App, vt: VirtualTreeLike, e: MouseEvent, row: HTMLElement, renameManager?: RenameManager): void {

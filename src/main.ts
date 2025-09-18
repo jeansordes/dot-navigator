@@ -173,7 +173,7 @@ export default class DotNavigatorPlugin extends Plugin {
 
                 if (!checking) {
                     if (this.renameManager) {
-                        this.renameManager.showRenameDialog(activeFile.path, 'file');
+                        this.renameManager.showRenameDialog(activeFile.path, 'file', { source: 'command' });
                     }
                 }
                 return true;
