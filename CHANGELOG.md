@@ -1,3 +1,13 @@
+# [1.19.0](https://github.com/jeansordes/dot-navigator/compare/1.18.0...1.19.0) (2025-09-18)
+
+### Bug Fixes
+
+* prevent newlines in textarea inputs ([5e258d2](https://github.com/jeansordes/dot-navigator/commit/5e258d271a2a0e8b6431eab2a7f3108ef873117d))
+
+### Features
+
+* **rename:** add progress tracking and operation reversibility ([7187740](https://github.com/jeansordes/dot-navigator/commit/71877405d06270c9042f8cbaa6a9faa7ac41ca09))
+
 # [1.18.0](https://github.com/jeansordes/dot-navigator/compare/1.17.2...1.18.0) (2025-09-17)
 
 ### Bug Fixes
