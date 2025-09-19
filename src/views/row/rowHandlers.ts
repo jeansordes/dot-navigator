@@ -11,9 +11,70 @@ const FILE_CLICK_DELAY = 200;
 const pendingFileClicks = new Map<string, number>();
 const TOUCH_DOUBLE_TAP_DELAY = 350;
 const TOUCH_DOUBLE_TAP_DISTANCE = 24;
-const lastTouchTap = new Map<string, { time: number; x: number; y: number }>();
+const TOUCH_INTERACTION_WINDOW = 700;
 
-function isTouchLikeEvent(e: MouseEvent): boolean {
+type TouchInteraction = { time: number; x: number; y: number };
+
+const touchStartById = new Map<string, TouchInteraction>();
+const recentTouchInteractions = new Map<string, TouchInteraction>();
+const lastTouchTap = new Map<string, TouchInteraction>();
+
+function trackRowTouchStart(row: HTMLElement, event: TouchEvent): void {
+  const id = row.dataset.id;
+  if (!id) return;
+  if (event.touches.length !== 1) {
+    touchStartById.delete(id);
+    return;
+  }
+  const touch = event.touches[0];
+  if (!touch) return;
+  touchStartById.set(id, { time: Date.now(), x: touch.clientX, y: touch.clientY });
+}
+
+function trackRowTouchEnd(row: HTMLElement, event: TouchEvent): void {
+  const id = row.dataset.id;
+  if (!id) return;
+  if (event.touches.length > 0 || event.changedTouches.length === 0) {
+    touchStartById.delete(id);
+    return;
+  }
+  if (event.changedTouches.length > 1) {
+    touchStartById.delete(id);
+    recentTouchInteractions.delete(id);
+    return;
+  }
+  const touch = event.changedTouches[0];
+  const start = touchStartById.get(id);
+  touchStartById.delete(id);
+  const now = Date.now();
+  const x = start ? (start.x + touch.clientX) / 2 : touch.clientX;
+  const y = start ? (start.y + touch.clientY) / 2 : touch.clientY;
+  const interaction: TouchInteraction = { time: now, x, y };
+  recentTouchInteractions.set(id, interaction);
+  window.setTimeout(() => {
+    const stored = recentTouchInteractions.get(id);
+    if (stored && stored.time === interaction.time) {
+      recentTouchInteractions.delete(id);
+    }
+  }, TOUCH_INTERACTION_WINDOW);
+}
+
+function trackRowTouchCancel(row: HTMLElement): void {
+  const id = row.dataset.id;
+  if (!id) return;
+  touchStartById.delete(id);
+  recentTouchInteractions.delete(id);
+}
+
+function consumeRecentTouchInteraction(id: string): TouchInteraction | undefined {
+  const interaction = recentTouchInteractions.get(id);
+  if (!interaction) return undefined;
+  recentTouchInteractions.delete(id);
+  if (Date.now() - interaction.time > TOUCH_INTERACTION_WINDOW) return undefined;
+  return interaction;
+}
+
+function isFallbackTouchEvent(e: MouseEvent): boolean {
   const pointerEvent = e as PointerEvent & { sourceCapabilities?: { firesTouchEvents?: boolean } };
   if (typeof pointerEvent.pointerType === 'string') {
     return pointerEvent.pointerType === 'touch';
@@ -24,21 +85,17 @@ function isTouchLikeEvent(e: MouseEvent): boolean {
   return Platform.isMobile;
 }
 
-function isTouchDoubleTap(id: string, e: MouseEvent): boolean {
-  if (!isTouchLikeEvent(e)) return false;
-  const now = Date.now();
-  const x = e.clientX ?? 0;
-  const y = e.clientY ?? 0;
+function isTouchDoubleTap(id: string, interaction: TouchInteraction): boolean {
   const previous = lastTouchTap.get(id);
   if (previous) {
-    const withinTime = now - previous.time <= TOUCH_DOUBLE_TAP_DELAY;
-    const withinDistance = Math.abs(previous.x - x) <= TOUCH_DOUBLE_TAP_DISTANCE && Math.abs(previous.y - y) <= TOUCH_DOUBLE_TAP_DISTANCE;
+    const withinTime = interaction.time - previous.time <= TOUCH_DOUBLE_TAP_DELAY;
+    const withinDistance = Math.abs(previous.x - interaction.x) <= TOUCH_DOUBLE_TAP_DISTANCE && Math.abs(previous.y - interaction.y) <= TOUCH_DOUBLE_TAP_DISTANCE;
     if (withinTime && withinDistance) {
       lastTouchTap.delete(id);
       return true;
     }
   }
-  lastTouchTap.set(id, { time: now, x, y });
+  lastTouchTap.set(id, interaction);
   return false;
 }
 
@@ -53,6 +110,15 @@ export function bindRowHandlers(
     if (!set.has(row)) {
       row.addEventListener('contextmenu', (ev) => {
         if (ev instanceof MouseEvent) onRowContextMenu(ev, row);
+      });
+      row.addEventListener('touchstart', (ev) => {
+        trackRowTouchStart(row, ev);
+      }, { passive: true });
+      row.addEventListener('touchend', (ev) => {
+        trackRowTouchEnd(row, ev);
+      }, { passive: true });
+      row.addEventListener('touchcancel', () => {
+        trackRowTouchCancel(row);
       });
       set.add(row);
     }
@@ -117,7 +183,10 @@ export function onRowClick(
   };
 
   const tryTouchDoubleTapRename = (): boolean => {
-    if (!isTouchDoubleTap(id, e)) return false;
+    const interaction = consumeRecentTouchInteraction(id)
+      ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 } as TouchInteraction) : undefined);
+    if (!interaction) return false;
+    if (!isTouchDoubleTap(id, interaction)) return false;
     clearPending();
     if (!triggerRename()) return false;
     applySelection();
