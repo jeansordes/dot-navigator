@@ -1,3 +1,10 @@
+## [1.20.2](https://github.com/jeansordes/dot-navigator/compare/1.20.1...1.20.2) (2025-09-19)
+
+### Bug Fixes
+
+* **mobile:** improve support for double-tap ([5d3e9db](https://github.com/jeansordes/dot-navigator/commit/5d3e9db66c4741115da85624f6667f7bc0589f30))
+* **ui:** improve diff visibility logic for folder renames ([21f9e9a](https://github.com/jeansordes/dot-navigator/commit/21f9e9ac885c0ad6e3679d919bc04e66c86abf6d))
+
 ## [1.20.1](https://github.com/jeansordes/dot-navigator/compare/1.20.0...1.20.1) (2025-09-18)
 
 ### Features
