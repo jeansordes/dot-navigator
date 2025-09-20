@@ -1,4 +1,4 @@
-import { App, Platform, Scope } from 'obsidian';
+import { App, Platform, Scope, setIcon } from 'obsidian';
 import { RenameDialogData, RenameMode } from '../../types';
 import { parsePath } from '../../utils/misc/PathUtils';
 import { validateInputs } from '../../utils/validation/ValidationUtils';
@@ -14,6 +14,7 @@ import {
 import { updateFileDiff, updateAllFileItems } from '../../utils/file/FileDiffUtils';
 import { setupInputNavigation, setupKeyboardNavigation } from '../../utils/misc/InputNavigationUtils';
 import type { RenameProgress } from './RenameProgress';
+import { t } from '../../i18n';
 
 export interface RenameDialogUISetupParams {
     app: App;
@@ -64,14 +65,50 @@ export function setupRenameDialogContent({
     contentEl.empty();
     contentEl.addClass('rename-dialog-content');
 
+    const attemptSubmit = () => {
+        if (shouldProceedWithRename()) {
+            handleRename();
+        } else {
+            showNoChangesMessage();
+        }
+    };
+
+    let layoutContainer = contentEl;
+
+    if (Platform.isMobile) {
+        // Build a dedicated header on mobile so the modal stays compact, leaves room to tap outside, and remains touch-friendly.
+        const header = contentEl.createEl('div', { cls: 'rename-mobile-header' });
+
+        const closeButton = header.createEl('button', {
+            cls: 'clickable-icon rename-mobile-close-button',
+            attr: { type: 'button', 'aria-label': t('commonClose') }
+        });
+        setIcon(closeButton, 'x');
+        closeButton.addEventListener('click', () => closeModal());
+
+        header.createEl('div', {
+            text: t('menuRename'),
+            cls: 'rename-mobile-title'
+        });
+
+        const submitButton = header.createEl('button', {
+            text: t('renameDialogConfirm'),
+            cls: 'mod-cta rename-mobile-submit-button',
+            attr: { type: 'button' }
+        });
+        submitButton.addEventListener('click', () => attemptSubmit());
+
+        layoutContainer = contentEl.createEl('div', { cls: 'rename-mobile-body' });
+    }
+
     if (renameProgress) {
         const progressEl = renameProgress.getElement();
         progressEl.addClass('is-hidden');
-        contentEl.appendChild(progressEl);
+        layoutContainer.appendChild(progressEl);
     }
 
     const pathParts = parsePath(data.path, data.extension);
-    const inputContainer = contentEl.createEl('div', { cls: 'rename-input-container' });
+    const inputContainer = layoutContainer.createEl('div', { cls: 'rename-input-container' });
 
     let pathInput: HTMLTextAreaElement;
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
@@ -220,7 +257,7 @@ export function setupRenameDialogContent({
     autoResize(nameInput);
 
     const childrenContainer = createChildrenList(
-        contentEl,
+        layoutContainer,
         data,
         {
             updateFileDiff: (diffContainer, originalPath, isMainFile) => updateFileDiff(diffContainer, originalPath, isMainFile, {
@@ -246,7 +283,7 @@ export function setupRenameDialogContent({
     let modeContainer: HTMLElement | undefined;
     if (shouldShowModeSelectionUtil(data)) {
         modeContainer = createModeSelection(
-            contentEl,
+            layoutContainer,
             modeSelection,
             {
                 onModeChange: (value) => {
@@ -258,22 +295,7 @@ export function setupRenameDialogContent({
         );
     }
 
-    createHints(contentEl, data);
-
-    if (Platform.isMobile) {
-        const buttonContainer = contentEl.createEl('div', { cls: 'rename-submit-container' });
-        const submitButton = buttonContainer.createEl('button', {
-            text: 'Rename',
-            cls: 'mod-cta rename-submit-button'
-        });
-        submitButton.addEventListener('click', () => {
-            if (shouldProceedWithRename()) {
-                handleRename();
-            } else {
-                showNoChangesMessage();
-            }
-        });
-    }
+    createHints(layoutContainer, data);
 
     setTimeout(() => {
         nameInput.focus();
