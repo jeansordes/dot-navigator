@@ -1,3 +1,9 @@
+## [1.20.10](https://github.com/jeansordes/dot-navigator/compare/1.20.9...1.20.10) (2025-09-20)
+
+### Bug Fixes
+
+* **mobile:** remove redundant padding for rename modal on mobile devices ([6c4cad3](https://github.com/jeansordes/dot-navigator/commit/6c4cad3c9818079a855c0ebb302a86f134cbdecd))
+
 ## [1.20.9](https://github.com/jeansordes/dot-navigator/compare/1.20.8...1.20.9) (2025-09-20)
 
 ### Bug Fixes
