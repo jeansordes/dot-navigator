@@ -1,3 +1,9 @@
+## [1.20.4](https://github.com/jeansordes/dot-navigator/compare/1.20.3...1.20.4) (2025-09-20)
+
+### Bug Fixes
+
+* **mobile:** improve modal scrolling when mobile keyboard is open ([025b250](https://github.com/jeansordes/dot-navigator/commit/025b25088cfb7d19ddcbb029013a092bae293a9d))
+
 ## [1.20.3](https://github.com/jeansordes/dot-navigator/compare/1.20.2...1.20.3) (2025-09-20)
 
 ### Bug Fixes
