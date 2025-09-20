@@ -104,7 +104,10 @@ export class MobileKeyboardHandler {
                 const keyboardOffset = height - this.visualViewport.height;
 
                 if (keyboardOffset > 50) { // Keyboard is likely visible (significant height reduction)
-                    this.applyIOSKeyboardOffset(keyboardOffset + 10); // +10px for some padding
+                    // Add extra space for iOS keyboard suggestions/autocomplete
+                    // iOS keyboard can expand significantly with suggestions
+                    const extraSpaceForSuggestions = 80; // Extra 80px for keyboard suggestions
+                    this.applyIOSKeyboardOffset(keyboardOffset + extraSpaceForSuggestions);
                 } else {
                     this.resetIOSKeyboardStyles();
                 }
@@ -123,8 +126,11 @@ export class MobileKeyboardHandler {
             if (/iPhone|iPad|iPod/.test(window.navigator.userAgent)) {
                 // Small delay to let iOS keyboard animation complete
                 setTimeout(() => {
-                    // Use a default offset for focus events (keyboard typically takes ~260px on iOS)
-                    this.applyIOSKeyboardOffset(270);
+                    // Use a more generous offset for focus events to account for keyboard suggestions
+                    // iOS keyboard can expand from ~260px to ~340px or more with suggestions
+                    const baseKeyboardHeight = 260;
+                    const extraSpaceForSuggestions = 100; // Extra space for autocomplete/suggestions
+                    this.applyIOSKeyboardOffset(baseKeyboardHeight + extraSpaceForSuggestions);
                 }, 300);
             }
         };
@@ -152,15 +158,27 @@ export class MobileKeyboardHandler {
         if (!this.mobileBodyEl) return;
 
         // Apply the calculated offset to the modal bottom position
+        // Add safety margin for keyboard suggestions and predictive text
+        const safetyMargin = 20; // Extra 20px safety margin
+        const totalOffset = offset + safetyMargin;
+
+        // Ensure we don't make the modal too small - minimum usable height
+        const minModalHeight = 200; // Minimum 200px for usable modal
+        const maxOffset = Math.max(0, window.innerHeight - minModalHeight);
+        const safeOffset = Math.min(totalOffset, maxOffset);
+
         const modal = this.contentEl.closest('.modal') as HTMLElement;
         if (modal) {
-            modal.style.bottom = `${offset}px`;
+            modal.style.bottom = `${safeOffset}px`;
             modal.style.position = 'fixed';
             modal.classList.add('ios-keyboard-active');
         }
 
         // Ensure body can scroll properly with keyboard
-        this.mobileBodyEl.style.maxHeight = `calc(100dvh - ${offset + 80}px)`;
+        // Use a more conservative height calculation
+        const headerHeight = 60; // Account for modal header
+        const availableHeight = `calc(100dvh - ${safeOffset + headerHeight}px)`;
+        this.mobileBodyEl.style.maxHeight = availableHeight;
         this.mobileBodyEl.style.overflowY = 'auto';
         this.mobileBodyEl.classList.add('ios-keyboard-body-active');
     }

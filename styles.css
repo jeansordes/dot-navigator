@@ -1368,19 +1368,22 @@
 .ios-keyboard-active.modal:has(.rename-dialog-content) {
     /* Position is set dynamically via JavaScript using Visual Viewport API */
     /* Use visual viewport height for more accurate iOS keyboard handling */
-    max-height: calc(100dvh - 80px) !important;
-    /* Ensure modal stays within visual viewport bounds */
-    top: 20px !important;
+    /* Ensure modal stays within visual viewport bounds with extra space for suggestions */
+    top: 15px !important;
     left: var(--size-4-3) !important;
     right: var(--size-4-3) !important;
     /* Use dynamic viewport units for better iOS support */
     height: auto !important;
+    /* Add some margin to account for keyboard suggestions */
+    margin-bottom: 10px !important;
 }
 
 .ios-keyboard-active .rename-mobile-header {
     /* Compact header for iOS keyboard */
     padding: 6px 8px;
     flex-shrink: 0;
+    /* Ensure header doesn't get compressed */
+    min-height: 44px;
 }
 
 .ios-keyboard-active .rename-mobile-body,
@@ -1389,12 +1392,14 @@
     overflow-y: auto !important;
     /* Use webkit property for iOS momentum scrolling */
     -webkit-overflow-scrolling: touch !important;
-    /* Prevent body from shrinking too much */
-    min-height: 150px;
+    /* Prevent body from shrinking too much, but allow more compression for suggestions */
+    min-height: 120px;
     /* Better touch handling for iOS */
     touch-action: pan-y;
-    /* Ensure content is accessible */
-    padding: 8px;
+    /* Ensure content is accessible with tighter padding */
+    padding: 6px;
+    /* Add smooth scrolling behavior */
+    scroll-behavior: smooth;
 }
 
 /* Mobile: show buttons container and position buttons vertically */
