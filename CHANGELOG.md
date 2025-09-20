@@ -1,3 +1,9 @@
+## [1.20.6](https://github.com/jeansordes/dot-navigator/compare/1.20.5...1.20.6) (2025-09-20)
+
+### Bug Fixes
+
+* new attempt at fixing ios keyboard issue ([6b867f5](https://github.com/jeansordes/dot-navigator/commit/6b867f501d7c2395715396780211ff4c8007a454))
+
 ## [1.20.5](https://github.com/jeansordes/dot-navigator/compare/1.20.4...1.20.5) (2025-09-20)
 
 ### Bug Fixes
