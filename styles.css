@@ -1262,10 +1262,7 @@
 .is-mobile .modal:has(.rename-dialog-content) {
     left: var(--size-4-3) !important;
     right: var(--size-4-3) !important;
-    top: var(--size-4-3) !important;
-    bottom: var(--size-4-3) !important;
     width: auto !important;
-    max-height: calc(100% - (var(--size-4-3) * 2));
     display: flex;
     flex-direction: column;
 
