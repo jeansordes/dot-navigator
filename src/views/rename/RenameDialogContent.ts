@@ -86,10 +86,6 @@ export function setupRenameDialogContent({
         setIcon(closeButton, 'x');
         closeButton.addEventListener('click', () => closeModal());
 
-        header.createEl('div', {
-            text: t('menuRename'),
-            cls: 'rename-mobile-title'
-        });
 
         const submitButton = header.createEl('button', {
             text: t('renameDialogConfirm'),

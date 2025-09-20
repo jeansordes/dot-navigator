@@ -129,7 +129,7 @@ export class MobileKeyboardHandler {
                     // Use a more generous offset for focus events to account for keyboard suggestions
                     // iOS keyboard can expand from ~260px to ~340px or more with suggestions
                     const baseKeyboardHeight = 260;
-                    const extraSpaceForSuggestions = 100; // Extra space for autocomplete/suggestions
+                    const extraSpaceForSuggestions = 40; // 2.5rem = 40px for autocomplete/suggestions
                     this.applyIOSKeyboardOffset(baseKeyboardHeight + extraSpaceForSuggestions);
                 }, 300);
             }
