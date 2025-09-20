@@ -1,5 +1,3 @@
-import { Platform } from 'obsidian';
-
 /**
  * Handles mobile-specific keyboard detection and scrolling behavior
  * for the rename dialog, with special support for iOS devices.
@@ -88,24 +86,26 @@ export class MobileKeyboardHandler {
     }
 
     private setupIOSKeyboardDetection(): void {
-        // Use Visual Viewport API for iOS keyboard detection
+        // Use Visual Viewport API for iOS keyboard detection (Stack Overflow solution)
         if (window.visualViewport) {
             this.visualViewport = window.visualViewport;
+            let height = this.visualViewport.height;
 
             this.viewportChangeHandler = () => {
                 if (!this.visualViewport) return;
 
-                const viewportHeight = this.visualViewport.height;
-                const windowHeight = window.innerHeight;
+                // Only apply iOS-specific logic on iOS devices
+                if (!/iPhone|iPad|iPod/.test(window.navigator.userAgent)) {
+                    height = this.visualViewport.height;
+                    return;
+                }
 
-                // On iOS, when keyboard appears, visualViewport.height becomes smaller than window.innerHeight
-                const keyboardVisible = viewportHeight < windowHeight * 0.8; // 80% threshold
+                // Calculate the offset using the Stack Overflow formula
+                const keyboardOffset = height - this.visualViewport.height;
 
-                if (keyboardVisible) {
-                    // Apply iOS-specific keyboard styles
-                    this.applyIOSKeyboardStyles();
+                if (keyboardOffset > 50) { // Keyboard is likely visible (significant height reduction)
+                    this.applyIOSKeyboardOffset(keyboardOffset + 10); // +10px for some padding
                 } else {
-                    // Reset to normal styles
                     this.resetIOSKeyboardStyles();
                 }
             };
@@ -119,10 +119,14 @@ export class MobileKeyboardHandler {
         const inputs = this.contentEl.querySelectorAll('input, textarea');
 
         const handleFocus = () => {
-            // Small delay to let iOS keyboard animation complete
-            setTimeout(() => {
-                this.applyIOSKeyboardStyles();
-            }, 300);
+            // Only apply on iOS devices
+            if (/iPhone|iPad|iPod/.test(window.navigator.userAgent)) {
+                // Small delay to let iOS keyboard animation complete
+                setTimeout(() => {
+                    // Use a default offset for focus events (keyboard typically takes ~260px on iOS)
+                    this.applyIOSKeyboardOffset(270);
+                }, 300);
+            }
         };
 
         const handleBlur = () => {
@@ -144,29 +148,37 @@ export class MobileKeyboardHandler {
         });
     }
 
-    private applyIOSKeyboardStyles(): void {
+    private applyIOSKeyboardOffset(offset: number): void {
         if (!this.mobileBodyEl) return;
 
-        // Force modal to use available visual viewport space
-        const modal = this.contentEl.closest('.modal');
+        // Apply the calculated offset to the modal bottom position
+        const modal = this.contentEl.closest('.modal') as HTMLElement;
         if (modal) {
+            modal.style.bottom = `${offset}px`;
+            modal.style.position = 'fixed';
             modal.classList.add('ios-keyboard-active');
         }
 
-        // Add keyboard active class to body for CSS styling
+        // Ensure body can scroll properly with keyboard
+        this.mobileBodyEl.style.maxHeight = `calc(100dvh - ${offset + 80}px)`;
+        this.mobileBodyEl.style.overflowY = 'auto';
         this.mobileBodyEl.classList.add('ios-keyboard-body-active');
     }
 
     private resetIOSKeyboardStyles(): void {
         if (!this.mobileBodyEl) return;
 
-        // Reset modal styles
-        const modal = this.contentEl.closest('.modal');
+        // Reset modal position
+        const modal = this.contentEl.closest('.modal') as HTMLElement;
         if (modal) {
+            modal.style.bottom = '';
+            modal.style.position = '';
             modal.classList.remove('ios-keyboard-active');
         }
 
         // Reset body styles
+        this.mobileBodyEl.style.maxHeight = '';
+        this.mobileBodyEl.style.overflowY = '';
         this.mobileBodyEl.classList.remove('ios-keyboard-body-active');
     }
 
