@@ -1,3 +1,9 @@
+## [1.20.11](https://github.com/jeansordes/dot-navigator/compare/1.20.10...1.20.11) (2025-09-20)
+
+### Bug Fixes
+
+* **ui:** improve path suggestion UI and enhance empty state handling ([b2a8be9](https://github.com/jeansordes/dot-navigator/commit/b2a8be96764771908cb9d7169d3cad3b35b08f5e))
+
 ## [1.20.10](https://github.com/jeansordes/dot-navigator/compare/1.20.9...1.20.10) (2025-09-20)
 
 ### Bug Fixes
