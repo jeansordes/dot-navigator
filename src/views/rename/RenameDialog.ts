@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, Platform } from 'obsidian';
 import { RenameDialogData, RenameMode, RenameOptions, RenameProgress as RenameProgressData } from '../../types';
 import { loadDirectories } from '../../utils/misc/PathLoadingUtils';
 import { shouldProceedWithRename } from '../../utils/rename/RenameLogicUtils';
@@ -34,6 +34,9 @@ export class RenameDialog extends Modal {
     private isRenaming = false;
     private shouldHideProgressOnInteraction = false;
     private childrenListEl: HTMLElement | null = null;
+    private mobileTouchStartHandler?: (event: TouchEvent) => void;
+    private mobileTouchMoveHandler?: (event: TouchEvent) => void;
+    private mobileTouchEndHandler?: (event: TouchEvent) => void;
 
     constructor(
         app: App,
@@ -95,6 +98,10 @@ export class RenameDialog extends Modal {
         this.modeContainer = modeContainer ?? undefined;
         this.childrenListEl = childrenListEl;
         this.autocompleteState = autocompleteState;
+
+        if (Platform.isMobile) {
+            this.setupMobileGestureHandlers();
+        }
     }
 
     private getProgressContext(): ProgressContext {
@@ -161,6 +168,12 @@ export class RenameDialog extends Modal {
     private async handleRename(): Promise<void> {
         const pathValue = this.pathInput.value.trim();
         const nameValue = this.nameInput.value.trim();
+
+        if (Platform.isMobile) {
+            // Blur inputs before submitting so the virtual keyboard hides on mobile devices.
+            this.pathInput.blur();
+            this.nameInput.blur();
+        }
 
         await executeRename(
             {
@@ -270,8 +283,90 @@ export class RenameDialog extends Modal {
     }
 
 
+    /**
+     * Detect downward swipe gestures on mobile to close the modal while
+     * ignoring swipes that originate from interactive areas like suggestions or diffs.
+     */
+    private setupMobileGestureHandlers(): void {
+        let touchStartY: number | null = null;
+        let touchStartX: number | null = null;
+        let swipeDetected = false;
+        let shouldIgnoreSwipe = false;
+
+        this.detachMobileGestureHandlers();
+
+        const handleTouchStart = (event: TouchEvent) => {
+            if (event.touches.length !== 1) {
+                return;
+            }
+
+            const touch = event.touches[0];
+            touchStartY = touch.clientY;
+            touchStartX = touch.clientX;
+            swipeDetected = false;
+
+            const target = event.target as HTMLElement | null;
+            shouldIgnoreSwipe = Boolean(target?.closest('.rename-path-suggestions, .rename-file-diff'));
+        };
+
+        const handleTouchMove = (event: TouchEvent) => {
+            if (
+                touchStartY === null ||
+                touchStartX === null ||
+                swipeDetected ||
+                shouldIgnoreSwipe ||
+                event.touches.length !== 1
+            ) {
+                return;
+            }
+
+            const touch = event.touches[0];
+            const deltaY = touch.clientY - touchStartY;
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+
+            if (deltaY > 60 && deltaX < 40) {
+                swipeDetected = true;
+                this.close();
+            }
+        };
+
+        const handleTouchEnd = () => {
+            touchStartY = null;
+            touchStartX = null;
+            swipeDetected = false;
+            shouldIgnoreSwipe = false;
+        };
+
+        this.mobileTouchStartHandler = handleTouchStart;
+        this.mobileTouchMoveHandler = handleTouchMove;
+        this.mobileTouchEndHandler = handleTouchEnd;
+
+        this.modalEl.addEventListener('touchstart', handleTouchStart);
+        this.modalEl.addEventListener('touchmove', handleTouchMove);
+        this.modalEl.addEventListener('touchend', handleTouchEnd);
+    }
+
+    private detachMobileGestureHandlers(): void {
+        if (this.mobileTouchStartHandler) {
+            this.modalEl.removeEventListener('touchstart', this.mobileTouchStartHandler);
+            this.mobileTouchStartHandler = undefined;
+        }
+
+        if (this.mobileTouchMoveHandler) {
+            this.modalEl.removeEventListener('touchmove', this.mobileTouchMoveHandler);
+            this.mobileTouchMoveHandler = undefined;
+        }
+
+        if (this.mobileTouchEndHandler) {
+            this.modalEl.removeEventListener('touchend', this.mobileTouchEndHandler);
+            this.mobileTouchEndHandler = undefined;
+        }
+    }
+
+
     onClose(): void {
         const { contentEl } = this;
+        this.detachMobileGestureHandlers();
         hideWarning(contentEl);
         this.hideInfoMessage();
         this.autocompleteState = null;
