@@ -98,10 +98,6 @@ export class RenameDialog extends Modal {
         this.modeContainer = modeContainer ?? undefined;
         this.childrenListEl = childrenListEl;
         this.autocompleteState = autocompleteState;
-
-        if (Platform.isMobile) {
-            this.setupMobileGestureHandlers();
-        }
     }
 
     private getProgressContext(): ProgressContext {
@@ -282,91 +278,8 @@ export class RenameDialog extends Modal {
         return this.renameProgress ? this.renameProgress.hasProgressBlocks() : false;
     }
 
-
-    /**
-     * Detect downward swipe gestures on mobile to close the modal while
-     * ignoring swipes that originate from interactive areas like suggestions or diffs.
-     */
-    private setupMobileGestureHandlers(): void {
-        let touchStartY: number | null = null;
-        let touchStartX: number | null = null;
-        let swipeDetected = false;
-        let shouldIgnoreSwipe = false;
-
-        this.detachMobileGestureHandlers();
-
-        const handleTouchStart = (event: TouchEvent) => {
-            if (event.touches.length !== 1) {
-                return;
-            }
-
-            const touch = event.touches[0];
-            touchStartY = touch.clientY;
-            touchStartX = touch.clientX;
-            swipeDetected = false;
-
-            const target = event.target as HTMLElement | null;
-            shouldIgnoreSwipe = Boolean(target?.closest('.rename-path-suggestions, .rename-file-diff'));
-        };
-
-        const handleTouchMove = (event: TouchEvent) => {
-            if (
-                touchStartY === null ||
-                touchStartX === null ||
-                swipeDetected ||
-                shouldIgnoreSwipe ||
-                event.touches.length !== 1
-            ) {
-                return;
-            }
-
-            const touch = event.touches[0];
-            const deltaY = touch.clientY - touchStartY;
-            const deltaX = Math.abs(touch.clientX - touchStartX);
-
-            if (deltaY > 60 && deltaX < 40) {
-                swipeDetected = true;
-                this.close();
-            }
-        };
-
-        const handleTouchEnd = () => {
-            touchStartY = null;
-            touchStartX = null;
-            swipeDetected = false;
-            shouldIgnoreSwipe = false;
-        };
-
-        this.mobileTouchStartHandler = handleTouchStart;
-        this.mobileTouchMoveHandler = handleTouchMove;
-        this.mobileTouchEndHandler = handleTouchEnd;
-
-        this.modalEl.addEventListener('touchstart', handleTouchStart);
-        this.modalEl.addEventListener('touchmove', handleTouchMove);
-        this.modalEl.addEventListener('touchend', handleTouchEnd);
-    }
-
-    private detachMobileGestureHandlers(): void {
-        if (this.mobileTouchStartHandler) {
-            this.modalEl.removeEventListener('touchstart', this.mobileTouchStartHandler);
-            this.mobileTouchStartHandler = undefined;
-        }
-
-        if (this.mobileTouchMoveHandler) {
-            this.modalEl.removeEventListener('touchmove', this.mobileTouchMoveHandler);
-            this.mobileTouchMoveHandler = undefined;
-        }
-
-        if (this.mobileTouchEndHandler) {
-            this.modalEl.removeEventListener('touchend', this.mobileTouchEndHandler);
-            this.mobileTouchEndHandler = undefined;
-        }
-    }
-
-
     onClose(): void {
         const { contentEl } = this;
-        this.detachMobileGestureHandlers();
         hideWarning(contentEl);
         this.hideInfoMessage();
         this.autocompleteState = null;
