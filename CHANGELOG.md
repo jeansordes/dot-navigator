@@ -1,3 +1,9 @@
+## [1.20.9](https://github.com/jeansordes/dot-navigator/compare/1.20.8...1.20.9) (2025-09-20)
+
+### Bug Fixes
+
+* **mobile:** tweak the top position of the rename modal ([5f9ef2c](https://github.com/jeansordes/dot-navigator/commit/5f9ef2cbf767dd6de25241138f79091db2554bb3))
+
 ## [1.20.8](https://github.com/jeansordes/dot-navigator/compare/1.20.7...1.20.8) (2025-09-20)
 
 ### Bug Fixes
