@@ -70,7 +70,21 @@ export function setupPathAutocomplete(
 
         // Handle empty input
         if (!query.trim()) {
-            const _emptyMsg = state.suggestionsContainer.createEl('div', {
+            // Create header for empty state
+            const header = state.suggestionsContainer.createEl('div', {
+                cls: 'rename-path-suggestions-header'
+            });
+            const iconContainer = header.createEl('span', { cls: 'rename-suggestions-icon' });
+            setIcon(iconContainer, 'folder');
+            const _textSpan = header.createEl('span', {
+                text: t('renameDialogPathSuggestions')
+            });
+
+            // Create list container with empty message
+            const listContainer = state.suggestionsContainer.createEl('div', {
+                cls: 'rename-path-suggestions-list'
+            });
+            const _emptyMsg = listContainer.createEl('div', {
                 cls: 'rename-path-suggestions-no-results',
                 text: 'Type to search for paths...'
             });
@@ -78,15 +92,6 @@ export function setupPathAutocomplete(
         }
 
         const matches = performFuzzySearch(query.trim(), allDirectories);
-
-        if (matches.length === 0) {
-            // Show "no results" message
-            const _noResultsMsg = state.suggestionsContainer.createEl('div', {
-                cls: 'rename-path-suggestions-no-results',
-                text: 'No matching paths found'
-            });
-            return;
-        }
 
         // Add a header to clarify what the suggestions are for, show result count
         const header = state.suggestionsContainer.createEl('div', {
@@ -102,13 +107,27 @@ export function setupPathAutocomplete(
             text: `${t('renameDialogPathSuggestions')} (${resultCount})`
         });
 
+        // Create scrollable list container
+        const listContainer = state.suggestionsContainer.createEl('div', {
+            cls: 'rename-path-suggestions-list'
+        });
+
+        if (matches.length === 0) {
+            // Show "no results" message in the list container
+            const _noResultsMsg = listContainer.createEl('div', {
+                cls: 'rename-path-suggestions-no-results',
+                text: 'No matching paths found'
+            });
+            return;
+        }
+
         // Reset suggestion tracking
         state.suggestionElements = [];
         state.currentSuggestionIndex = -1;
 
         // Show all matches, but limit visible items to 10 with scrolling
         matches.forEach((matchResult, index) => {
-            const suggestion = state.suggestionsContainer!.createEl('div', {
+            const suggestion = listContainer.createEl('div', {
                 cls: 'rename-path-suggestion'
             });
 
@@ -241,7 +260,8 @@ export function navigateSuggestions(
     if (state.currentSuggestionIndex >= 0) {
         const selectedElement = suggestionElements[state.currentSuggestionIndex];
         if (selectedElement) {
-            selectedElement.scrollIntoView({ block: 'nearest' });
+            // Scroll within the list container, not the entire page
+            selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
     }
 
