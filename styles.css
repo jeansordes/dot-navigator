@@ -1352,16 +1352,6 @@
         top: var(--size-4-3) !important;
         max-height: calc(100vh - var(--size-4-3) * 2) !important;
     }
-
-    .is-mobile .rename-mobile-header {
-        /* Compact header when keyboard is open */
-        padding: 8px;
-    }
-
-    .is-mobile .rename-mobile-body {
-        /* Ensure body remains scrollable with minimal padding */
-        padding: 8px;
-    }
 }
 
 /* iOS-specific keyboard handling using Visual Viewport API (Stack Overflow approach) */
@@ -1379,7 +1369,6 @@
 
 .ios-keyboard-active .rename-mobile-header {
     /* Compact header for iOS keyboard */
-    padding: 6px 8px;
     flex-shrink: 0;
     /* Ensure header doesn't get compressed */
     min-height: 44px;
@@ -1395,8 +1384,6 @@
     min-height: 120px;
     /* Better touch handling for iOS */
     touch-action: pan-y;
-    /* Ensure content is accessible with tighter padding */
-    padding: 6px;
     /* Add smooth scrolling behavior */
     scroll-behavior: smooth;
 }
