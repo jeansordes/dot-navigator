@@ -750,8 +750,7 @@
 }
 
 .rename-progress-icon {
-    width: 14px;
-    height: 14px;
+    line-height: 0;
 }
 
 .rename-progress-btn-text {
@@ -1265,6 +1264,12 @@
     width: auto !important;
     display: flex;
     flex-direction: column;
+    /* Use calc with small viewport units to handle keyboard changes */
+    max-height: calc(100vh - 80px - var(--size-4-3));
+    /* Ensure modal doesn't exceed available space */
+    height: auto;
+    /* Use fixed positioning for better mobile keyboard handling */
+    position: fixed !important;
 
     .prompt-instructions {
         display: none;
@@ -1276,6 +1281,8 @@
     flex-direction: column;
     max-height: 100%;
     overflow: hidden;
+    /* Ensure content takes full available height */
+    height: 100%;
 }
 
 .is-mobile .rename-mobile-header {
@@ -1321,6 +1328,40 @@
     flex: 1;
     overflow-y: auto;
     padding: 12px;
+    /* Enhanced scrolling for mobile with keyboard */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth momentum scrolling on iOS */
+    scroll-behavior: smooth;
+    /* Ensure scrollable area is always accessible */
+    min-height: 0;
+    /* Allow flex item to shrink */
+    max-height: none;
+    /* Override any max-height constraints */
+    /* Improve touch scrolling */
+    overscroll-behavior: contain;
+    /* Prevent scroll chaining */
+    touch-action: pan-y;
+    /* Enable vertical touch scrolling */
+}
+
+/* Additional mobile keyboard handling */
+@media screen and (max-height: 500px) {
+    /* When keyboard is likely open (small viewport height) */
+    .is-mobile .modal:has(.rename-dialog-content) {
+        /* Reduce top margin when keyboard is open */
+        top: var(--size-4-3) !important;
+        max-height: calc(100vh - var(--size-4-3) * 2) !important;
+    }
+
+    .is-mobile .rename-mobile-header {
+        /* Compact header when keyboard is open */
+        padding: 8px;
+    }
+
+    .is-mobile .rename-mobile-body {
+        /* Ensure body remains scrollable with minimal padding */
+        padding: 8px;
+    }
 }
 
 /* Mobile: show buttons container and position buttons vertically */
