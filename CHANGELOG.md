@@ -1,3 +1,9 @@
+## [1.20.5](https://github.com/jeansordes/dot-navigator/compare/1.20.4...1.20.5) (2025-09-20)
+
+### Bug Fixes
+
+* **ios:** attempt at detecting keyboard to modify the height of the rename modal ([abcbfee](https://github.com/jeansordes/dot-navigator/commit/abcbfeebf8415ff30b10156a703d80cf2e8d6a6d))
+
 ## [1.20.4](https://github.com/jeansordes/dot-navigator/compare/1.20.3...1.20.4) (2025-09-20)
 
 ### Bug Fixes
