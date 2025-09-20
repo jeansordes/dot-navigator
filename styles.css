@@ -1364,6 +1364,41 @@
     }
 }
 
+/* iOS-specific keyboard handling using Visual Viewport API */
+.ios-keyboard-active.modal:has(.rename-dialog-content) {
+    /* Use visual viewport height for more accurate iOS keyboard handling */
+    max-height: calc(100dvh - 80px) !important;
+    /* Ensure modal stays within visual viewport bounds */
+    position: fixed !important;
+    top: 20px !important;
+    bottom: 20px !important;
+    left: var(--size-4-3) !important;
+    right: var(--size-4-3) !important;
+    /* Use dynamic viewport units for better iOS support */
+    height: auto !important;
+}
+
+.ios-keyboard-active .rename-mobile-header {
+    /* Compact header for iOS keyboard */
+    padding: 6px 8px;
+    flex-shrink: 0;
+}
+
+.ios-keyboard-active .rename-mobile-body,
+.ios-keyboard-body-active {
+    /* Ensure proper scrolling on iOS with keyboard */
+    max-height: calc(100dvh - 140px) !important;
+    overflow-y: auto !important;
+    /* Use webkit property for iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch !important;
+    /* Prevent body from shrinking too much */
+    min-height: 150px;
+    /* Better touch handling for iOS */
+    touch-action: pan-y;
+    /* Ensure content is accessible */
+    padding: 8px;
+}
+
 /* Mobile: show buttons container and position buttons vertically */
 .dotn_view-mobile .dotn_rename-notification-buttons {
     display: flex;

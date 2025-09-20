@@ -17,6 +17,7 @@ import {
 } from './RenameDialogProgressUtils';
 import { executeRename, performRevert } from './RenameDialogOperations';
 import { refreshDialogState as refreshDialogStateHelper } from './RenameDialogStateUtils';
+import { MobileKeyboardHandler } from './MobileKeyboardHandler.js';
 
 
 export class RenameDialog extends Modal {
@@ -37,7 +38,7 @@ export class RenameDialog extends Modal {
     private mobileTouchStartHandler?: (event: TouchEvent) => void;
     private mobileTouchMoveHandler?: (event: TouchEvent) => void;
     private mobileTouchEndHandler?: (event: TouchEvent) => void;
-    private mobileBodyEl?: HTMLElement;
+    private mobileKeyboardHandler?: MobileKeyboardHandler;
 
     constructor(
         app: App,
@@ -100,74 +101,12 @@ export class RenameDialog extends Modal {
         this.childrenListEl = childrenListEl;
         this.autocompleteState = autocompleteState;
 
-        // Initialize mobile touch handling if on mobile
+        // Initialize mobile keyboard handler if on mobile
         if (Platform.isMobile) {
-            this.initializeMobileTouchHandling();
+            this.mobileKeyboardHandler = new MobileKeyboardHandler(this.contentEl);
         }
     }
 
-    private initializeMobileTouchHandling(): void {
-        // Find the mobile body element
-        this.mobileBodyEl = this.contentEl.querySelector('.rename-mobile-body') as HTMLElement;
-
-        if (!this.mobileBodyEl) {
-            return;
-        }
-
-        // Add touch event handlers for better scrolling on mobile
-        this.mobileTouchStartHandler = (event: TouchEvent) => {
-            // Store initial touch position for scroll detection
-            const touch = event.touches[0];
-            if (touch) {
-                this.mobileBodyEl!.dataset.touchStartY = touch.clientY.toString();
-            }
-        };
-
-        this.mobileTouchMoveHandler = (event: TouchEvent) => {
-            if (!this.mobileBodyEl) return;
-
-            const touch = event.touches[0];
-            if (!touch) return;
-
-            const startY = parseFloat(this.mobileBodyEl.dataset.touchStartY || '0');
-            const currentY = touch.clientY;
-            const deltaY = startY - currentY;
-
-            // Get scroll position info
-            const scrollTop = this.mobileBodyEl.scrollTop;
-            const scrollHeight = this.mobileBodyEl.scrollHeight;
-            const clientHeight = this.mobileBodyEl.clientHeight;
-
-            // Allow scrolling when:
-            // 1. Scrolling down and not at top, OR
-            // 2. Scrolling up and not at bottom
-            const canScrollDown = scrollTop > 0;
-            const canScrollUp = scrollTop < scrollHeight - clientHeight;
-
-            if ((deltaY < 0 && canScrollDown) || (deltaY > 0 && canScrollUp)) {
-                // Allow the scroll to happen naturally
-                return;
-            }
-
-            // If we can't scroll in the intended direction, prevent default
-            // This prevents the page from scrolling when the modal is at its scroll limits
-            if (Math.abs(deltaY) > 10) { // Small threshold to avoid interfering with taps
-                event.preventDefault();
-            }
-        };
-
-        this.mobileTouchEndHandler = () => {
-            // Clean up touch data
-            if (this.mobileBodyEl) {
-                delete this.mobileBodyEl.dataset.touchStartY;
-            }
-        };
-
-        // Register the touch event handlers
-        this.mobileBodyEl.addEventListener('touchstart', this.mobileTouchStartHandler, { passive: false });
-        this.mobileBodyEl.addEventListener('touchmove', this.mobileTouchMoveHandler, { passive: false });
-        this.mobileBodyEl.addEventListener('touchend', this.mobileTouchEndHandler, { passive: true });
-    }
 
     private getProgressContext(): ProgressContext {
         return {
@@ -353,21 +292,11 @@ export class RenameDialog extends Modal {
         this.hideInfoMessage();
         this.autocompleteState = null;
 
-        // Clean up mobile touch handlers
-        if (this.mobileBodyEl && this.mobileTouchStartHandler) {
-            this.mobileBodyEl.removeEventListener('touchstart', this.mobileTouchStartHandler);
+        // Clean up mobile keyboard handler
+        if (this.mobileKeyboardHandler) {
+            this.mobileKeyboardHandler.destroy();
+            this.mobileKeyboardHandler = undefined;
         }
-        if (this.mobileBodyEl && this.mobileTouchMoveHandler) {
-            this.mobileBodyEl.removeEventListener('touchmove', this.mobileTouchMoveHandler);
-        }
-        if (this.mobileBodyEl && this.mobileTouchEndHandler) {
-            this.mobileBodyEl.removeEventListener('touchend', this.mobileTouchEndHandler);
-        }
-
-        this.mobileTouchStartHandler = undefined;
-        this.mobileTouchMoveHandler = undefined;
-        this.mobileTouchEndHandler = undefined;
-        this.mobileBodyEl = undefined;
 
         // Clean up progress component
         if (this.renameProgress) {
