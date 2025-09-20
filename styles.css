@@ -1369,7 +1369,6 @@
     /* Position is set dynamically via JavaScript using Visual Viewport API */
     /* Use visual viewport height for more accurate iOS keyboard handling */
     /* Ensure modal stays within visual viewport bounds with extra space for suggestions */
-    top: 15px !important;
     left: var(--size-4-3) !important;
     right: var(--size-4-3) !important;
     /* Use dynamic viewport units for better iOS support */
