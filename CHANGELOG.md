@@ -1,3 +1,13 @@
+## [1.20.3](https://github.com/jeansordes/dot-navigator/compare/1.20.2...1.20.3) (2025-09-20)
+
+### Bug Fixes
+
+* **styles:** clean up mobile modal CSS for improved layout ([3eb867c](https://github.com/jeansordes/dot-navigator/commit/3eb867c65759528305f931085c638453fd18af9c))
+
+### Features
+
+* **rename:** refine mobile rename modal interactions ([#40](https://github.com/jeansordes/dot-navigator/issues/40)) ([d48cc92](https://github.com/jeansordes/dot-navigator/commit/d48cc92b049d6e75a578a1e5db74e1a9f83ccb8d))
+
 ## [1.20.2](https://github.com/jeansordes/dot-navigator/compare/1.20.1...1.20.2) (2025-09-19)
 
 ### Bug Fixes
