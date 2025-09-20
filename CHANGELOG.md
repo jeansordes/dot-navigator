@@ -1,3 +1,9 @@
+## [1.20.8](https://github.com/jeansordes/dot-navigator/compare/1.20.7...1.20.8) (2025-09-20)
+
+### Bug Fixes
+
+* **mobile:** adjust extra space for iOS keyboard suggestions ([3b47484](https://github.com/jeansordes/dot-navigator/commit/3b4748467352b8d9df69cae8795308ce7c3d82cf))
+
 ## [1.20.7](https://github.com/jeansordes/dot-navigator/compare/1.20.6...1.20.7) (2025-09-20)
 
 ### Bug Fixes
