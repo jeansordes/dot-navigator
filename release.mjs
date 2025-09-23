@@ -1,8 +1,9 @@
 import { readFileSync, writeFileSync, existsSync } from "fs";
+import { execSync } from "child_process";
 import debug from "debug";
 import process from "process";
 
-const log = debug("dot-navigator:version-bump");
+const log = debug("dot-navigator:release");
 
 // Get version type from command line arguments (patch, minor, major)
 // Default to patch if not specified
@@ -124,3 +125,24 @@ log(
 	`Updated version to ${targetVersion} in package.json, package-lock.json and versions.json`
 );
 log(`Min app version is set to ${minAppVersion}`);
+
+// Run post-version-bump steps
+log("Running post-version-bump steps...");
+
+// Generate changelog
+log("Generating changelog...");
+execSync("npm run changelog", { stdio: "inherit" });
+
+// Git operations
+log("Committing changes...");
+execSync("git add CHANGELOG.md beta-manifest.json", { stdio: "inherit" });
+execSync("git add .", { stdio: "inherit" });
+execSync(`git commit -m "chore(release): ${targetVersion}"`, { stdio: "inherit" });
+
+log("Creating git tag...");
+execSync(`git tag "${targetVersion}"`, { stdio: "inherit" });
+
+log("Pushing to remote...");
+execSync("git push origin HEAD --tags", { stdio: "inherit" });
+
+log(`Successfully released version ${targetVersion}!`);

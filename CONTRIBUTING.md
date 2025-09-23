@@ -92,7 +92,7 @@ If you prefer more control over the process, you can manually trigger the GitHub
 1. Manually bump the version and create a tag:
    ```bash
    # First, update the version in package.json, manifest.json, and versions.json
-   npm run version-bump
+   npm run release
    
    # Commit the changes
    git add .

@@ -12,7 +12,7 @@ export default [
 			"scripts/",
 			"esbuild.config.mjs",
 			"jest.config.js",
-			"version-bump.mjs",
+			"release.mjs",
 			"src/core/VirtualTreeCore.ts",
 		],
 	},
