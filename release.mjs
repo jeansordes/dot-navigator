@@ -34,7 +34,13 @@ const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const currentVersion = packageJson.version;
 
 // Calculate new version
-let [major, minor, patch] = currentVersion.split(".").map(Number);
+// Extract base version (major.minor.patch) and handle beta separately
+const baseVersionMatch = currentVersion.match(/^(\d+)\.(\d+)\.(\d+)/);
+if (!baseVersionMatch) {
+	log(`Error: Invalid version format "${currentVersion}"`);
+	process.exit(1);
+}
+let [major, minor, patch] = baseVersionMatch.slice(1, 4).map(Number);
 let betaNumber = 0;
 
 // Handle beta versions
