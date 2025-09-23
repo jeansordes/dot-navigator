@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"ci": "npm run test && npm run lint && npm run build",
+		"ci": "npm run lint && npm run build && npm run test",
 		"commit": "cz",
 		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && node --loader ts-node/esm --no-warnings --experimental-specifier-resolution=node scripts/cleanup-changelog.ts",
 		"release:patch": "npm run build && node release.mjs patch",
