@@ -118,12 +118,12 @@ if (versionType === "beta") {
 
 	// Also update manifest.json for beta releases
 	manifest.version = targetVersion;
-	writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t") + "\n");
+	writeFileSync("manifest.json", JSON.stringify(manifest));
 	log(`Updated manifest.json with version ${targetVersion}`);
 } else {
 	// For regular releases, update manifest.json
 	manifest.version = targetVersion;
-	writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t") + "\n");
+	writeFileSync("manifest.json", JSON.stringify(manifest));
 	log(`Updated manifest.json with version ${targetVersion}`);
 }
 
