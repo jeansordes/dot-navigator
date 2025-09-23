@@ -1,3 +1,9 @@
+## [1.20.12-beta.0](https://github.com/jeansordes/dot-navigator/compare/1.20.11...1.20.12-beta.0) (2025-09-23)
+
+### Features
+
+* add schema-based note suggestions ([0792b2b](https://github.com/jeansordes/dot-navigator/commit/0792b2b54aba1e2ee1887ccb485f3cf3ec9a7e9b))
+
 ## [1.20.11](https://github.com/jeansordes/dot-navigator/compare/1.20.10...1.20.11) (2025-09-20)
 
 ### Bug Fixes
