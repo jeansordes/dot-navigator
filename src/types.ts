@@ -23,6 +23,7 @@ export interface PluginSettings {
     autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
+    dendronConfigFilePath?: string; // Path to the dendron config file (default: .dendron.yaml)
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -35,7 +36,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     defaultNewFileName: '', // Empty string means use i18n default
     autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
     transformDashesToSpaces: DashTransformation.SENTENCE_CASE, // Transform dashes to spaces and capitalize first letter of note names for better readability
-    enableSchemaSuggestions: true // Show schema-based suggestions by default
+    enableSchemaSuggestions: true, // Show schema-based suggestions by default
+    dendronConfigFilePath: '.dendron.yaml' // Default dendron config file path
 }
 
 export enum TreeNodeType {

@@ -15,14 +15,21 @@ export class DendronEventHandler {
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
     private readonly graceMs = 300; // keep very small to reduce perceived lag
-    private readonly schemaRegex = /\.schema\.ya?ml$/i;
+    private schemaRegex: RegExp;
 
-    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number) {
+    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string) {
         this.app = app;
         this.refreshCallback = refreshCallback;
+        this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || '.dendron.yaml');
         if (debounceTime !== undefined) {
             this.debounceWaitTime = debounceTime;
         }
+    }
+
+    private createSchemaFileRegex(configFilePath: string): RegExp {
+        // Escape special regex characters and create pattern for exact file name
+        const escapedPath = configFilePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`^${escapedPath}$`);
     }
 
     /**

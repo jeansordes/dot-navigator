@@ -70,7 +70,7 @@ export default class PluginMainPanel extends ItemView {
         );
 
         // Lower debounce to make updates feel snappier; structural ops still coalesce
-        this.eventHandler = new DendronEventHandler(this.app, this.refresh.bind(this), 120);
+        this.eventHandler = new DendronEventHandler(this.app, this.refresh.bind(this), 120, this.settings.dendronConfigFilePath || '.dendron.yaml');
         // Controls will be initialized in onOpen when container is available
     }
 

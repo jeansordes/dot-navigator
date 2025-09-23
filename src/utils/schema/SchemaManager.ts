@@ -11,14 +11,18 @@ import {
 const debug = createDebug('dot-navigator:schema:manager');
 const debugError = debug.extend('error');
 
-const SCHEMA_FILE_REGEX = /\.schema\.ya?ml$/i;
-
 async function readFile(app: App, file: TFile): Promise<string> {
   return app.vault.read(file);
 }
 
 function cloneEntry(entry: SchemaEntry, file: TFile): SchemaEntry {
   return { ...entry, file };
+}
+
+function createSchemaFileRegex(configFilePath: string): RegExp {
+  // Escape special regex characters and create pattern for exact file name
+  const escapedPath = configFilePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escapedPath}$`);
 }
 
 function rebuildIndex(files: Map<string, SchemaFileCache>): SchemaIndex {
@@ -97,12 +101,14 @@ async function loadSchemaFile(app: App, file: TFile, previous?: SchemaFileCache,
 
 export class SchemaManager {
   private readonly app: App;
+  private readonly configFilePath: string;
   private cache = new Map<string, SchemaFileCache>();
   private index: SchemaIndex = rebuildIndex(new Map());
   private inflight: Promise<void> | null = null;
 
-  constructor(app: App) {
+  constructor(app: App, configFilePath: string = '.dendron.yaml') {
     this.app = app;
+    this.configFilePath = configFilePath;
   }
 
   async refresh(force = false): Promise<void> {
@@ -121,7 +127,8 @@ export class SchemaManager {
   }
 
   private async _refresh(force: boolean): Promise<void> {
-    const files = this.app.vault.getFiles().filter((file) => SCHEMA_FILE_REGEX.test(file.path));
+    const configRegex = createSchemaFileRegex(this.configFilePath);
+    const files = this.app.vault.getFiles().filter((file) => configRegex.test(file.path));
     const next = new Map<string, SchemaFileCache>();
 
     await Promise.all(files.map(async (file) => {

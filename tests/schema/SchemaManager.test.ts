@@ -29,7 +29,7 @@ schemas:
     };
     vault._addFile(file, contents);
 
-    const manager = new SchemaManager(app);
+    const manager = new SchemaManager(app, 'structure.schema.yml');
     const index = await manager.ensureLatest();
 
     expect(index.entries.get('root')).toBeDefined();
@@ -39,7 +39,7 @@ schemas:
   });
 
   it('refreshes when file contents change', async () => {
-    const manager = new SchemaManager(app);
+    const manager = new SchemaManager(app, 'projects.schema.yml');
 
     const file = createMockFile('projects.schema.yml');
     const vault = app.vault as unknown as {

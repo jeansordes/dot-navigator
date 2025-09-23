@@ -44,7 +44,7 @@ export default class DotNavigatorPlugin extends Plugin {
         
         await this.loadSettings();
 
-        this.schemaManager = new SchemaManager(this.app);
+        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || '.dendron.yaml');
 
         // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);

@@ -42,6 +42,23 @@
     --dotn_font-size-small: 0.6rem;
 }
 
+/* Settings styles */
+.dotnav-config-preview {
+    margin-top: 8px;
+}
+
+.dotnav-config-content {
+    max-height: 200px;
+    overflow: auto;
+    font-size: 0.8em;
+    background-color: var(--background-secondary);
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 /* Utility class for text measurement */
 .dotn-measure-span {
     visibility: hidden;
