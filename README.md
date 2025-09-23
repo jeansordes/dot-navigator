@@ -19,6 +19,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Hierarchical note organization** with a tree-like interface
 - **Performance optimized for large vaults**, meaning you can expand all 10K notes of your vault at once on your phone, it will still run and scroll smoothly 👌
 - **Optimized for mobile as well as desktop**, (e.g. the top menu on desktop is at the bottom of the screen on mobile for easier access)
+- **Schema-aware suggestions** that surface virtual child notes defined in `.schema.yml` files so you can scaffold structures before the notes exist
 
 <img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
 
@@ -80,4 +81,3 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 - [Structured Tree](https://github.com/Rudtrack/structured-tree)
 - [Obsidian Structure](https://github.com/dobrovolsky/obsidian-structure)
 - [Obsidian Dendron Tree](https://github.com/levirs565/obsidian-dendron-tree)
-

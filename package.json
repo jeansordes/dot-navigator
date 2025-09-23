@@ -58,7 +58,8 @@
 	},
 	"dependencies": {
 		"@tanstack/virtual-core": "^3.13.12",
-		"debug": "^4.4.1"
+		"debug": "^4.4.1",
+		"yaml": "^2.8.1"
 	},
 	"overrides": {
 		"tmp": ">=0.2.4",

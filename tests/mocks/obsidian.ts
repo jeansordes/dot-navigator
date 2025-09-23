@@ -6,6 +6,7 @@ export class TFile {
     parent: TFolder | null = null;
     basename: string = '';
     extension: string = '';
+    stat: { mtime: number };
 
     constructor(path: string = '', name: string = '', parent: TFolder | null = null) {
         this.path = path;
@@ -21,6 +22,8 @@ export class TFile {
         if (!this.basename) {
             this.basename = this.name;
         }
+
+        this.stat = { mtime: Date.now() };
     }
 }
 
@@ -69,6 +72,7 @@ export class App {
 export class Vault {
     private files: TFile[] = [];
     private folders: TFolder[] = [];
+    private fileContents: Map<string, string> = new Map();
 
     getFiles(): TFile[] {
         return this.files;
@@ -88,13 +92,24 @@ export class Vault {
         return file;
     }
 
+    async read(file: TFile): Promise<string> {
+        return this.fileContents.get(file.path) ?? '';
+    }
+
     // Add methods to help with testing
-    _addFile(file: TFile) {
+    _addFile(file: TFile, contents: string = '') {
         this.files.push(file);
+        if (contents !== undefined) {
+            this.fileContents.set(file.path, contents);
+        }
     }
 
     _addFolder(folder: TFolder) {
         this.folders.push(folder);
+    }
+
+    _setFileContents(path: string, contents: string): void {
+        this.fileContents.set(path, contents);
     }
 }
 

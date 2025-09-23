@@ -22,6 +22,7 @@ export interface PluginSettings {
     defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
     autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
+    enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -33,7 +34,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     viewWasOpen: true, // Auto-open the panel on first install
     defaultNewFileName: '', // Empty string means use i18n default
     autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
-    transformDashesToSpaces: DashTransformation.SENTENCE_CASE // Transform dashes to spaces and capitalize first letter of note names for better readability
+    transformDashesToSpaces: DashTransformation.SENTENCE_CASE, // Transform dashes to spaces and capitalize first letter of note names for better readability
+    enableSchemaSuggestions: true // Show schema-based suggestions by default
 }
 
 export enum TreeNodeType {

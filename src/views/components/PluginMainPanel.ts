@@ -17,6 +17,7 @@ import { FileOperations } from '../misc/FileOperations';
 import { PersistenceManager } from './PersistenceManager';
 import { ViewInitialization } from './ViewInitialization';
 import { TreeOperations } from '../tree/TreeOperations';
+import { SchemaManager } from '../../utils/schema/SchemaManager';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -35,6 +36,7 @@ export default class PluginMainPanel extends ItemView {
     private layout: ViewLayout | null = null;
     private vtManager: VirtualTreeManager | null = null;
     private renameManager?: RenameManager;
+    private schemaManager?: SchemaManager;
     private fileOperations: FileOperations;
     private persistenceManager: PersistenceManager;
     private treeOperations: TreeOperations;
@@ -42,11 +44,12 @@ export default class PluginMainPanel extends ItemView {
     // Track initialization to avoid duplicate onOpen work
     private _onOpenCalled: boolean = false;
 
-    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, renameManager?: RenameManager) {
+    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, renameManager?: RenameManager, schemaManager?: SchemaManager) {
         super(leaf);
         this.instanceId = ++PluginMainPanel.instanceCounter;
         this.settings = settings;
         this.renameManager = renameManager;
+        this.schemaManager = schemaManager;
 
         // Initialize file operations
         this.fileOperations = new FileOperations(this.app, this.renameManager);
@@ -127,8 +130,8 @@ export default class PluginMainPanel extends ItemView {
         this.vtManager = new VirtualTreeManager(this.app, () => {
             this._syncHeaderToggle();
             this.persistenceManager.persistExpandedNodesDebounced();
-        }, this.renameManager, this.settings);
-        this.vtManager.init(viewRoot, this.settings?.expandedNodes);
+        }, this.renameManager, this.settings, this.schemaManager);
+        await this.vtManager.init(viewRoot, this.settings?.expandedNodes);
         // Access internal instance for highlight calls
         this.virtualTree = this.vtManager.getInstance();
 
@@ -216,7 +219,7 @@ export default class PluginMainPanel extends ItemView {
     async refresh() {
         if (!this.containerEl) return;
         if (this.vtManager) {
-            this.vtManager.updateOnVaultChange();
+            await this.vtManager.updateOnVaultChange();
             // After data updates, ensure the current active file is highlighted
             if (this.activeFile) {
                 this.vtManager.revealPath(this.activeFile.path);
@@ -309,12 +312,12 @@ export default class PluginMainPanel extends ItemView {
     /**
      * Update settings and refresh the tree view
      */
-    public updateSettings(newSettings: PluginSettings): void {
+    public async updateSettings(newSettings: PluginSettings): Promise<void> {
         this.settings = newSettings;
         if (this.vtManager) {
-            this.vtManager.updateSettings(newSettings);
+            await this.vtManager.updateSettings(newSettings);
         }
         // Update persistence manager with new settings
         this.persistenceManager.updateSettings(newSettings);
     }
-} 
+}

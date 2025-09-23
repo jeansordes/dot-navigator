@@ -8,6 +8,8 @@ import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
 import { computeGap, computeRowHeight } from '../utils/misc/measure';
+import { SchemaManager } from '../utils/schema/SchemaManager';
+import { SchemaSuggester } from '../utils/schema/SchemaSuggester';
 
 export class VirtualTreeManager {
   private app: App;
@@ -16,20 +18,39 @@ export class VirtualTreeManager {
   private rootContainer?: HTMLElement;
   private renameManager?: RenameManager;
   private settings?: PluginSettings;
+  private schemaManager?: SchemaManager;
 
-  constructor(app: App, onExpansionChange?: () => void, renameManager?: RenameManager, settings?: PluginSettings) {
+  constructor(
+    app: App,
+    onExpansionChange?: () => void,
+    renameManager?: RenameManager,
+    settings?: PluginSettings,
+    schemaManager?: SchemaManager,
+  ) {
     this.app = app;
     this.onExpansionChange = onExpansionChange;
     this.renameManager = renameManager;
     this.settings = settings;
+    this.schemaManager = schemaManager;
   }
 
-  init(rootContainer: HTMLElement, expanded?: string[]): void {
+  async init(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     this.rootContainer = rootContainer;
     const folders = this.app.vault.getAllFolders();
     const files = this.app.vault.getFiles();
     const tb = new TreeBuilder();
     const root = tb.buildDendronStructure(folders, files);
+
+    const useSchema = this.settings?.enableSchemaSuggestions ?? true;
+    if (useSchema && this.schemaManager) {
+      try {
+        const index = await this.schemaManager.ensureLatest();
+        const suggester = new SchemaSuggester(index);
+        suggester.apply(root);
+      } catch (error) {
+        debugError('Failed to apply schema suggestions during init:', error);
+      }
+    }
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 
     const gap = computeGap(rootContainer) ?? 4;
@@ -62,7 +83,7 @@ export class VirtualTreeManager {
     });
   }
 
-  updateOnVaultChange(): void {
+  async updateOnVaultChange(): Promise<void> {
     if (!this.vt) return;
     // We no longer attempt per-case in-place rename handling; always rebuild via diffed update
 
@@ -70,13 +91,24 @@ export class VirtualTreeManager {
     const files = this.app.vault.getFiles();
     const tb = new TreeBuilder();
     const root = tb.buildDendronStructure(folders, files);
+
+    const useSchema = this.settings?.enableSchemaSuggestions ?? true;
+    if (useSchema && this.schemaManager) {
+      try {
+        const index = await this.schemaManager.ensureLatest();
+        const suggester = new SchemaSuggester(index);
+        suggester.apply(root);
+      } catch (error) {
+        debugError('Failed to apply schema suggestions on update:', error);
+      }
+    }
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
     try {
       this.vt.updateData(data, parentMap);
       this.onExpansionChange?.();
     } catch (e) {
       debugError('Error updating VT data, rebuilding fully:', e);
-      if (this.rootContainer) this.init(this.rootContainer, this.getExpandedPaths());
+      if (this.rootContainer) await this.init(this.rootContainer, this.getExpandedPaths());
     }
   }
 
@@ -97,11 +129,11 @@ export class VirtualTreeManager {
   /**
    * Update settings and refresh the tree data if needed
    */
-  updateSettings(newSettings: PluginSettings): void {
+  async updateSettings(newSettings: PluginSettings): Promise<void> {
     this.settings = newSettings;
     if (this.vt && this.rootContainer) {
       // Rebuild the tree data with new settings
-      this.updateOnVaultChange();
+      await this.updateOnVaultChange();
     }
   }
 }

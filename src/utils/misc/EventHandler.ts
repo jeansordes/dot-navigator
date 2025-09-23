@@ -15,6 +15,7 @@ export class DendronEventHandler {
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
     private readonly graceMs = 300; // keep very small to reduce perceived lag
+    private readonly schemaRegex = /\.schema\.ya?ml$/i;
 
     constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number) {
         this.app = app;
@@ -78,6 +79,10 @@ export class DendronEventHandler {
     private handleFileModify = (file: TAbstractFile) => {
         if (!(file instanceof TFile)) return;
         const path = file.path;
+        if (this.isSchemaFile(path)) {
+            this.queueRefresh(path, true, true);
+            return;
+        }
         const newTitle = getYamlTitle(this.app, path);
         const oldTitle = this.yamlTitleCache.get(path) ?? null;
         if (oldTitle !== newTitle) {
@@ -89,6 +94,10 @@ export class DendronEventHandler {
 
     private handleMetadataChange = (file: TFile) => {
         const path = file.path;
+        if (this.isSchemaFile(path)) {
+            this.queueRefresh(path, true, true);
+            return;
+        }
         const newTitle = getYamlTitle(this.app, path);
         const oldTitle = this.yamlTitleCache.get(path) ?? null;
         if (oldTitle !== newTitle) {
@@ -229,5 +238,9 @@ export class DendronEventHandler {
             // If any error occurs, fall back to full rebuild
             return false;
         }
+    }
+
+    private isSchemaFile(path: string | undefined): boolean {
+        return typeof path === 'string' && this.schemaRegex.test(path);
     }
 }

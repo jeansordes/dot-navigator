@@ -59,6 +59,8 @@ export default {
     settingsDashTransformNone: 'Aucun changement',
     settingsDashTransformSpaces: 'Supprimer les tirets',
     settingsDashTransformSentenceCase: 'Supprimer les tirets + mettre en majuscule la première lettre',
+    settingsEnableSchemaSuggestions: 'Afficher les suggestions de schéma',
+    settingsEnableSchemaSuggestionsDesc: 'Affiche les notes suggérées définies dans les fichiers .schema.yml',
     settingsMoreMenuHeader: 'Menu Plus',
     settingsMoreMenuDescription: 'Personnalisez le menu trois-points. Les éléments intégrés ne peuvent pas être supprimés ; vous pouvez les réorganiser. Vous pouvez ajouter, supprimer et réorganiser les commandes personnalisées.',
     settingsBuiltinItems: 'Éléments intégrés',

@@ -59,6 +59,8 @@ export default {
     settingsDashTransformNone: 'No changes',
     settingsDashTransformSpaces: 'Remove dashes',
     settingsDashTransformSentenceCase: 'Remove dashes + capitalize first letter',
+    settingsEnableSchemaSuggestions: 'Show schema suggestions',
+    settingsEnableSchemaSuggestionsDesc: 'Display virtual note suggestions defined in .schema.yml files',
     settingsMoreMenuHeader: 'More Menu',
     settingsMoreMenuDescription: 'Customize the three-dots menu. Built-in items cannot be removed; you can reorder them. You can add, remove, and reorder custom commands.',
     settingsBuiltinItems: 'Built-in Items',

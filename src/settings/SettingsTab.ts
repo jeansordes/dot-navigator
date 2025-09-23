@@ -16,12 +16,12 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   /**
    * Update the tree view when settings change
    */
-  private updateTreeView(): void {
+  private async updateTreeView(): Promise<void> {
     const leaves = this.app.workspace.getLeavesOfType(FILE_TREE_VIEW_TYPE);
     if (leaves.length > 0) {
       const view = leaves[0].view;
       if (view instanceof PluginMainPanel) {
-        view.updateSettings(this.plugin.settings);
+        await view.updateSettings(this.plugin.settings);
       }
     }
   }
@@ -75,7 +75,19 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
             this.plugin.settings.transformDashesToSpaces = value;
             await this.plugin.saveSettings();
             // Update the tree view immediately to reflect the change
-            this.updateTreeView();
+            void this.updateTreeView();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName(t('settingsEnableSchemaSuggestions'))
+      .setDesc(t('settingsEnableSchemaSuggestionsDesc'))
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.enableSchemaSuggestions ?? true)
+          .onChange(async (value) => {
+            this.plugin.settings.enableSchemaSuggestions = value;
+            await this.plugin.saveSettings();
+            void this.updateTreeView();
           });
       });
 
