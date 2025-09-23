@@ -96,7 +96,7 @@ const manifest = JSON.parse(readFileSync("manifest.json", "utf8"));
 const { minAppVersion } = manifest;
 
 if (versionType === "beta") {
-	// For beta releases, update beta-manifest.json
+	// For beta releases, update both beta-manifest.json and manifest.json
 	let betaManifest = {
 		version: targetVersion,
 		minAppVersion: minAppVersion,
@@ -115,10 +115,15 @@ if (versionType === "beta") {
 		JSON.stringify(betaManifest, null, "\t") + "\n"
 	);
 	log(`Updated beta-manifest.json with version ${targetVersion}`);
+
+	// Also update manifest.json for beta releases
+	manifest.version = targetVersion;
+	writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t") + "\n");
+	log(`Updated manifest.json with version ${targetVersion}`);
 } else {
 	// For regular releases, update manifest.json
 	manifest.version = targetVersion;
-	writeFileSync("manifest.json", JSON.stringify(manifest));
+	writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t") + "\n");
 	log(`Updated manifest.json with version ${targetVersion}`);
 }
 
@@ -141,7 +146,11 @@ execSync("npm run changelog", { stdio: "inherit" });
 
 // Git operations
 log("Committing changes...");
-execSync("git add CHANGELOG.md beta-manifest.json", { stdio: "inherit" });
+if (versionType === "beta") {
+	execSync("git add CHANGELOG.md beta-manifest.json manifest.json", { stdio: "inherit" });
+} else {
+	execSync("git add CHANGELOG.md", { stdio: "inherit" });
+}
 execSync("git add .", { stdio: "inherit" });
 execSync(`git commit -m "chore(release): ${targetVersion}"`, { stdio: "inherit" });
 
