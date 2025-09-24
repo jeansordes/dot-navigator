@@ -1,20 +1,15 @@
-import { App, Platform, Scope, setIcon } from 'obsidian';
+import { App, Platform, Scope } from 'obsidian';
 import { RenameDialogData, RenameMode } from '../../types';
 import { parsePath } from '../../utils/misc/PathUtils';
-import { validateInputs } from '../../utils/validation/ValidationUtils';
 import { autoResize } from '../../utils/ui/UIUtils';
-import { setupPathAutocomplete, AutocompleteState } from '../../utils/misc/AutocompleteUtils';
-import { validatePath, validateAndShowWarning } from '../../utils/validation/PathValidationUtils';
-import {
-    createModeSelection,
-    createChildrenList,
-    createHints,
-    shouldShowModeSelection as shouldShowModeSelectionUtil
-} from '../../utils/rename/RenameDialogUIUtils';
-import { updateFileDiff, updateAllFileItems } from '../../utils/file/FileDiffUtils';
-import { setupInputNavigation, setupKeyboardNavigation } from '../../utils/misc/InputNavigationUtils';
+import { createHints } from '../../utils/rename/RenameDialogUIUtils';
+import { validateAndShowWarning } from '../../utils/validation/PathValidationUtils';
 import type { RenameProgress } from './RenameProgress';
-import { t } from '../../i18n';
+import { setupMobileHeader } from './RenameDialogMobileSetup';
+import { setupPathInput, setupNameInputListeners, setupExtensionInput } from './RenameDialogInputSetup';
+import { setupInputNavigationForAll } from './RenameDialogNavigationSetup';
+import { setupChildrenContainer, setupModeContainer } from './RenameDialogContainerSetup';
+import type { AutocompleteState } from '../../utils/misc/AutocompleteUtils';
 
 export interface RenameDialogUISetupParams {
     app: App;
@@ -43,6 +38,7 @@ export interface RenameDialogUISetupResult {
     childrenListEl: HTMLElement | null;
     autocompleteState: AutocompleteState | null;
 }
+
 
 export function setupRenameDialogContent({
     app,
@@ -76,25 +72,7 @@ export function setupRenameDialogContent({
     let layoutContainer = contentEl;
 
     if (Platform.isMobile) {
-        // Build a dedicated header on mobile so the modal stays compact, leaves room to tap outside, and remains touch-friendly.
-        const header = contentEl.createEl('div', { cls: 'rename-mobile-header' });
-
-        const closeButton = header.createEl('button', {
-            cls: 'clickable-icon rename-mobile-close-button',
-            attr: { type: 'button', 'aria-label': t('commonClose') }
-        });
-        setIcon(closeButton, 'x');
-        closeButton.addEventListener('click', () => closeModal());
-
-
-        const submitButton = header.createEl('button', {
-            text: t('renameDialogConfirm'),
-            cls: 'mod-cta rename-mobile-submit-button',
-            attr: { type: 'button' }
-        });
-        submitButton.addEventListener('click', () => attemptSubmit());
-
-        layoutContainer = contentEl.createEl('div', { cls: 'rename-mobile-body' });
+        layoutContainer = setupMobileHeader(contentEl, attemptSubmit, closeModal);
     }
 
     if (renameProgress) {
@@ -106,66 +84,7 @@ export function setupRenameDialogContent({
     const pathParts = parsePath(data.path, data.extension);
     const inputContainer = layoutContainer.createEl('div', { cls: 'rename-input-container' });
 
-    let pathInput: HTMLTextAreaElement;
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
-
-    if (data.kind !== 'folder') {
-        const pathContainer = inputContainer.createEl('div', { cls: 'rename-path-container' });
-        pathInput = pathContainer.createEl('textarea', {
-            cls: 'rename-path-input',
-            placeholder: pathParts.directory,
-            attr: { rows: '1' }
-        });
-        pathInput.value = pathParts.directory;
-        autoResize(pathInput);
-        pathInput.addEventListener('input', () => {
-            handlePostOperationInteraction();
-            validatePath(pathInput.value, app, contentEl);
-            autoResize(pathInput);
-            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl);
-        });
-        pathInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-            }
-        });
-        pathInput.addEventListener('paste', (e) => {
-            const paste = e.clipboardData?.getData('text') || '';
-            if (paste.includes('\n') || paste.includes('\r')) {
-                e.preventDefault();
-                const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-                const start = pathInput.selectionStart;
-                const end = pathInput.selectionEnd;
-                pathInput.value = pathInput.value.substring(0, start) + singleLine + pathInput.value.substring(end);
-                pathInput.selectionStart = pathInput.selectionEnd = start + singleLine.length;
-                autoResize(pathInput);
-                validatePath(pathInput.value, app, contentEl);
-                validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl);
-            }
-        });
-        const getState = setupPathAutocomplete(
-            pathInput,
-            contentEl,
-            allDirectories,
-            {
-                validatePath: () => validatePath(pathInput.value, app, contentEl),
-                validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
-            }
-        );
-        autocompleteState = getState();
-        setAutocompleteState(autocompleteState);
-
-        setTimeout(() => {
-            const event = new Event('focus');
-            pathInput.dispatchEvent(event);
-        }, 50);
-    } else {
-        pathInput = document.createElement('textarea');
-        pathInput.setAttribute('rows', '1');
-        pathInput.value = pathParts.directory;
-        pathInput.classList.add('is-hidden');
-    }
 
     const nameInput = inputContainer.createEl('textarea', {
         cls: 'rename-name-input',
@@ -174,137 +93,65 @@ export function setupRenameDialogContent({
     });
     nameInput.value = pathParts.name;
     autoResize(nameInput);
-    nameInput.addEventListener('input', () => {
-        handlePostOperationInteraction();
-        validateInputs(nameInput.value.trim());
-        autoResize(nameInput);
-        validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl);
-    });
-    nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-        }
-    });
-    nameInput.addEventListener('paste', (e) => {
-        const paste = e.clipboardData?.getData('text') || '';
-        if (paste.includes('\n') || paste.includes('\r')) {
-            e.preventDefault();
-            const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-            const start = nameInput.selectionStart;
-            const end = nameInput.selectionEnd;
-            nameInput.value = nameInput.value.substring(0, start) + singleLine + nameInput.value.substring(end);
-            nameInput.selectionStart = nameInput.selectionEnd = start + singleLine.length;
-            autoResize(nameInput);
-            validateInputs(nameInput.value.trim());
-            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl);
-        }
-    });
 
-    setupInputNavigation(nameInput, {
+    const { pathInput, autocompleteState: newAutocompleteState } = setupPathInput(
+        inputContainer,
+        pathParts,
+        data,
+        app,
+        contentEl,
+        allDirectories,
+        getAutocompleteState,
+        setAutocompleteState,
+        handlePostOperationInteraction,
+        getModeSelection,
+        nameInput,
+        undefined
+    );
+    autocompleteState = newAutocompleteState;
+
+    // Create extension input if needed
+    const extensionInput = setupExtensionInput(inputContainer, data, pathInput, nameInput, app, contentEl, handlePostOperationInteraction);
+    setupNameInputListeners(nameInput, pathInput, extensionInput, data, app, contentEl, handlePostOperationInteraction);
+
+    setupInputNavigationForAll(
         pathInput,
         nameInput,
+        extensionInput,
         contentEl,
         data,
-        modeSelection: getModeSelection(),
-        autocompleteState: autocompleteState,
-        setAutocompleteState: (state) => {
-            autocompleteState = state;
-            setAutocompleteState(state);
-        },
-        validatePath: () => validatePath(pathInput.value, app, contentEl),
-        validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl),
-        updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
-    });
-
-    if (data.kind !== 'folder') {
-        setupInputNavigation(pathInput, {
-            pathInput,
-            nameInput,
-            contentEl,
-            data,
-            modeSelection: getModeSelection(),
-            autocompleteState: () => autocompleteState,
-            setAutocompleteState: (state) => {
-            autocompleteState = state;
-            setAutocompleteState(state);
-        },
-            validatePath: () => validatePath(pathInput.value, app, contentEl),
-            validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl),
-            updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
-        });
-    }
-
-    let extensionEl: HTMLElement | undefined;
-    if (data.extension) {
-        extensionEl = inputContainer.createEl('span', {
-            text: data.extension,
-            cls: 'rename-extension-display'
-        });
-    }
-
-    setupKeyboardNavigation(scope, {
-        close: closeModal,
+        app,
+        getModeSelection,
+        autocompleteState,
+        setAutocompleteState,
+        scope,
+        closeModal,
         shouldProceedWithRename,
         handleRename,
         showNoChangesMessage
-    });
+    );
 
     autoResize(pathInput);
     autoResize(nameInput);
 
-    const childrenContainer = createChildrenList(
-        layoutContainer,
-        data,
-        {
-            updateFileDiff: (diffContainer, originalPath, isMainFile) => updateFileDiff(diffContainer, originalPath, isMainFile, {
-                data,
-                modeSelection: getModeSelection(),
-                pathValue: pathInput.value.trim(),
-                nameValue: nameInput.value.trim(),
-                app
-            }),
-            updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
-        }
-    );
+    const childrenListEl = setupChildrenContainer(layoutContainer, data, app, getModeSelection, pathInput, nameInput);
 
-    const childrenListEl = childrenContainer.querySelector('.rename-children-list');
-    if (childrenListEl) {
-        const refreshChildren = () => updateAllFileItems(childrenListEl as HTMLElement, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app);
-
-        refreshChildren();
-        pathInput.addEventListener('input', refreshChildren);
-        nameInput.addEventListener('input', refreshChildren);
-    }
-
-    let modeContainer: HTMLElement | undefined;
-    if (shouldShowModeSelectionUtil(data)) {
-        modeContainer = createModeSelection(
-            layoutContainer,
-            modeSelection,
-            {
-                onModeChange: (value) => {
-                    const nextMode = value ? RenameMode.FILE_AND_CHILDREN : RenameMode.FILE_ONLY;
-                    updateModeSelection(nextMode);
-                },
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
-            }
-        );
-    }
+    const modeContainer = setupModeContainer(layoutContainer, data, modeSelection, updateModeSelection, getModeSelection, pathInput, nameInput, app);
 
     createHints(layoutContainer, data);
 
     setTimeout(() => {
         nameInput.focus();
         nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
-        validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), data.extension || '', data.path, app, contentEl);
+        validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || data.extension || '', data.path, app, contentEl);
     }, 0);
 
     return {
         pathInput,
         nameInput,
-        extensionEl,
+        extensionEl: extensionInput,
         modeContainer,
-        childrenListEl: childrenListEl as HTMLElement | null,
+        childrenListEl,
         autocompleteState
     };
 }

@@ -49,9 +49,13 @@ export async function renameWithProgress(
         const newBaseName = options.newPath.replace(/\.md$/i, "");
 
         for (const childPath of children) {
-            const childBaseName = childPath.replace(/\.md$/i, "");
+            // Extract the original extension from the child path
+            const lastDotIndex = childPath.lastIndexOf('.');
+            const childExtension = lastDotIndex > 0 ? childPath.substring(lastDotIndex) : '';
+            const childBaseName = childPath.substring(0, lastDotIndex > 0 ? lastDotIndex : childPath.length);
+
             const childSuffix = childBaseName.substring(originalBaseName.length);
-            const newChildPath = `${newBaseName}${childSuffix}.md`;
+            const newChildPath = `${newBaseName}${childSuffix}${childExtension}`;
 
             filesToRename.push({
                 from: childPath,

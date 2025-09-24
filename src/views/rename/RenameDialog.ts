@@ -158,11 +158,13 @@ export class RenameDialog extends Modal {
     private shouldProceedWithRename(): boolean {
         const pathValue = this.pathInput.value.trim();
         const nameValue = this.nameInput.value.trim();
+        const extensionValue = this.extensionEl instanceof HTMLInputElement ? this.extensionEl.value.trim() : undefined;
 
         return shouldProceedWithRename({
             data: this.data,
             pathValue,
             nameValue,
+            extensionValue,
             modeSelection: this.modeSelection,
             shouldShowModeSelection: () => shouldShowModeSelectionUtil(this.data),
             app: this.app
@@ -192,7 +194,8 @@ export class RenameDialog extends Modal {
                 handlePostOperationInteraction: (force) => this.handlePostOperationInteraction(force)
             },
             pathValue,
-            nameValue
+            nameValue,
+            this.extensionEl instanceof HTMLInputElement ? this.extensionEl.value.trim() : undefined
         );
     }
 

@@ -11,6 +11,7 @@ export interface RenameLogicParams {
     data: RenameDialogData;
     pathValue: string;
     nameValue: string;
+    extensionValue?: string;
     modeSelection: RenameMode;
     shouldShowModeSelection: () => boolean;
     app: App;
@@ -20,7 +21,7 @@ export interface RenameLogicParams {
  * Check if there are any changes that warrant proceeding with rename
  */
 export function shouldProceedWithRename(params: RenameLogicParams): boolean {
-    const { data, pathValue, nameValue } = params;
+    const { data, pathValue, nameValue, extensionValue } = params;
 
     if (!validateInputs(nameValue)) {
         return false;
@@ -32,8 +33,9 @@ export function shouldProceedWithRename(params: RenameLogicParams): boolean {
     // Check if the inputs are different from what they should be initially
     const pathChanged = pathValue !== originalParsed.directory;
     const nameChanged = nameValue !== originalParsed.name;
+    const extensionChanged = extensionValue !== undefined && extensionValue !== (data.extension || '');
 
-    return pathChanged || nameChanged;
+    return pathChanged || nameChanged || extensionChanged;
 }
 
 /**
@@ -43,14 +45,14 @@ export async function handleRename(
     params: RenameLogicParams,
     onRename: (options: RenameOptions) => Promise<void>
 ): Promise<void> {
-    const { data, pathValue, nameValue, modeSelection, shouldShowModeSelection } = params;
+    const { data, pathValue, nameValue, extensionValue, modeSelection, shouldShowModeSelection } = params;
 
     if (!validateInputs(nameValue)) {
         return;
     }
 
     // Check if the target file already exists
-    const extension = data.extension || '';
+    const extension = extensionValue || data.extension || '';
     if (shouldShowFileExistsWarning(pathValue, nameValue, extension, data.path, params.app)) {
         throw new Error('Target file already exists, cannot proceed with rename');
     }

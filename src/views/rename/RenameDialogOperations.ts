@@ -21,7 +21,8 @@ export interface RenameExecutionContext {
 export async function executeRename(
     context: RenameExecutionContext,
     pathValue: string,
-    nameValue: string
+    nameValue: string,
+    extensionValue?: string
 ): Promise<void> {
     context.handlePostOperationInteraction(true);
     context.showProgress();
@@ -31,6 +32,7 @@ export async function executeRename(
             data: context.data,
             pathValue,
             nameValue,
+            extensionValue,
             modeSelection: context.modeSelection,
             shouldShowModeSelection: () => shouldShowModeSelectionUtil(context.data),
             app: context.app
