@@ -120,7 +120,7 @@ export function createActionButtons(item: VItem, _app: App): HTMLElement {
   const container = document.createElement('div');
   container.className = 'dotn_action-buttons-container';
 
-  if (item.kind === 'virtual') {
+  if (item.kind === 'virtual' || item.kind === 'suggestion') {
     const createNoteBtn = document.createElement('div');
     createNoteBtn.className = 'dotn_button-icon';
     createNoteBtn.title = t('tooltipCreateNote', { path: item.id });

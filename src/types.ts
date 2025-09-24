@@ -126,7 +126,7 @@ export const DEFAULT_MORE_MENU: MoreMenuItem[] = [
         type: 'builtin',
         builtin: 'create-child',
         icon: 'copy-plus',
-        showFor: ['file', 'folder', 'virtual']
+        showFor: ['file', 'folder', 'virtual', 'suggestion']
     },
     {
         id: 'builtin-open-closest-parent',
