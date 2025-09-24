@@ -923,11 +923,13 @@
     box-shadow: 0 0 0 2px var(--interactive-accent-hover);
 }
 
-.rename-extension-display {
+.rename-extension-display,
+.is-mobile .rename-extension-display {
     display: inline-block;
     width: 4rem;
     padding: 8px 12px !important;
     height: 36px !important;
+    background: var(--background-primary);
 
     border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
