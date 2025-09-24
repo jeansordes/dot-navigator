@@ -42,14 +42,17 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   const imageExts = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'tif', 'tiff', 'avif', 'heic', 'heif']);
   const audioExts = new Set(['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'aiff']);
   const videoExts = new Set(['mp4', 'mov', 'avi', 'mkv', 'webm']);
+  const codeExts = new Set(['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'yaml', 'yml', 'toml', 'ini', 'conf', 'cfg', 'config', 'props', 'props.tsx', 'props.ts']);
+  const txtExts = new Set(['txt', 'pdf', 'doc', 'docx']);
 
   let iconName: string | null = null;
   if (imageExts.has(ext)) iconName = 'file-image';
   else if (audioExts.has(ext)) iconName = 'file-audio';
   else if (videoExts.has(ext)) iconName = 'file-video';
+  else if (codeExts.has(ext)) iconName = 'file-code';
+  else if (txtExts.has(ext)) iconName = 'file-text';
   else if (ext === 'excalidraw' || item.name.endsWith('excalidraw')) iconName = 'pen-tool';
   else if (ext === 'canvas') iconName = 'layout-dashboard';
-  else if (ext === 'pdf') iconName = 'file-text';
   else if (ext === 'base') iconName = 'layout-list';
   else iconName = 'file-question';
 
@@ -61,7 +64,7 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
 }
 
 export function createTitleElement(item: RowItem): HTMLElement {
-  const titleClass = item.kind === 'virtual'
+  const titleClass = item.kind === 'virtual' || item.kind === 'suggestion'
     ? 'dotn_tree-item-title mod-create-new'
     : item.kind === 'file'
       ? 'dotn_tree-item-title is-clickable'
