@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, ButtonComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, ButtonComponent, Notice } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, FILE_TREE_VIEW_TYPE } from '../types';
 import { addFileCreationSection } from './FileCreationSettings';
@@ -52,7 +52,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     addSchemaConfigurationSection(containerEl, this.plugin.settings, {
       updateTreeView: this.updateTreeView.bind(this),
       saveSettings: this.plugin.saveSettings.bind(this.plugin),
-      refreshDisplay: this.display.bind(this)
+      refreshDisplay: this.display.bind(this),
+      reloadConfig: this.reloadConfig.bind(this)
     }, this.app);
 
     // More menu section
@@ -160,5 +161,29 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       icon: 'dot',
       showFor: ['file']
     };
+  }
+
+  private async reloadConfig(): Promise<void> {
+    try {
+      // Get the config file path from settings
+      const configPath = this.plugin.settings.dendronConfigFilePath || 'dendron.yaml';
+
+      // Refresh the schema manager to reload the dendron.yaml file
+      const schemaManager = this.plugin.getSchemaManager();
+      if (schemaManager) {
+        await schemaManager.refresh(true); // Force refresh from disk
+        new Notice(`Reloaded Dendron config: ${configPath}`);
+      }
+
+      // Update the tree view to reflect schema changes
+      await this.updateTreeView();
+
+      // Refresh the settings display to update any schema-dependent UI
+      this.display();
+    } catch (error: unknown) {
+      console.error('Failed to reload config:', error);
+      const message = error instanceof Error ? error.message : String(error);
+      new Notice(`Failed to reload config: ${message}`);
+    }
   }
 }

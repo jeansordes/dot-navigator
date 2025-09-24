@@ -31,6 +31,10 @@
     --dotn_border-color: var(--background-modifier-border);
     --dotn_text-faint: var(--text-faint);
 
+    /* Orange colors for warnings */
+    --color-orange: #e69500;
+    --color-orange-rgb: 230, 149, 0;
+
     /* Sizes */
     --dotn_square-size: 1.5rem;
     --dotn_button-icon-size: 14px;
@@ -40,23 +44,6 @@
     --dotn_view-padding: 8px;
     --dotn_font-size: var(--font-ui-small);
     --dotn_font-size-small: 0.6rem;
-}
-
-/* Settings styles */
-.dotnav-config-preview {
-    margin-top: 8px;
-}
-
-.dotnav-config-content {
-    max-height: 200px;
-    overflow: auto;
-    font-size: 0.8em;
-    background-color: var(--background-secondary);
-    padding: 8px;
-    border-radius: 4px;
-    margin-top: 4px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
 }
 
 /* Utility class for text measurement */
@@ -146,8 +133,7 @@
 
     .dotn_tree-item-self {
         display: flex;
-        width: max-content;
-        /* Allow container to grow based on content */
+        /* width: max-content; - Removed to allow JavaScript width control */
         min-width: 100%;
         /* Ensure it's at least as wide as the parent */
         gap: var(--dotn_gap);
@@ -180,6 +166,13 @@
 
     .dotn_tree-item-title[data-node-kind="folder"],
     .dotn_tree-item-title[data-node-kind="virtual"] {
+        background-color: unset;
+    }
+
+    /* Schema-suggested virtual nodes styling */
+    .dotn_tree-item-title[data-node-kind="suggestion"] {
+        border: 1px dashed var(--dotn_accent-color);
+        color: var(--dotn_accent-color);
         background-color: unset;
     }
 
@@ -614,8 +607,9 @@
     display: flex;
     align-items: center;
     /* Allow rows to expand horizontally to content while still filling panel */
-    width: max-content;
+    /* width: max-content; - Removed to allow JavaScript width control */
     min-width: 100%;
+    width: 100%; /* Default to full width, let JS override as needed */
 }
 
 .tree-row .dotn_indent {
@@ -914,10 +908,11 @@
 }
 
 .rename-path-input:focus,
-.rename-name-input:focus {
-    outline: none;
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+.rename-name-input:focus,
+.rename-extension-display:focus {
+    outline: none !important;
+    border-color: var(--interactive-accent) !important;
+    box-shadow: 0 0 0 2px var(--interactive-accent-hover) !important;
 }
 
 .rename-path-input.full-path-selected,
@@ -930,15 +925,18 @@
 
 .rename-extension-display {
     display: inline-block;
-    font-family: var(--font-monospace);
-    color: var(--text-muted);
-    background: var(--background-secondary);
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 14px;
+    width: 60px;
+    padding: 8px 12px !important;
+    height: 36px !important;
+
     border: 1px solid var(--background-modifier-border);
-    white-space: nowrap;
-    margin-left: 4px;
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    line-height: 1.4;
 }
 
 .rename-mode-container {
@@ -1215,6 +1213,24 @@
     color: var(--color-red);
 }
 
+.rename-extension-warning-message {
+    margin: 8px 0 12px 0;
+    padding: 12px;
+    background: rgba(var(--color-orange-rgb), 0.1);
+    border: 1px solid rgba(var(--color-orange-rgb), 0.3);
+    border-radius: 6px;
+    border-left: 4px solid var(--color-orange);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.rename-extension-warning-message .rename-warning-icon svg {
+    color: var(--color-orange);
+}
+
 .rename-warning-content {
     flex: 1;
 }
@@ -1440,4 +1456,37 @@
 
 .display-flex {
     display: flex;
+}
+
+
+/* Path validation styles */
+.dotnav-path-validation {
+    margin-bottom: 1rem;
+}
+
+.dotnav-validation-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: var(--font-ui-smaller);
+    font-weight: 500;
+}
+
+.dotnav-validation-success {
+    background-color: rgba(25, 135, 84, 0.08);
+    border: 1px solid var(--text-success);
+    color: var(--text-success);
+}
+
+.dotnav-validation-error {
+    background-color: rgba(220, 38, 38, 0.08);
+    border: 1px solid var(--text-error);
+    color: var(--text-error);
+}
+
+.dotnav-validation-icon {
+    font-weight: bold;
+    font-size: var(--font-ui-small);
 }
