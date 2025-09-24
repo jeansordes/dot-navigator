@@ -1,3 +1,9 @@
+## [1.21.4](https://github.com/jeansordes/dot-navigator/compare/1.21.3...1.21.4) (2025-09-24)
+
+### Bug Fixes
+
+* **ui:** reduce the width of extension input in rename modal ON MOBILE ([f32b641](https://github.com/jeansordes/dot-navigator/commit/f32b6417ab355d35ff41f7be1978fadf533addb0))
+
 ## [1.21.3](https://github.com/jeansordes/dot-navigator/compare/1.21.2...1.21.3) (2025-09-24)
 
 ### Bug Fixes
