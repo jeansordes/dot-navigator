@@ -1,3 +1,9 @@
+## [1.21.1](https://github.com/jeansordes/dot-navigator/compare/1.21.0...1.21.1) (2025-09-24)
+
+### Features
+
+* **ui:** add create file button for suggestion nodes ([7350ac3](https://github.com/jeansordes/dot-navigator/commit/7350ac349fb1ee06a613621fe4f6218c57154718))
+
 # [1.21.0](https://github.com/jeansordes/dot-navigator/compare/1.20.12-beta.0...1.21.0) (2025-09-24)
 
 ### Features
