@@ -1,7 +1,7 @@
 {
 	"name": "dot-navigator",
 	"type": "module",
-	"version": "1.20.12-beta.0",
+	"version": "1.21.0",
 	"description": "A hierarchical note management system for your vault",
 	"main": "main.js",
 	"scripts": {

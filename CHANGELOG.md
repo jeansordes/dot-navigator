@@ -1,3 +1,16 @@
+# [1.21.0](https://github.com/jeansordes/dot-navigator/compare/1.20.12-beta.0...1.21.0) (2025-09-24)
+
+### Features
+
+* add schema suggestion node type and update data models ([21f425e](https://github.com/jeansordes/dot-navigator/commit/21f425ec74d4bf0f06a2a303258411903ae8c1f6))
+* enhance schema manager with debugging and event handling ([b4679e8](https://github.com/jeansordes/dot-navigator/commit/b4679e8ec49f348f8737322ca6fba394b4e0b664))
+* enhance schema parsing and validation functionality ([c74a9a5](https://github.com/jeansordes/dot-navigator/commit/c74a9a5f5c92adba1628e26d4b32e3edc57c2848))
+* **i18n:** update schema configuration strings ([9789f88](https://github.com/jeansordes/dot-navigator/commit/9789f887d34a2c4e728152ea931ecc84ed1d4f69))
+* **settings:** enhance settings management with Dendron config file support ([2dc94ec](https://github.com/jeansordes/dot-navigator/commit/2dc94ecd4a04d78c02469ead1541fc5d81454d47))
+* **ui:** add extension input field to rename dialog ([cd9e43d](https://github.com/jeansordes/dot-navigator/commit/cd9e43d2c05521c8e472fcf895f180cddfa178c0))
+* **ui:** add real-time schema config path validation and reload ([57739da](https://github.com/jeansordes/dot-navigator/commit/57739daac68753fad8f8c9d0e4f60af9b9ee56dd))
+* **ui:** enhance file type icons and schema suggestion styling ([5663b50](https://github.com/jeansordes/dot-navigator/commit/5663b506201afb50bd1cb8b5542144f2f1004f7a))
+
 ## [1.20.12-beta.0](https://github.com/jeansordes/dot-navigator/compare/1.20.11...1.20.12-beta.0) (2025-09-23)
 
 ### Features
