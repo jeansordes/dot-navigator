@@ -22,7 +22,7 @@ export function setupPathInput(
     setAutocompleteState: (state: AutocompleteState | null) => void,
     handlePostOperationInteraction: () => void,
     getModeSelection: () => RenameMode,
-    nameInput: HTMLTextAreaElement,
+    getNameInput: () => HTMLTextAreaElement,
     extensionInput?: HTMLInputElement
 ): PathInputSetupResult {
     let pathInput: HTMLTextAreaElement;
@@ -41,7 +41,7 @@ export function setupPathInput(
             handlePostOperationInteraction();
             validatePath(pathInput.value, app, contentEl);
             autoResize(pathInput);
-            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
+            validateAndShowWarning(pathInput.value.trim(), getNameInput().value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
         });
         pathInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -59,7 +59,7 @@ export function setupPathInput(
                 pathInput.selectionStart = pathInput.selectionEnd = start + singleLine.length;
                 autoResize(pathInput);
                 validatePath(pathInput.value, app, contentEl);
-                validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
+                validateAndShowWarning(pathInput.value.trim(), getNameInput().value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
             }
         });
         const getState = setupPathAutocomplete(
@@ -68,8 +68,8 @@ export function setupPathInput(
             allDirectories,
             {
                 validatePath: () => validatePath(pathInput.value, app, contentEl),
-                validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl),
-                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), nameInput.value.trim(), app)
+                validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), getNameInput().value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl),
+                updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), getNameInput().value.trim(), app)
             }
         );
         autocompleteState = getState();

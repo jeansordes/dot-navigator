@@ -86,14 +86,6 @@ export function setupRenameDialogContent({
 
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
 
-    const nameInput = inputContainer.createEl('textarea', {
-        cls: 'rename-name-input',
-        placeholder: pathParts.name,
-        attr: { rows: '1' }
-    });
-    nameInput.value = pathParts.name;
-    autoResize(nameInput);
-
     const { pathInput, autocompleteState: newAutocompleteState } = setupPathInput(
         inputContainer,
         pathParts,
@@ -105,10 +97,18 @@ export function setupRenameDialogContent({
         setAutocompleteState,
         handlePostOperationInteraction,
         getModeSelection,
-        nameInput,
+        () => nameInput, // nameInput will be created after
         undefined
     );
     autocompleteState = newAutocompleteState;
+
+    const nameInput = inputContainer.createEl('textarea', {
+        cls: 'rename-name-input',
+        placeholder: pathParts.name,
+        attr: { rows: '1' }
+    });
+    nameInput.value = pathParts.name;
+    autoResize(nameInput);
 
     // Create extension input if needed
     const extensionInput = setupExtensionInput(inputContainer, data, pathInput, nameInput, app, contentEl, handlePostOperationInteraction);
