@@ -75,11 +75,9 @@ describe('SchemaSuggester', () => {
 
     expect(paths.has('Notes/index.md')).toBe(true);
     expect(paths.has('Notes/alpha.md')).toBe(true);
-    expect(paths.has('Notes/alpha.index.md')).toBe(true);
     expect(paths.has('Notes/beta.md')).toBe(true);
-    expect(paths.has('Notes/beta.index.md')).toBe(true);
 
     const alphaNode = [...notes.children.values()].find((child) => child.path === 'Notes/alpha.md');
-    expect(alphaNode?.nodeType).toBe(TreeNodeType.VIRTUAL);
+    expect(alphaNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
   });
 });

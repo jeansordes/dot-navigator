@@ -61,11 +61,13 @@ export class App {
     vault: Vault;
     workspace: Workspace;
     metadataCache: MetadataCache;
+    fileManager: FileManager;
 
     constructor() {
         this.vault = new Vault();
         this.workspace = new Workspace();
         this.metadataCache = new MetadataCache();
+        this.fileManager = new FileManager();
     }
 }
 
@@ -134,6 +136,16 @@ export class WorkspaceLeaf {
     view: ItemView | null = null;
 
     async openFile(__file: TFile): Promise<void> {
+        // Mock implementation
+    }
+}
+
+export class FileManager {
+    async renameFile(__file: TFile | TFolder, __newPath: string): Promise<void> {
+        // Mock implementation
+    }
+
+    async trashFile(__file: TFile | TFolder): Promise<void> {
         // Mock implementation
     }
 }
