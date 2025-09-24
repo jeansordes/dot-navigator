@@ -2,7 +2,7 @@
  * Utility functions for autocomplete functionality
  */
 
-import { performFuzzySearch, createHighlightedText } from '../search/FuzzySearchUtils';
+import { performFuzzySearch, createHighlightedText } from './FuzzySearchUtils';
 import { autoResize, updateSuggestionSelection } from '../ui/UIUtils';
 import { t } from '../../i18n';
 import { setIcon } from 'obsidian';

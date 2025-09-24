@@ -23,7 +23,7 @@ export function flattenTree(
       kind: n.kind,
       extension: n.extension,
       level,
-      hasChildren
+      hasChildren 
     });
     if (hasChildren) {
       const isOpen = expandedMap.get(n.id) ?? n.expanded ?? false;
