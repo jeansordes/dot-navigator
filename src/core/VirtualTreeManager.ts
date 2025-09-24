@@ -42,14 +42,22 @@ export class VirtualTreeManager {
     const root = tb.buildDendronStructure(folders, files);
 
     const useSchema = this.settings?.enableSchemaSuggestions ?? true;
+    debug('Schema suggestions enabled:', useSchema);
+
     if (useSchema && this.schemaManager) {
       try {
         const index = await this.schemaManager.ensureLatest();
+        debug('Applying schema suggestions with', Array.from(index.entries.keys()).length, 'schemas available');
+
         const suggester = new SchemaSuggester(index);
         suggester.apply(root);
       } catch (error) {
         debugError('Failed to apply schema suggestions during init:', error);
       }
+    } else if (!useSchema) {
+      debug('Schema suggestions disabled in settings');
+    } else if (!this.schemaManager) {
+      debug('No schema manager available');
     }
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 

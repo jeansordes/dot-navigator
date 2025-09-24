@@ -5,6 +5,7 @@ import { getYamlTitle } from './YamlTitleUtils';
 export class DendronEventHandler {
     private app: App;
     private refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void;
+    private schemaReloadCallback?: () => Promise<void>;
     private refreshDebounceTimeout: number | null = null;
     // Default debounce time of 500ms for better performance
     private debounceWaitTime = 500;
@@ -17,10 +18,11 @@ export class DendronEventHandler {
     private readonly graceMs = 300; // keep very small to reduce perceived lag
     private schemaRegex: RegExp;
 
-    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string) {
+    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>) {
         this.app = app;
         this.refreshCallback = refreshCallback;
-        this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || '.dendron.yaml');
+        this.schemaReloadCallback = schemaReloadCallback;
+        this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || 'dendron.yaml');
         if (debounceTime !== undefined) {
             this.debounceWaitTime = debounceTime;
         }
@@ -87,6 +89,12 @@ export class DendronEventHandler {
         if (!(file instanceof TFile)) return;
         const path = file.path;
         if (this.isSchemaFile(path)) {
+            // Reload schema configuration when config file is modified
+            if (this.schemaReloadCallback) {
+                this.schemaReloadCallback().catch(error => {
+                    console.error('Failed to reload schema config:', error);
+                });
+            }
             this.queueRefresh(path, true, true);
             return;
         }
@@ -102,6 +110,12 @@ export class DendronEventHandler {
     private handleMetadataChange = (file: TFile) => {
         const path = file.path;
         if (this.isSchemaFile(path)) {
+            // Reload schema configuration when config file is modified
+            if (this.schemaReloadCallback) {
+                this.schemaReloadCallback().catch(error => {
+                    console.error('Failed to reload schema config:', error);
+                });
+            }
             this.queueRefresh(path, true, true);
             return;
         }
