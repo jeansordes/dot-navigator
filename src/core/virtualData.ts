@@ -3,7 +3,7 @@ import { FileUtils } from '../utils/file/FileUtils';
 import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
 import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
 
-export type Kind = 'folder' | 'file' | 'virtual';
+export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
 export interface VItem {
   id: string;
@@ -25,6 +25,7 @@ export function nodeKind(node: TreeNode): Kind {
     case TreeNodeType.FOLDER: return 'folder';
     case TreeNodeType.FILE: return 'file';
     case TreeNodeType.VIRTUAL: return 'virtual';
+    case TreeNodeType.SUGGESTION: return 'suggestion';
   }
   return 'virtual';
 }

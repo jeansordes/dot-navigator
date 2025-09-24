@@ -23,7 +23,7 @@ export interface PluginSettings {
     autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
-    dendronConfigFilePath?: string; // Path to the dendron config file (default: .dendron.yaml)
+    dendronConfigFilePath?: string; // Path to the dendron config file (default: dendron.yaml)
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -35,15 +35,16 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     viewWasOpen: true, // Auto-open the panel on first install
     defaultNewFileName: '', // Empty string means use i18n default
     autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
-    transformDashesToSpaces: DashTransformation.SENTENCE_CASE, // Transform dashes to spaces and capitalize first letter of note names for better readability
+    transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
-    dendronConfigFilePath: '.dendron.yaml' // Default dendron config file path
+    dendronConfigFilePath: 'dendron.yaml' // Default dendron config file path
 }
 
 export enum TreeNodeType {
     FILE = 'file',
     FOLDER = 'folder',
-    VIRTUAL = 'virtual'
+    VIRTUAL = 'virtual',
+    SUGGESTION = 'suggestion'
 }
 
 export interface TreeNode {
@@ -60,7 +61,7 @@ export interface VirtualTreeBaseItem {
     name: string;
     originalName?: string;
     title?: string;
-    kind: 'file' | 'folder' | 'virtual';
+    kind: 'file' | 'folder' | 'virtual' | 'suggestion';
     // Optional file extension (present for files when available)
     extension?: string;
     children?: VirtualTreeBaseItem[];
@@ -89,7 +90,7 @@ export interface WindowResult {
 }
 
 // More menu customization
-export type MenuItemKind = 'file' | 'folder' | 'virtual';
+export type MenuItemKind = 'file' | 'folder' | 'virtual' | 'suggestion';
 
 export interface MoreMenuItemBase {
     id: string; // unique id

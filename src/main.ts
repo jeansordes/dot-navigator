@@ -16,6 +16,10 @@ export default class DotNavigatorPlugin extends Plugin {
     private renameManager?: RenameManager;
     private schemaManager?: SchemaManager;
 
+    getSchemaManager(): SchemaManager | undefined {
+        return this.schemaManager;
+    }
+
     async onload() {
         // Toggle debug output dynamically using debug.enable/disable
         // Dev: enable our namespaces; Prod: disable all
@@ -44,7 +48,7 @@ export default class DotNavigatorPlugin extends Plugin {
         
         await this.loadSettings();
 
-        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || '.dendron.yaml');
+        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || 'dendron.yaml');
 
         // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);
