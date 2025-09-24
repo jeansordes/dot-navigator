@@ -31,16 +31,23 @@ export interface NavigationContext {
     validatePath: () => void;
     validateAndShowWarning: () => void;
     updateAllFileItems: (childrenList: HTMLElement) => void;
+    extensionInput?: HTMLInputElement;
+}
+
+export interface NavigationInputs {
+    pathInput: HTMLTextAreaElement;
+    nameInput: HTMLTextAreaElement;
+    extensionInput?: HTMLInputElement;
 }
 
 /**
  * Set up keyboard navigation between input fields
  */
 export function setupInputNavigation(
-    input: HTMLTextAreaElement,
+    input: HTMLTextAreaElement | HTMLInputElement,
     context: NavigationContext
 ): void {
-    const { pathInput, nameInput } = context;
+    const { pathInput, nameInput, extensionInput } = context;
 
     // Remove any existing navigation event listener to prevent duplicates
     const existingListener = input._navigationListener;
@@ -51,6 +58,7 @@ export function setupInputNavigation(
     const navigationHandler = (e: KeyboardEvent) => {
         const isPathInput = input === pathInput;
         const isNameInput = input === nameInput;
+        const isExtensionInput = input === extensionInput;
 
         if (e.key === 'ArrowRight' && isPathInput) {
             // At the end of path input, jump to beginning of name input
@@ -71,6 +79,26 @@ export function setupInputNavigation(
                 pathInput.focus();
                 const pathLength = pathInput.value.length;
                 pathInput.setSelectionRange(pathLength, pathLength);
+            }
+        } else if (e.key === 'ArrowRight' && isNameInput) {
+            // At the end of name input, jump to beginning of extension input
+            const cursorPosition = input.selectionStart || 0;
+            const inputLength = input.value.length;
+
+            if (cursorPosition === inputLength && extensionInput) {
+                e.preventDefault();
+                extensionInput.focus();
+                extensionInput.setSelectionRange(0, 0);
+            }
+        } else if (e.key === 'ArrowLeft' && isExtensionInput) {
+            // At the beginning of extension input, jump to end of name input
+            const cursorPosition = input.selectionStart || 0;
+
+            if (cursorPosition === 0 && nameInput) {
+                e.preventDefault();
+                nameInput.focus();
+                const nameLength = nameInput.value.length;
+                nameInput.setSelectionRange(nameLength, nameLength);
             }
         } else if (e.key === 'ArrowUp' && isPathInput) {
             // Up arrow in path input: navigate suggestions and update input instantly
