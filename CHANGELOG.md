@@ -1,3 +1,9 @@
+## [1.21.2](https://github.com/jeansordes/dot-navigator/compare/1.21.1...1.21.2) (2025-09-24)
+
+### Bug Fixes
+
+* **ui:** correct input order in rename dialog ([823555e](https://github.com/jeansordes/dot-navigator/commit/823555ed0a3522fe999503545ff090119edb8229))
+
 ## [1.21.1](https://github.com/jeansordes/dot-navigator/compare/1.21.0...1.21.1) (2025-09-24)
 
 ### Features
