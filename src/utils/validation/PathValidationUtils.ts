@@ -106,6 +106,50 @@ export function hideWarning(contentEl: HTMLElement): void {
 }
 
 /**
+ * Show warning for extension change
+ */
+export function showExtensionChangeWarning(contentEl: HTMLElement): HTMLElement {
+    // Remove existing extension warning if any
+    hideExtensionChangeWarning(contentEl);
+
+    // Create warning element
+    const warningElement = contentEl.createEl('div', { cls: 'rename-extension-warning-message' });
+
+    // Add warning icon
+    const iconContainer = warningElement.createEl('div', { cls: 'rename-warning-icon' });
+    setIcon(iconContainer, 'info');
+
+    // Add warning content
+    const contentDiv = warningElement.createEl('div', { cls: 'rename-warning-content' });
+    contentDiv.createEl('div', {
+        text: 'Extension change',
+        cls: 'rename-warning-title'
+    });
+    contentDiv.createEl('div', {
+        text: 'Changing the extension will only affect this file. Other notes with the same name will keep their original extensions.',
+        cls: 'rename-warning-description'
+    });
+
+    // Position after the input container
+    const inputContainer = contentEl.querySelector('.rename-input-container');
+    if (inputContainer) {
+        inputContainer.insertAdjacentElement('afterend', warningElement);
+    }
+
+    return warningElement;
+}
+
+/**
+ * Hide extension change warning
+ */
+export function hideExtensionChangeWarning(contentEl: HTMLElement): void {
+    const warningElement = contentEl.querySelector('.rename-extension-warning-message');
+    if (warningElement instanceof HTMLElement) {
+        warningElement.remove();
+    }
+}
+
+/**
  * Validate inputs and show/hide warning as needed
  */
 export function validateAndShowWarning(
@@ -120,5 +164,20 @@ export function validateAndShowWarning(
         showWarning(contentEl);
     } else {
         hideWarning(contentEl);
+    }
+}
+
+/**
+ * Validate extension change and show warning if needed
+ */
+export function validateAndShowExtensionWarning(
+    currentExtension: string,
+    originalExtension: string | undefined,
+    contentEl: HTMLElement
+): void {
+    if (originalExtension && currentExtension !== originalExtension) {
+        showExtensionChangeWarning(contentEl);
+    } else {
+        hideExtensionChangeWarning(contentEl);
     }
 }

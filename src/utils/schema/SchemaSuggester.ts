@@ -29,6 +29,10 @@ export class SchemaSuggester {
     const queue: TreeNode[] = [];
 
     const visit = (node: TreeNode): void => {
+      // Don't process suggestion nodes
+      if (node.nodeType === TreeNodeType.SUGGESTION) {
+        return;
+      }
       nodeMap.set(node.path, node);
       queue.push(node);
       node.children.forEach((child) => visit(child));
@@ -37,6 +41,9 @@ export class SchemaSuggester {
     visit(root);
 
     const processedPairs = new Set<string>();
+    let totalSuggestions = 0;
+
+    debug('Starting schema suggestions application. Available schemas:', Array.from(this.index.entries.keys()));
 
     while (queue.length) {
       const node = queue.shift();
@@ -56,14 +63,47 @@ export class SchemaSuggester {
         for (const canonicalId of canonicalChildIds) {
           const actualId = this.mapChildId(canonicalId, schema.id, effectiveId);
           const suggestionPath = this.buildSuggestionPath(context, effectiveId, actualId);
-          if (!suggestionPath) continue;
-          if (nodeMap.has(suggestionPath)) continue;
+
+          if (!suggestionPath || nodeMap.has(suggestionPath)) {
+            continue;
+          }
+
           const newNode = this.ensureNode(root, suggestionPath, nodeMap);
           if (newNode) {
-            queue.push(newNode);
+            totalSuggestions++;
           }
         }
       }
+    }
+
+    debug(`Schema suggestions complete. Created ${totalSuggestions} virtual nodes.`);
+  }
+
+  private matchesGlob(text: string, pattern: string): boolean {
+    // Convert glob pattern to regex
+    // * matches any sequence of characters except .
+    // ** matches any sequence of characters including .
+    const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+    const globRegex = escaped.replace(/\*\*/g, '.*').replace(/\*/g, '[^.]*');
+    const regex = new RegExp(`^${globRegex}$`);
+    return regex.test(text);
+  }
+
+  private matchesRegexp(text: string, pattern: string): boolean {
+    try {
+      const regex = new RegExp(pattern);
+      // Test the regex with a timeout to prevent catastrophic backtracking
+      const startTime = Date.now();
+      const result = regex.test(text);
+      const elapsed = Date.now() - startTime;
+      if (elapsed > 100) { // More than 100ms is suspiciously slow
+        debugError('Regexp pattern took too long to execute:', pattern, `(${elapsed}ms)`);
+        return false; // Treat slow regexes as failures to prevent hangs
+      }
+      return result;
+    } catch (error) {
+      debugError('Invalid regexp pattern:', pattern, error);
+      return false;
     }
   }
 
@@ -86,6 +126,16 @@ export class SchemaSuggester {
       }
       if (schema.pattern.type === 'choice' && schema.pattern.values.includes(relative)) {
         return { schema, effectiveId };
+      }
+      if (schema.pattern.type === 'glob') {
+        if (this.matchesGlob(relative, schema.pattern.value)) {
+          return { schema, effectiveId };
+        }
+      }
+      if (schema.pattern.type === 'regexp') {
+        if (this.matchesRegexp(relative, schema.pattern.value)) {
+          return { schema, effectiveId };
+        }
       }
     }
 
@@ -190,7 +240,6 @@ export class SchemaSuggester {
     const parentNode = map.get(parentPath) ?? this.ensureNode(root, parentPath, map);
     if (!parentNode) return null;
 
-    const nodeType = path.endsWith('.md') ? TreeNodeType.VIRTUAL : TreeNodeType.FOLDER;
     const keyBase = FileUtils.basename(path) || path;
     let key = keyBase;
     let counter = 1;
@@ -203,7 +252,7 @@ export class SchemaSuggester {
 
     const newNode: TreeNode = {
       path,
-      nodeType,
+      nodeType: TreeNodeType.SUGGESTION,
       obsidianResource: undefined,
       children: new Map(),
     };

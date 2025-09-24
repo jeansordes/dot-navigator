@@ -13,6 +13,49 @@ import {
 
 const debug = createDebug('dot-navigator:schema:parser');
 
+/**
+ * Extracts the first complete JSON object from a file content.
+ * Looks for JSON in codeblocks (```json or ```yaml) or raw JSON in the content.
+ */
+function extractJSON(content: string): string | null {
+  // First, try to find JSON within codeblocks
+  const codeblockRegex = /```(?:json|yaml)\s*\n?([\s\S]*?)```/g;
+  let match;
+
+  while ((match = codeblockRegex.exec(content)) !== null) {
+    const codeblockContent = match[1].trim();
+    if (codeblockContent) {
+      try {
+        // Validate that it's valid JSON
+        JSON.parse(codeblockContent);
+        return codeblockContent;
+      } catch {
+        // Not valid JSON, continue searching
+        continue;
+      }
+    }
+  }
+
+  // If no valid JSON found in codeblocks, try to find raw JSON objects
+  // Look for objects starting with { and ending with }
+  const jsonObjectRegex = /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
+  let jsonMatch;
+
+  while ((jsonMatch = jsonObjectRegex.exec(content)) !== null) {
+    const potentialJson = jsonMatch[0];
+    try {
+      // Validate that it's valid JSON
+      JSON.parse(potentialJson);
+      return potentialJson;
+    } catch {
+      // Not valid JSON, continue searching
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export interface SchemaParseResult {
   entries: SchemaEntry[];
   errors: SchemaError[];
@@ -52,7 +95,7 @@ function coerceArray(value: unknown): unknown[] {
   return [value];
 }
 
-function parsePattern(raw: unknown): SchemaPattern | undefined {
+function parsePattern(raw: unknown, file: string, errors: SchemaError[]): SchemaPattern | undefined {
   if (!isRecord(raw)) return undefined;
   const obj = raw;
   const typeRaw = toString(obj.type ?? obj.kind ?? obj.pattern);
@@ -90,6 +133,15 @@ function parsePattern(raw: unknown): SchemaPattern | undefined {
   if (type === 'regexp' || type === 'regex' || type === 'pattern') {
     const value = toString(obj.value ?? obj.pattern ?? obj.regex);
     if (!value) return undefined;
+
+    // Validate regex pattern early to prevent crashes
+    try {
+      new RegExp(value);
+    } catch (error) {
+      errors.push({ file, message: `Invalid regex pattern: ${value}`, details: error instanceof Error ? error.message : error });
+      return undefined;
+    }
+
     return { type: 'regexp', value };
   }
 
@@ -165,11 +217,34 @@ export function parseSchemaFile(contents: string, filePath: string): SchemaParse
   const errors: SchemaError[] = [];
   let doc: unknown;
 
-  try {
-    doc = parse(contents);
-  } catch (error) {
-    errors.push({ file: filePath, message: 'Failed to parse YAML', details: error instanceof Error ? error.message : error });
-    return { entries: [], errors };
+  // First, try to extract and parse JSON from the file
+  const jsonContent = extractJSON(contents);
+  if (jsonContent) {
+    try {
+      doc = JSON.parse(jsonContent);
+      debug('Parsed JSON content from file %s', filePath);
+    } catch (error) {
+      errors.push({ file: filePath, message: 'Failed to parse extracted JSON', details: error instanceof Error ? error.message : error });
+      // Continue to try YAML parsing as fallback
+    }
+  }
+
+  // If no JSON was found or JSON parsing failed, try YAML parsing
+  if (!doc) {
+    try {
+      // Strip Obsidian frontmatter if present before parsing YAML
+      let yamlContent = contents;
+      const frontmatterMatch = contents.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
+      if (frontmatterMatch) {
+        yamlContent = frontmatterMatch[1];
+      }
+
+      doc = parse(yamlContent);
+      debug('Parsed YAML content from file %s', filePath);
+    } catch (error) {
+      errors.push({ file: filePath, message: 'Failed to parse YAML', details: error instanceof Error ? error.message : error });
+      return { entries: [], errors };
+    }
   }
 
   const rawFile = asRawSchemaFile(doc);
@@ -201,7 +276,7 @@ export function parseSchemaFile(contents: string, filePath: string): SchemaParse
 
     const namespaceBool = toBoolean(entry.namespace);
     const parent = toString(entry.parent);
-    const pattern = parsePattern(entry.pattern);
+    const pattern = parsePattern(entry.pattern, filePath, errors);
     const children = normalizeChildren(entry.children, filePath, errors);
     const title = toString(entry.title);
 

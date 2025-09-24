@@ -106,7 +106,7 @@ export class SchemaManager {
   private index: SchemaIndex = rebuildIndex(new Map());
   private inflight: Promise<void> | null = null;
 
-  constructor(app: App, configFilePath: string = '.dendron.yaml') {
+  constructor(app: App, configFilePath: string = 'dendron.yaml') {
     this.app = app;
     this.configFilePath = configFilePath;
   }
@@ -126,19 +126,57 @@ export class SchemaManager {
     }
   }
 
-  private async _refresh(force: boolean): Promise<void> {
-    const configRegex = createSchemaFileRegex(this.configFilePath);
-    const files = this.app.vault.getFiles().filter((file) => configRegex.test(file.path));
+  private   async _refresh(force: boolean): Promise<void> {
+    const files: TFile[] = [];
     const next = new Map<string, SchemaFileCache>();
+
+    debug('Looking for schema config files with pattern:', this.configFilePath);
+
+    // Try to get the file directly by path
+    try {
+      const directFile = this.app.vault.getAbstractFileByPath(this.configFilePath);
+      if (directFile && directFile instanceof TFile) {
+        files.push(directFile);
+        debug('Found config file directly:', directFile.path);
+      } else {
+        debug('Config file not found at path:', this.configFilePath);
+      }
+    } catch (error) {
+      debug('Error getting config file:', error);
+    }
+
+    // Also try the regex approach for files with different names
+    if (files.length === 0) {
+      const configRegex = createSchemaFileRegex(this.configFilePath);
+      const allFiles = this.app.vault.getFiles();
+      const regexFiles = allFiles.filter((file) => configRegex.test(file.path));
+      files.push(...regexFiles);
+      debug('Regex pattern:', configRegex.toString());
+      debug('Found potential config files via regex:', regexFiles.map(f => f.path));
+    }
 
     await Promise.all(files.map(async (file) => {
       const previous = this.cache.get(file.path);
       const cache = await loadSchemaFile(this.app, file, previous, force);
       next.set(file.path, cache);
+
+      if (cache.entries.length > 0) {
+        debug(`Loaded ${cache.entries.length} schema entries from ${file.path}:`, cache.entries.map(e => e.id));
+      } else {
+        debug(`No schema entries found in ${file.path}`);
+      }
+
+      if (cache.errors.length > 0) {
+        debugError(`Errors parsing ${file.path}:`, cache.errors);
+      }
     }));
 
     this.cache = next;
     this.index = rebuildIndex(next);
+
+    const totalEntries = Array.from(this.index.entries.values()).length;
+    const totalErrors = this.index.errors.length;
+    debug(`Schema refresh complete. Total entries: ${totalEntries}, Total errors: ${totalErrors}`);
   }
 
   getIndex(): SchemaIndex {

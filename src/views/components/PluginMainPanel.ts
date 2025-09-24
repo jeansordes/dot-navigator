@@ -1,4 +1,4 @@
-import { ItemView, TFile, WorkspaceLeaf, App } from 'obsidian';
+import { ItemView, TFile, WorkspaceLeaf, App, Notice } from 'obsidian';
 
 interface ObsidianInternalApp extends App {
   setting?: {
@@ -70,7 +70,13 @@ export default class PluginMainPanel extends ItemView {
         );
 
         // Lower debounce to make updates feel snappier; structural ops still coalesce
-        this.eventHandler = new DendronEventHandler(this.app, this.refresh.bind(this), 120, this.settings.dendronConfigFilePath || '.dendron.yaml');
+        this.eventHandler = new DendronEventHandler(
+            this.app,
+            this.refresh.bind(this),
+            120,
+            this.settings.dendronConfigFilePath || 'dendron.yaml',
+            this.reloadSchemaConfig.bind(this)
+        );
         // Controls will be initialized in onOpen when container is available
     }
 
@@ -224,6 +230,14 @@ export default class PluginMainPanel extends ItemView {
             if (this.activeFile) {
                 this.vtManager.revealPath(this.activeFile.path);
             }
+        }
+    }
+
+    async reloadSchemaConfig(): Promise<void> {
+        // Reload the schema configuration using the schema manager
+        if (this.schemaManager) {
+            await this.schemaManager.refresh(true);
+            new Notice(`Dendron config reloaded: ${this.settings.dendronConfigFilePath || 'dendron.yaml'}`);
         }
     }
 
