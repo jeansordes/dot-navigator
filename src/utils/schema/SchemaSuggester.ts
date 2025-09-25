@@ -24,7 +24,7 @@ export class SchemaSuggester {
     this.index = index;
   }
 
-  apply(root: TreeNode): void {
+  apply(root: TreeNode, filter?: (node: TreeNode) => boolean): void {
     const nodeMap = new Map<string, TreeNode>();
     const queue: TreeNode[] = [];
 
@@ -33,6 +33,16 @@ export class SchemaSuggester {
       if (node.nodeType === TreeNodeType.SUGGESTION) {
         return;
       }
+
+      // If filter is provided, only process nodes that pass the filter
+      if (filter && !filter(node)) {
+        // Still add to nodeMap for path resolution, but don't queue for processing
+        nodeMap.set(node.path, node);
+        // Still visit children in case they pass the filter
+        node.children.forEach((child) => visit(child));
+        return;
+      }
+
       nodeMap.set(node.path, node);
       queue.push(node);
       node.children.forEach((child) => visit(child));
