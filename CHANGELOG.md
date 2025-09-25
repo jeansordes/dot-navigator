@@ -1,3 +1,9 @@
+## [1.21.5-beta.0](https://github.com/jeansordes/dot-navigator/compare/1.21.4...1.21.5-beta.0) (2025-09-25)
+
+### Performance Improvements
+
+* implement lazy schema suggestions loading for better mobile performance ([f25d845](https://github.com/jeansordes/dot-navigator/commit/f25d845e84f79253ebd7c60b4b170906f05aa67d))
+
 ## [1.21.4](https://github.com/jeansordes/dot-navigator/compare/1.21.3...1.21.4) (2025-09-24)
 
 ### Bug Fixes
