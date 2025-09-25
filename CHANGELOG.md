@@ -1,3 +1,9 @@
+## [1.21.5-beta.1](https://github.com/jeansordes/dot-navigator/compare/1.21.5-beta.0...1.21.5-beta.1) (2025-09-25)
+
+### Performance Improvements
+
+* implement IndexedDB caching for instant tree loading ([7383116](https://github.com/jeansordes/dot-navigator/commit/738311679d0348dac431e45ab8e7001128ac442b))
+
 ## [1.21.5-beta.0](https://github.com/jeansordes/dot-navigator/compare/1.21.4...1.21.5-beta.0) (2025-09-25)
 
 ### Performance Improvements
