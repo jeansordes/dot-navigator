@@ -6,6 +6,7 @@ export class DendronEventHandler {
     private app: App;
     private refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void;
     private schemaReloadCallback?: () => Promise<void>;
+    private schemaConfigUpdateCallback?: (newPath: string) => Promise<void>;
     private refreshDebounceTimeout: number | null = null;
     // Default debounce time of 500ms for better performance
     private debounceWaitTime = 500;
@@ -18,10 +19,11 @@ export class DendronEventHandler {
     private readonly graceMs = 300; // keep very small to reduce perceived lag
     private schemaRegex: RegExp;
 
-    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>) {
+    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>, schemaConfigUpdateCallback?: (newPath: string) => Promise<void>) {
         this.app = app;
         this.refreshCallback = refreshCallback;
         this.schemaReloadCallback = schemaReloadCallback;
+        this.schemaConfigUpdateCallback = schemaConfigUpdateCallback;
         this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || 'dendron.yaml');
         if (debounceTime !== undefined) {
             this.debounceWaitTime = debounceTime;
@@ -76,6 +78,16 @@ export class DendronEventHandler {
     };
 
     private handleFileRename = (file: TAbstractFile, oldPath: string) => {
+        // Check if the renamed file is the current schema config file
+        if (this.isSchemaFile(oldPath) && file instanceof TFile) {
+            // The schema config file was renamed - update the setting
+            if (this.schemaConfigUpdateCallback) {
+                this.schemaConfigUpdateCallback(file.path).catch(error => {
+                    console.error('Failed to update schema config path:', error);
+                });
+            }
+        }
+
         // Defer to unified rebuild path; debounce lightly for stability
         if (file instanceof TFile) {
             const cached = this.yamlTitleCache.get(oldPath) ?? getYamlTitle(this.app, file.path);

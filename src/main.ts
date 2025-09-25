@@ -20,6 +20,21 @@ export default class DotNavigatorPlugin extends Plugin {
         return this.schemaManager;
     }
 
+    getPluginMainPanel(): PluginMainPanel | null {
+        return this.pluginMainPanel;
+    }
+
+    updateSchemaManager(): void {
+        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || 'dendron.yaml');
+    }
+
+    async updateSchemaConfigPath(): Promise<void> {
+        // The PluginMainPanel handles updating the SchemaManager
+        if (this.pluginMainPanel) {
+            await this.pluginMainPanel.updateSchemaConfigPath();
+        }
+    }
+
     async onload() {
         // Toggle debug output dynamically using debug.enable/disable
         // Dev: enable our namespaces; Prod: disable all
@@ -60,7 +75,7 @@ export default class DotNavigatorPlugin extends Plugin {
         this.registerView(
             FILE_TREE_VIEW_TYPE,
             (leaf) => {
-                this.pluginMainPanel = new PluginMainPanel(leaf, this.settings, this.renameManager, this.schemaManager);
+                this.pluginMainPanel = new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.schemaManager);
                 return this.pluginMainPanel;
             }
         );

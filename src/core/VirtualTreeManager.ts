@@ -227,4 +227,15 @@ export class VirtualTreeManager {
       await this.updateOnVaultChange();
     }
   }
+
+  /**
+   * Update the schema manager reference and refresh the tree
+   */
+  async updateSchemaManager(schemaManager: SchemaManager | undefined): Promise<void> {
+    this.schemaManager = schemaManager;
+    // Refresh the tree data with the new schema manager
+    if (this.vt && this.rootContainer) {
+      await this.updateOnVaultChange();
+    }
+  }
 }

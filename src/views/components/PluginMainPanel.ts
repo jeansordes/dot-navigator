@@ -6,6 +6,12 @@ interface ObsidianInternalApp extends App {
     openTabById(id: string): void;
   };
 }
+
+interface DotNavigatorPluginInterface {
+  saveSettings(): Promise<void>;
+  updateSchemaManager(): void;
+  getSchemaManager(): SchemaManager | undefined;
+}
 import { t } from '../../i18n';
 import { FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON } from '../../types';
 import { DendronEventHandler } from '../../utils/misc/EventHandler';
@@ -44,10 +50,13 @@ export default class PluginMainPanel extends ItemView {
     // Track initialization to avoid duplicate onOpen work
     private _onOpenCalled: boolean = false;
 
-    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, renameManager?: RenameManager, schemaManager?: SchemaManager) {
+    private plugin: DotNavigatorPluginInterface; // Reference to the main plugin instance
+
+    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, plugin: DotNavigatorPluginInterface, renameManager?: RenameManager, schemaManager?: SchemaManager) {
         super(leaf);
         this.instanceId = ++PluginMainPanel.instanceCounter;
         this.settings = settings;
+        this.plugin = plugin;
         this.renameManager = renameManager;
         this.schemaManager = schemaManager;
 
@@ -75,7 +84,8 @@ export default class PluginMainPanel extends ItemView {
             this.refresh.bind(this),
             120,
             this.settings.dendronConfigFilePath || 'dendron.yaml',
-            this.reloadSchemaConfig.bind(this)
+            this.reloadSchemaConfig.bind(this),
+            this.handleSchemaConfigRename.bind(this)
         );
         // Controls will be initialized in onOpen when container is available
     }
@@ -238,6 +248,45 @@ export default class PluginMainPanel extends ItemView {
         if (this.schemaManager) {
             await this.schemaManager.refresh(true);
             new Notice(`Dendron config reloaded: ${this.settings.dendronConfigFilePath || 'dendron.yaml'}`);
+        }
+    }
+
+    async handleSchemaConfigRename(newPath: string): Promise<void> {
+        // Update the setting
+        this.settings.dendronConfigFilePath = newPath;
+        await this.plugin.saveSettings();
+
+        // Update the main plugin's schema manager with the new path
+        this.plugin.updateSchemaManager();
+        this.schemaManager = this.plugin.getSchemaManager()!;
+
+        // Update all components with the new path
+        await this.updateSchemaConfigPath();
+    }
+
+    async updateSchemaConfigPath(): Promise<void> {
+        // Update the event handler to watch the new config file path
+        this.eventHandler.unregisterFileEvents();
+        this.eventHandler = new DendronEventHandler(
+            this.app,
+            this.refresh.bind(this),
+            120,
+            this.settings.dendronConfigFilePath || 'dendron.yaml',
+            this.reloadSchemaConfig.bind(this),
+            this.handleSchemaConfigRename.bind(this)
+        );
+        this.eventHandler.registerFileEvents();
+
+        // Update the schema manager reference in VirtualTreeManager
+        if (this.vtManager) {
+            await this.vtManager.updateSchemaManager(this.schemaManager);
+        }
+
+        // Refresh the schema to load the new config file
+        if (this.schemaManager) {
+            this.schemaManager.refresh(true).catch(error => {
+                console.error('Failed to refresh schema after config path update:', error);
+            });
         }
     }
 

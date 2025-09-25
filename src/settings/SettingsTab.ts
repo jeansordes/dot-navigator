@@ -168,7 +168,10 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       // Get the config file path from settings
       const configPath = this.plugin.settings.dendronConfigFilePath || 'dendron.yaml';
 
-      // Refresh the schema manager to reload the dendron.yaml file
+      // Update the schema manager and event handler to use the new config path
+      await this.plugin.updateSchemaConfigPath();
+
+      // Refresh the schema manager to reload the config file
       const schemaManager = this.plugin.getSchemaManager();
       if (schemaManager) {
         await schemaManager.refresh(true); // Force refresh from disk
