@@ -1,15 +1,17 @@
 import { App } from 'obsidian';
 import { ComplexVirtualTree } from '../views/tree/VirtualizedTree';
-import { TreeBuilder } from '../utils/tree/TreeBuilder';
 import { buildVirtualizedData } from './virtualData';
 import { RenameManager } from '../utils/rename/RenameManager';
-import { PluginSettings, TreeNode } from '../types';
-import createDebug from 'debug';
+import { PluginSettings } from '../types';
+import { TreeCacheManager, type CachedTreeData } from './TreeCacheManager';
+import { SchemaUtils } from './SchemaUtils';
+import { CacheUtils } from './CacheUtils';
+import { TreeRenderUtils } from './TreeRenderUtils';
+import { TreeUtils } from './TreeUtils';
+import createDebug from 'debug'; 
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
-import { computeGap, computeRowHeight } from '../utils/misc/measure';
 import { SchemaManager } from '../utils/schema/SchemaManager';
-import { SchemaSuggester } from '../utils/schema/SchemaSuggester';
 
 export class VirtualTreeManager {
   private app: App;
@@ -21,6 +23,8 @@ export class VirtualTreeManager {
   private schemaManager?: SchemaManager;
   private processedSuggestionNodes = new Set<string>();
   private suggestionDebounceTimer: number | null = null;
+  private cacheManager = new TreeCacheManager();
+  private usingCachedData = false;
 
   constructor(
     app: App,
@@ -42,97 +46,123 @@ export class VirtualTreeManager {
     } : () => this.applySuggestionsToExpandedNodesDebounced();
   }
 
-  private getExpandedNodePaths(root: TreeNode, expandedPaths: string[] = []): string[] {
-    const paths = new Set(expandedPaths);
-    const queue: TreeNode[] = [root];
 
-    while (queue.length > 0) {
-      const node = queue.shift();
-      if (!node) continue;
 
-      paths.add(node.path);
-
-      // Add children of expanded nodes
-      if (node.children) {
-        for (const [_key, child] of node.children) {
-          if (paths.has(child.path)) {
-            queue.push(child);
-          }
-        }
-      }
-    }
-
-    return Array.from(paths);
-  }
 
   async init(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     this.rootContainer = rootContainer;
-    const folders = this.app.vault.getAllFolders();
-    const files = this.app.vault.getFiles();
-    const tb = new TreeBuilder();
-    const root = tb.buildDendronStructure(folders, files);
+    const vaultPath = this.app.vault.getRoot().path;
 
-    const useSchema = this.settings?.enableSchemaSuggestions ?? true;
-    debug('Schema suggestions enabled:', useSchema);
+    const cachedData = await this.cacheManager.loadCache(vaultPath);
+    const shouldUseCache = await CacheUtils.shouldUseCache(cachedData, this.app, this.settings, this.schemaManager);
 
-    if (useSchema && this.schemaManager) {
-      try {
-        const index = await this.schemaManager.ensureLatest();
-        debug('Applying schema suggestions with', Array.from(index.entries.keys()).length, 'schemas available');
-
-        // For initial load, only apply suggestions to root level and expanded nodes to improve performance
-        const expandedNodePaths = this.getExpandedNodePaths(root, expanded || []);
-        const suggester = new SchemaSuggester(index);
-
-        // Filter to only process initially visible/expanded nodes
-        const initialFilter = (node: TreeNode): boolean => {
-          return expandedNodePaths.includes(node.path) || !node.path.includes('/'); // Include root level
-        };
-
-        suggester.apply(root, initialFilter);
-
-        // Mark processed nodes
-        expandedNodePaths.forEach(path => this.processedSuggestionNodes.add(path));
-
-      } catch (error) {
-        debugError('Failed to apply schema suggestions during init:', error);
-      }
-    } else if (!useSchema) {
-      debug('Schema suggestions disabled in settings');
-    } else if (!this.schemaManager) {
-      debug('No schema manager available');
+    if (shouldUseCache && cachedData) {
+      await this.loadFromCache(cachedData, rootContainer, expanded);
+      this.buildAndCacheTreeInBackground(expanded); // Rebuild in background
+    } else {
+      await this.buildAndRenderFreshTree(rootContainer, expanded);
     }
+  }
+
+  private async loadFromCache(
+    cachedData: CachedTreeData,
+    rootContainer: HTMLElement,
+    expanded?: string[]
+  ): Promise<void> {
+    this.usingCachedData = true;
+    this.processedSuggestionNodes = TreeUtils.loadProcessedSuggestionNodes(cachedData);
+    this.vt = await TreeRenderUtils.renderFromCache(
+      cachedData,
+      rootContainer,
+      this.app,
+      this.renameManager,
+      this.onExpansionChange,
+      expanded
+    );
+  }
+
+
+  private async buildAndRenderFreshTree(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
+    const root = TreeUtils.buildTreeStructure(this.app);
+    await SchemaUtils.applySchemaSuggestionsToTree(
+      root,
+      expanded || [],
+      true,
+      this.schemaManager,
+      this.settings,
+      this.processedSuggestionNodes
+    );
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 
-    const gap = computeGap(rootContainer) ?? 4;
-    const rowHeight = computeRowHeight(rootContainer) || (24 + gap);
-
-    if (this.vt) {
-      try { this.vt.destroy(); } catch (e) { debugError('Error destroying previous VT:', e); }
-      this.vt = null;
-    }
-
-    this.vt = new ComplexVirtualTree({
-      container: rootContainer,
+    TreeRenderUtils.destroyCurrentVirtualTree(this.vt);
+    this.vt = TreeRenderUtils.renderVirtualTree(
+      rootContainer,
       data,
-      rowHeight,
-      // TanStack overscan (items beyond viewport)
+      parentMap,
+      this.app,
+      this.renameManager,
+      this.onExpansionChange,
+      expanded
+    );
+    await CacheUtils.saveTreeToCache(
+      this.cacheManager,
+      data,
+      parentMap,
+      this.app,
+      this.processedSuggestionNodes,
+      this.settings,
+      this.schemaManager
+    );
+
+    debug('Virtual Tree init (fresh build)', {
+      rowHeight: TreeRenderUtils.computeRowHeight(rootContainer),
+      gap: TreeRenderUtils.computeGap(rootContainer),
       buffer: 8,
-      app: this.app,
-      gap,
-      onExpansionChange: () => this.onExpansionChange?.(),
-      renameManager: this.renameManager,
-    });
-    this.vt.setParentMap(parentMap);
-    if (expanded && expanded.length) this.vt.setExpanded(expanded);
-    // Debug init metrics
-    debug('Virtual Tree init', {
-      rowHeight,
-      gap,
-      buffer: 8,
-      items: data.length
+      items: data.length,
+      fromCache: false
     });
   }
+
+  private async buildAndCacheTreeInBackground(_expanded?: string[]): Promise<void> {
+    try {
+      debug('Starting background tree rebuild');
+
+      const root = TreeUtils.buildTreeStructure(this.app);
+      const expandedPaths = this.getExpandedPaths();
+      await SchemaUtils.applySchemaSuggestionsToTree(
+        root,
+        expandedPaths,
+        false,
+        this.schemaManager,
+        this.settings,
+        this.processedSuggestionNodes
+      );
+      const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
+
+      // Cache the rebuilt tree
+      await CacheUtils.saveTreeToCache(
+        this.cacheManager,
+        data,
+        parentMap,
+        this.app,
+        this.processedSuggestionNodes,
+        this.settings,
+        this.schemaManager
+      );
+
+      // If we're still using cached data, update to fresh data
+      if (this.usingCachedData && this.vt) {
+        debug('Updating tree with fresh data from background rebuild');
+        this.vt.updateData(data, parentMap);
+        this.onExpansionChange?.();
+        this.usingCachedData = false; // Now using fresh data
+      }
+
+    } catch (error) {
+      debugError('Background tree rebuild failed:', error);
+    }
+  }
+
 
   private applySuggestionsToExpandedNodesDebounced(): void {
     if (this.suggestionDebounceTimer) {
@@ -169,42 +199,40 @@ export class VirtualTreeManager {
 
   async updateOnVaultChange(): Promise<void> {
     if (!this.vt) return;
-    // We no longer attempt per-case in-place rename handling; always rebuild via diffed update
 
-    const folders = this.app.vault.getAllFolders();
-    const files = this.app.vault.getFiles();
-    const tb = new TreeBuilder();
-    const root = tb.buildDendronStructure(folders, files);
+    await CacheUtils.invalidateCache(this.cacheManager, this.app.vault.getRoot().path);
+    this.usingCachedData = false;
 
-    const useSchema = this.settings?.enableSchemaSuggestions ?? true;
-    if (useSchema && this.schemaManager) {
-      try {
-        const index = await this.schemaManager.ensureLatest();
-        const suggester = new SchemaSuggester(index);
+    // Rebuild the tree with current vault state
+    const root = TreeUtils.buildTreeStructure(this.app);
+    const expandedPaths = this.getExpandedPaths();
+    await SchemaUtils.applySchemaSuggestionsToTree(
+      root,
+      expandedPaths,
+      false,
+      this.schemaManager,
+      this.settings,
+      this.processedSuggestionNodes
+    );
 
-        // On vault change updates, apply suggestions to all nodes since the user may have expanded more nodes
-        // But skip nodes we've already processed to avoid duplicates
-        const expandedPaths = this.getExpandedPaths();
-        const allVisiblePaths = this.getExpandedNodePaths(root, expandedPaths);
-
-        const updateFilter = (node: TreeNode): boolean => {
-          // Process nodes that are expanded or were previously processed
-          return allVisiblePaths.includes(node.path) || this.processedSuggestionNodes.has(node.path);
-        };
-
-        suggester.apply(root, updateFilter);
-
-        // Mark newly processed nodes
-        allVisiblePaths.forEach(path => this.processedSuggestionNodes.add(path));
-
-      } catch (error) {
-        debugError('Failed to apply schema suggestions on update:', error);
-      }
-    }
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
+
     try {
       this.vt.updateData(data, parentMap);
       this.onExpansionChange?.();
+
+      // Cache the updated tree
+      if (this.rootContainer) {
+        await CacheUtils.saveTreeToCache(
+          this.cacheManager,
+          data,
+          parentMap,
+          this.app,
+          this.processedSuggestionNodes,
+          this.settings,
+          this.schemaManager
+        );
+      }
     } catch (e) {
       debugError('Error updating VT data, rebuilding fully:', e);
       if (this.rootContainer) await this.init(this.rootContainer, this.getExpandedPaths());
@@ -222,7 +250,8 @@ export class VirtualTreeManager {
       clearTimeout(this.suggestionDebounceTimer);
       this.suggestionDebounceTimer = null;
     }
-    try { this.vt?.destroy(); } catch { /* ignore */ } this.vt = null;
+    TreeRenderUtils.destroyCurrentVirtualTree(this.vt);
+    this.vt = null;
   }
 
   // Expose whether the underlying virtual tree is present
@@ -235,7 +264,10 @@ export class VirtualTreeManager {
    * Update settings and refresh the tree data if needed
    */
   async updateSettings(newSettings: PluginSettings): Promise<void> {
+    // Note: Cache invalidation is handled in CacheUtils.isCacheValid based on settings hash
     this.settings = newSettings;
+    this.usingCachedData = false; // Force rebuild to ensure settings are applied
+
     if (this.vt && this.rootContainer) {
       // Rebuild the tree data with new settings
       await this.updateOnVaultChange();

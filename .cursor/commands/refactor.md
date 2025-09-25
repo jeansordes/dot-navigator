@@ -14,7 +14,7 @@ Refactor the provided file to improve readability, maintainability, and structur
     - Ensure consistent formatting and indentation.
     - Break down large functions:
         - Functions longer than ~40 lines should be split into smaller, single-responsibility functions.
-        - Place helper functions near where they are used or in a separate utility file if they are reusable.
+        - When you can, move the helper functions to a separate file (especially when the main file is longer than 300–400 lines)
     - If the file is longer than 300–400 lines:
         - Extract logically related sections into separate files (e.g., `utils/`, `components/`, `services/`, `models/`, depending on the project).
         - Update imports and exports accordingly.
