@@ -1,7 +1,6 @@
 import { App } from 'obsidian';
 import { TreeBuilder } from '../utils/tree/TreeBuilder';
 import { TreeNode } from '../types';
-import { type CachedTreeData } from './TreeCacheManager';
 
 /**
  * General utility functions for tree operations
@@ -17,10 +16,4 @@ export class TreeUtils {
     return treeBuilder.buildDendronStructure(folders, files);
   }
 
-  /**
-   * Load processed suggestion nodes from cached data
-   */
-  static loadProcessedSuggestionNodes(cachedData: CachedTreeData): Set<string> {
-    return new Set(cachedData.processedSuggestionNodes);
-  }
 }

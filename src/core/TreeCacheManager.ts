@@ -18,7 +18,6 @@ export interface CachedTreeData {
   parentMap: Record<string, string | undefined>; // Map as plain object for storage
   schemaVersion: string;
   settingsHash: string;
-  processedSuggestionNodes: string[];
 }
 
 // Type import needed for CachedTreeData

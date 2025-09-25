@@ -21,8 +21,6 @@ export class VirtualTreeManager {
   private renameManager?: RenameManager;
   private settings?: PluginSettings;
   private schemaManager?: SchemaManager;
-  private processedSuggestionNodes = new Set<string>();
-  private suggestionDebounceTimer: number | null = null;
   private cacheManager = new TreeCacheManager();
   private usingCachedData = false;
 
@@ -38,12 +36,8 @@ export class VirtualTreeManager {
     this.settings = settings;
     this.schemaManager = schemaManager;
 
-    // Wrap the expansion change callback to also apply suggestions to newly expanded nodes
-    this.onExpansionChange = onExpansionChange ? () => {
-      onExpansionChange();
-      // Apply suggestions to newly expanded nodes with debouncing to avoid excessive rebuilds
-      this.applySuggestionsToExpandedNodesDebounced();
-    } : () => this.applySuggestionsToExpandedNodesDebounced();
+    // Schema suggestions are now pre-calculated, so no need to apply them on expansion
+    this.onExpansionChange = onExpansionChange;
   }
 
 
@@ -70,7 +64,6 @@ export class VirtualTreeManager {
     expanded?: string[]
   ): Promise<void> {
     this.usingCachedData = true;
-    this.processedSuggestionNodes = TreeUtils.loadProcessedSuggestionNodes(cachedData);
     this.vt = await TreeRenderUtils.renderFromCache(
       cachedData,
       rootContainer,
@@ -84,14 +77,14 @@ export class VirtualTreeManager {
 
   private async buildAndRenderFreshTree(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     const root = TreeUtils.buildTreeStructure(this.app);
-    await SchemaUtils.applySchemaSuggestionsToTree(
+
+    // Pre-calculate ALL schema suggestions for the entire tree
+    await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
-      expanded || [],
-      true,
       this.schemaManager,
-      this.settings,
-      this.processedSuggestionNodes
+      this.settings 
     );
+
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 
     TreeRenderUtils.destroyCurrentVirtualTree(this.vt);
@@ -109,7 +102,6 @@ export class VirtualTreeManager {
       data,
       parentMap,
       this.app,
-      this.processedSuggestionNodes,
       this.settings,
       this.schemaManager
     );
@@ -128,15 +120,14 @@ export class VirtualTreeManager {
       debug('Starting background tree rebuild');
 
       const root = TreeUtils.buildTreeStructure(this.app);
-      const expandedPaths = this.getExpandedPaths();
-      await SchemaUtils.applySchemaSuggestionsToTree(
+
+      // Pre-calculate ALL schema suggestions for the entire tree
+      await SchemaUtils.applyAllSchemaSuggestionsToTree(
         root,
-        expandedPaths,
-        false,
         this.schemaManager,
-        this.settings,
-        this.processedSuggestionNodes
+        this.settings
       );
+
       const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
 
       // Cache the rebuilt tree
@@ -145,7 +136,6 @@ export class VirtualTreeManager {
         data,
         parentMap,
         this.app,
-        this.processedSuggestionNodes,
         this.settings,
         this.schemaManager
       );
@@ -164,37 +154,10 @@ export class VirtualTreeManager {
   }
 
 
+  // Schema suggestions are now pre-calculated for the entire tree during data layer building
+  // No need to calculate them on-demand during expansion
   private applySuggestionsToExpandedNodesDebounced(): void {
-    if (this.suggestionDebounceTimer) {
-      clearTimeout(this.suggestionDebounceTimer);
-    }
-
-    this.suggestionDebounceTimer = window.setTimeout(() => {
-      this.applySuggestionsToExpandedNodes();
-    }, 300); // 300ms debounce to avoid excessive rebuilds during rapid expansion/collapse
-  }
-
-  private async applySuggestionsToExpandedNodes(): Promise<void> {
-    if (!this.schemaManager || !this.settings?.enableSchemaSuggestions || !this.vt) return;
-
-    const expandedPaths = this.getExpandedPaths();
-    const newlyExpandedPaths = expandedPaths.filter(path => !this.processedSuggestionNodes.has(path));
-
-    if (newlyExpandedPaths.length === 0) return;
-
-    debug('Applying suggestions to newly expanded nodes:', newlyExpandedPaths.length);
-
-    try {
-      // Trigger a vault change update which will apply suggestions to the newly expanded nodes
-      await this.updateOnVaultChange();
-
-      // Mark the newly expanded nodes as processed
-      newlyExpandedPaths.forEach(path => this.processedSuggestionNodes.add(path));
-    } catch (error) {
-      debugError('Failed to apply suggestions to expanded nodes:', error);
-    } finally {
-      this.suggestionDebounceTimer = null;
-    }
+    // No-op: suggestions are pre-calculated
   }
 
   async updateOnVaultChange(): Promise<void> {
@@ -203,16 +166,12 @@ export class VirtualTreeManager {
     await CacheUtils.invalidateCache(this.cacheManager, this.app.vault.getRoot().path);
     this.usingCachedData = false;
 
-    // Rebuild the tree with current vault state
+    // Rebuild the tree with current vault state and ALL pre-calculated suggestions
     const root = TreeUtils.buildTreeStructure(this.app);
-    const expandedPaths = this.getExpandedPaths();
-    await SchemaUtils.applySchemaSuggestionsToTree(
+    await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
-      expandedPaths,
-      false,
       this.schemaManager,
-      this.settings,
-      this.processedSuggestionNodes
+      this.settings
     );
 
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
@@ -228,7 +187,6 @@ export class VirtualTreeManager {
           data,
           parentMap,
           this.app,
-          this.processedSuggestionNodes,
           this.settings,
           this.schemaManager
         );
@@ -246,10 +204,6 @@ export class VirtualTreeManager {
   getExpandedPaths(): string[] { return this.vt?.getExpandedPaths() ?? []; }
   setExpandedPaths(paths: string[]): void { this.vt?.setExpanded(paths); this.onExpansionChange?.(); }
   destroy(): void {
-    if (this.suggestionDebounceTimer) {
-      clearTimeout(this.suggestionDebounceTimer);
-      this.suggestionDebounceTimer = null;
-    }
     TreeRenderUtils.destroyCurrentVirtualTree(this.vt);
     this.vt = null;
   }

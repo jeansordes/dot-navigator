@@ -10,15 +10,12 @@ const debugError = debug.extend('error');
  */
 export class SchemaUtils {
   /**
-   * Apply schema suggestions to a tree node based on the given parameters
+   * Apply schema suggestions to ALL nodes in the tree (pre-calculates everything)
    */
-  static async applySchemaSuggestionsToTree(
+  static async applyAllSchemaSuggestionsToTree(
     root: TreeNode,
-    expandedPaths: string[],
-    isInitialLoad: boolean,
     schemaManager: SchemaManager | undefined,
-    settings: PluginSettings | undefined,
-    processedSuggestionNodes: Set<string>
+    settings: PluginSettings | undefined
   ): Promise<void> {
     const shouldUseSchema = settings?.enableSchemaSuggestions ?? true;
     debug('Schema suggestions enabled:', shouldUseSchema);
@@ -31,30 +28,32 @@ export class SchemaUtils {
 
     try {
       const schemaIndex = await schemaManager.ensureLatest();
-      debug('Applying schema suggestions with', Array.from(schemaIndex.entries.keys()).length, 'schemas available');
+      debug('Applying schema suggestions to ALL nodes with', Array.from(schemaIndex.entries.keys()).length, 'schemas available');
 
       const suggester = new SchemaSuggester(schemaIndex);
-      const visibleNodePaths = SchemaUtils.getAllVisibleNodePaths(root, expandedPaths);
 
-      if (isInitialLoad) {
-        // For initial load, only apply suggestions to root level and expanded nodes
-        const filter = (node: TreeNode): boolean => {
-          return visibleNodePaths.includes(node.path) || !node.path.includes('/');
-        };
-        suggester.apply(root, filter);
-        visibleNodePaths.forEach(path => processedSuggestionNodes.add(path));
-      } else {
-        // For updates, apply to all visible nodes and previously processed ones
-        const filter = (node: TreeNode): boolean => {
-          return visibleNodePaths.includes(node.path) || processedSuggestionNodes.has(node.path);
-        };
-        suggester.apply(root, filter);
-        visibleNodePaths.forEach(path => processedSuggestionNodes.add(path));
-      }
+      // Apply suggestions to ALL nodes in the tree - no filtering
+      suggester.apply(root, () => true); // Always return true to process all nodes
 
     } catch (error) {
       debugError('Failed to apply schema suggestions:', error);
     }
+  }
+
+  /**
+   * Apply schema suggestions to a tree node based on the given parameters
+   * @deprecated Use applyAllSchemaSuggestionsToTree for complete pre-calculation
+   */
+  static async applySchemaSuggestionsToTree(
+    root: TreeNode,
+    _expandedPaths: string[],
+    _isInitialLoad: boolean,
+    schemaManager: SchemaManager | undefined,
+    settings: PluginSettings | undefined,
+    _processedSuggestionNodes: Set<string>
+  ): Promise<void> {
+    // For backward compatibility, delegate to the new method
+    await SchemaUtils.applyAllSchemaSuggestionsToTree(root, schemaManager, settings);
   }
 
   /**

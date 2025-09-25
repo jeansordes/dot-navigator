@@ -80,7 +80,6 @@ export class CacheUtils {
     data: VItem[],
     parentMap: Map<string, string | undefined>,
     app: App,
-    processedSuggestionNodes: Set<string>,
     settings?: PluginSettings,
     schemaManager?: SchemaManager
   ): Promise<void> {
@@ -94,8 +93,7 @@ export class CacheUtils {
         tree: data,
         parentMap: Object.fromEntries(parentMap),
         schemaVersion: await CacheUtils.getSchemaVersion(schemaManager),
-        settingsHash: CacheUtils.computeSettingsHash(settings),
-        processedSuggestionNodes: Array.from(processedSuggestionNodes)
+        settingsHash: CacheUtils.computeSettingsHash(settings)
       };
 
       await cacheManager.saveCache(cacheData);
