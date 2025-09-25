@@ -17,9 +17,6 @@
         gap: var(--dotn_gap);
         border-bottom: 1px solid var(--dotn_border-color);
         flex-shrink: 0;
-        position: sticky;
-        top: 0;
-        z-index: 10;
     }
 
     .dotn_spacer {
@@ -30,16 +27,11 @@
         flex-grow: 1;
         overflow-y: auto;
         overflow-x: auto;
-        /* Allow horizontal scrolling */
         position: relative;
-        /* Create positioning context for sticky elements */
         scroll-behavior: smooth;
-        /* smooth programmatic scrolls */
 
-        /* Improve scrollbar behavior on macOS */
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        /* For Firefox */
 
         /* Hide scrollbars on macOS when not in use */
         &::-webkit-scrollbar {
@@ -89,17 +81,16 @@
 
     .dotn_tree-item-title {
         flex: 1 1 auto;
-        min-width: 0;
-        /* allow flex item to shrink and fill */
         display: flex;
         gap: var(--dotn_gap);
         height: var(--dotn_button-size);
         /* constant row content height */
         line-height: var(--dotn_button-size);
         white-space: nowrap;
-        padding: 0 0.5rem;
+        padding: 0 0.4rem;
         /* Default: no extra margin; context rules below add it when needed */
         margin-left: 0;
+        margin-right: 8px;
         border-radius: var(--dotn_border-radius);
         background-color: var(--dotn_bg-hover);
         color: var(--dotn_color-text-hover);
@@ -184,8 +175,9 @@
         z-index: 5;
         /* Keep above text, but let highlight extend underneath */
         background-color: transparent;
-        box-shadow: none;
         margin-left: var(--dotn_gap);
+        box-shadow: 0px 0px 0 4px var(--dotn_bg), 8px 0px 0 0px var(--dotn_bg);
+        background-color: var(--dotn_bg);
     }
 
     /* Remove the extra overlay that clipped highlight */
@@ -293,16 +285,6 @@
 
     .is-clickable {
         cursor: pointer;
-    }
-
-    .dotn_action-buttons-container>.dotn_button-icon::before {
-        content: "";
-        background-color: var(--dotn_bg);
-        width: calc(var(--dotn_button-size) + var(--dotn_gap) + var(--dotn_view-padding));
-        height: 100%;
-        position: absolute;
-        z-index: -1;
-        left: calc(-1 * var(--dotn_gap));
     }
 
     .dotn_button-icon:hover,

@@ -27,7 +27,6 @@ export class ComplexVirtualTree extends VirtualTree {
   // Lazily initialized because base class constructor calls into our _render before fields run
   private _ctxMenuBound?: WeakSet<HTMLElement>;
   // Width management for rows
-  private _maxRowWidth: number = 0;
   private _widthAdjustTimer?: number;
   private _lastScrollTop: number = 0;
   // Debug state
@@ -320,7 +319,7 @@ export class ComplexVirtualTree extends VirtualTree {
     this._widthAdjustTimer = window.setTimeout(() => {
       this._widthAdjustTimer = undefined as unknown as number;
       this._adjustWidthNow();
-    }, 80);
+    }, 120);
   }
 
   private _adjustWidthNow(): void {
@@ -329,25 +328,34 @@ export class ComplexVirtualTree extends VirtualTree {
       const rows = vt.pool.filter(r => !r.classList.contains('is-hidden'));
       if (rows.length === 0) return;
 
-      // Read widths first (minimize write/read thrash)
       let max = 0;
+      const prevWidths: string[] = [];
       for (const row of rows) {
-        // Use offsetWidth; CSS uses width:max-content so this reflects content width
-        const w = Math.ceil(row.offsetWidth);
+        prevWidths.push(row.style.width);
+        row.style.width = ''; // Clear any inline width completely
+        const w = Math.floor(row.scrollWidth);
         if (w > max) max = w;
       }
 
       const sc = (vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container);
       const minPanelWidth = sc.clientWidth || 0;
-      const finalWidth = Math.max(max, minPanelWidth);
-      if (finalWidth <= 0 || finalWidth === this._maxRowWidth) return;
+      const finalWidth = Math.max(max, minPanelWidth) - 1; // Subtract 1px to prevent horizontal scrolling
+      /**
+       * I have no idea why I need to subtract 1px to prevent horizontal scrolling,
+       * the conditions in which this happened were on a macos machine
+       * (so maybe it's related to the retina display, with pixels being
+       * half the size of the physical pixels, and thus inducing approximations
+       * in the roundings somehow - that's my only theory.
+       * I've tried many things, and at the end, this seems to do the trick,
+       * but it's still a mystery)
+       */
+      const widthPx = finalWidth > 0 ? `${finalWidth}px` : '';
+      for (let i = 0; i < rows.length; i++) {
+        rows[i].style.width = widthPx || prevWidths[i] || '';
+      }
 
-      const widthPx = `${finalWidth}px`;
-      // Write widths
-      for (const row of rows) row.style.width = widthPx;
       const vz = vt.virtualizer;
-      if (vz instanceof HTMLElement) vz.style.width = widthPx;
-      this._maxRowWidth = finalWidth;
+      if (vz instanceof HTMLElement && vz.style.width !== widthPx) vz.style.width = widthPx;
     } catch { /* ignore */ }
   }
 

@@ -5,7 +5,7 @@
 	"description": "A hierarchical note management system for your vault",
 	"main": "main.js",
 	"scripts": {
-		"dev": "npm run build:css && node esbuild.config.mjs",
+		"dev": "concurrently \"sass --watch --load-path=. src/styles.scss:styles.css --style=compressed\" \"node esbuild.config.mjs\"",
 		"build": "npm run build:css && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"build:css": "sass src/styles.scss styles.css --style=compressed",
 		"ci": "npm run lint && npm run build && npm run test",
@@ -43,6 +43,7 @@
 		"@typescript-eslint/parser": "^8.31.0",
 		"builtin-modules": "^3.3.0",
 		"commitizen": "^4.3.1",
+		"concurrently": "^9.2.1",
 		"conventional-changelog-cli": "^4.1.0",
 		"cz-conventional-changelog": "^3.0.1",
 		"esbuild": "^0.25.9",
