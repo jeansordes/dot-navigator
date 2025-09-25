@@ -1,0 +1,8 @@
+/* Import modular SCSS files using modern @use syntax */
+@use '../styles/variables';
+@use '../styles/tree';
+@use '../styles/rename';
+@use '../styles/mobile';
+@use '../styles/settings';
+@use '../styles/virtual-tree';
+@use '../styles/utilities';

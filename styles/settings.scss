@@ -1,0 +1,37 @@
+/* Settings Page Styles */
+
+/* Settings: cards for More Menu items */
+.dotn_settings-card {
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-m);
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.dotn_settings-card .setting-item {
+    margin: 0;
+    padding: 0;
+}
+
+/* Built-in item icons in settings */
+.dotn-builtin-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    color: var(--text-muted);
+}
+
+.dotn-builtin-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+.dotn_settings-card .setting-item+.setting-item {
+    border-top: 1px solid var(--background-modifier-border);
+    margin-top: 8px;
+    padding-top: 8px;
+}

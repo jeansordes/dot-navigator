@@ -1,0 +1,80 @@
+/* Utility Classes and Additional Styles */
+
+/* Utilities and VT enhancements injected by tooling */
+.is-hidden {
+    display: none !important;
+}
+
+.dotn_cursor-pointer {
+    cursor: pointer;
+}
+
+.dotn_auto-width {
+    width: auto !important;
+}
+
+/* Utility classes for inline style replacements */
+.pointer-events-none {
+    pointer-events: none;
+}
+
+.pointer-events-auto {
+    pointer-events: auto;
+}
+
+.display-flex {
+    display: flex;
+}
+
+/* Inline command suggest dropdown */
+.dotn_cmd-suggest {
+    position: relative;
+    margin-top: 6px;
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-s);
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.dotn_cmd-suggest-item {
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.dotn_cmd-suggest-item:hover,
+.dotn_cmd-suggest-item.is-selected {
+    background-color: var(--background-modifier-hover);
+}
+
+/* Path validation styles */
+.dotnav-path-validation {
+    margin-bottom: 1rem;
+}
+
+.dotnav-validation-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: var(--font-ui-smaller);
+    font-weight: 500;
+}
+
+.dotnav-validation-success {
+    background-color: rgba(25, 135, 84, 0.08);
+    border: 1px solid var(--text-success);
+    color: var(--text-success);
+}
+
+.dotnav-validation-error {
+    background-color: rgba(220, 38, 38, 0.08);
+    border: 1px solid var(--text-error);
+    color: var(--text-error);
+}
+
+.dotnav-validation-icon {
+    font-weight: bold;
+    font-size: var(--font-ui-small);
+}

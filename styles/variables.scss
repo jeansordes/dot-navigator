@@ -1,0 +1,58 @@
+/* CSS Variables and Base Styles */
+
+/* Dark mode */
+.theme-dark .dotn_view {
+    --bg1: hsl(0, 0, 15%);
+    --bg2: hsl(0, 0%, calc(15% - 2%));
+    --bg3: hsla(0, 0%, calc(15% + 40%), 0.12);
+    --tx1: hsl(0, calc(0% - 10%), calc(15% + 67%));
+    --tx2: hsl(0, calc(0% - 20%), calc(15% + 45%));
+}
+
+.dotn_view {
+    /* DO NOT REMOVE THIS LINE */
+    --dotn_css-is-loaded: true;
+    /* This is a hack to ensure the styles are loaded */
+
+    /* Background colors extracted from the Minimal Theme */
+    --bg1: white;
+    --bg2: #f5f5f5;
+    --bg3: hsla(0, 0%, calc(96% - 50%), 0.12);
+    --tx1: hsl(0, 0%, calc(96% - 90%));
+    --tx2: hsl(0, calc(0% - 20%), calc(96% - 50%));
+
+    /* Colors */
+    --dotn_bg2-5: hsla(0, 0%, calc(96% - 50%), 0.06);
+    --dotn_bg-clickable: var(--dotn_bg2-5);
+    --dotn_bg-hover: var(--bg3);
+    --dotn_bg: var(--bg2);
+    --dotn_accent-color: var(--interactive-accent);
+    --dotn_text-on-accent: var(--text-on-accent);
+    --dotn_color-text-clickable: var(--tx2);
+    --dotn_color-text-hover: var(--tx1);
+    --dotn_border-color: var(--background-modifier-border);
+    --dotn_text-faint: var(--text-faint);
+
+    /* Orange colors for warnings */
+    --color-orange: #e69500;
+    --color-orange-rgb: 230, 149, 0;
+
+    /* Sizes */
+    --dotn_square-size: 1.5rem;
+    --dotn_button-icon-size: 14px;
+    --dotn_button-size: calc(var(--dotn_square-size));
+    --dotn_border-radius: 3px;
+    --dotn_gap: 4px;
+    --dotn_view-padding: 8px;
+    --dotn_font-size: var(--font-ui-small);
+    --dotn_font-size-small: 0.6rem;
+}
+
+/* Utility class for text measurement */
+.dotn-measure-span {
+    visibility: hidden;
+    position: absolute;
+    white-space: pre;
+    pointer-events: none;
+    font: var(--dotn-measure-font, inherit);
+}

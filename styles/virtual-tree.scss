@@ -1,0 +1,88 @@
+/* Virtual Tree Specific Styles */
+
+.dotn_view .dotn_view-tree {
+    position: relative;
+}
+
+.tree-row {
+    height: var(--dotn_button-size);
+    line-height: var(--dotn_button-size);
+    padding-bottom: var(--dotn_gap);
+}
+
+.dotn_probe {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.dotn_probe-row {
+    height: var(--dotn_button-size);
+}
+
+.dotn_probe-gap {
+    height: var(--dotn_gap);
+}
+
+.vt-spacer {
+    width: 1px;
+}
+
+/* Virtual tree demo styles */
+#tree-demo-container,
+.vtree {
+    position: relative;
+    overflow-y: auto;
+    will-change: transform;
+}
+
+.spacer {
+    position: relative;
+}
+
+/* Removed ARIA-based toggle triangles for legacy rows */
+
+/* Indent guide styles for virtual tree rows */
+.tree-row {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    /* Allow rows to expand horizontally to content while still filling panel */
+    /* width: max-content; - Removed to allow JavaScript width control */
+    min-width: 100%;
+    width: 100%; /* Default to full width, let JS override as needed */
+}
+
+.tree-row .dotn_indent {
+    position: absolute;
+    /* Align guide columns centered under the toggle triangle, including the gap offset */
+    left: calc(var(--dotn_view-padding) + var(--dotn_gap) + (var(--dotn_button-size) / 2));
+    /* Extend slightly above and below to maintain continuous look between rows */
+    top: calc(-1 * var(--dotn_gap) + 1px);
+    height: calc(var(--dotn_button-size) + (var(--dotn_gap) * 2) - 2px);
+    pointer-events: none;
+}
+
+.tree-row .dotn_indent-col {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 100%;
+    box-sizing: border-box;
+    border-left: 1px solid var(--dotn_border-color);
+}
+
+/* Space between triangle button and folder icon */
+.tree-row .dotn_indent-click {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    pointer-events: auto;
+}
+
+/* Dynamic indentation using CSS custom properties - supports infinite levels */
+.tree-row {
+    padding-left: calc(var(--dotn_view-padding) + (var(--row-indent, 0) * 20px));
+}
