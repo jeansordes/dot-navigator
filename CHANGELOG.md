@@ -1,3 +1,9 @@
+## [1.21.7](https://github.com/jeansordes/dot-navigator/compare/1.21.6...1.21.7) (2025-09-25)
+
+### Features
+
+* **ui:** improve virtual tree width management and UI styling ([1f3ed30](https://github.com/jeansordes/dot-navigator/commit/1f3ed30cbab85760467876443f352735588a731e))
+
 ## [1.21.6](https://github.com/jeansordes/dot-navigator/compare/1.21.5-beta.1...1.21.6) (2025-09-25)
 
 ## [1.21.5-beta.1](https://github.com/jeansordes/dot-navigator/compare/1.21.5-beta.0...1.21.5-beta.1) (2025-09-25)
