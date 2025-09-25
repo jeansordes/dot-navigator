@@ -1,3 +1,5 @@
+## [1.21.6](https://github.com/jeansordes/dot-navigator/compare/1.21.5-beta.1...1.21.6) (2025-09-25)
+
 ## [1.21.5-beta.1](https://github.com/jeansordes/dot-navigator/compare/1.21.5-beta.0...1.21.5-beta.1) (2025-09-25)
 
 ### Performance Improvements
