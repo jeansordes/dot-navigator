@@ -1,3 +1,9 @@
+## [1.21.8](https://github.com/jeansordes/dot-navigator/compare/1.21.7...1.21.8) (2025-09-25)
+
+### Features
+
+* implement automatic schema config file rename detection ([1282f3b](https://github.com/jeansordes/dot-navigator/commit/1282f3b902a066f83bd486a04b50af135fa1b38b))
+
 ## [1.21.7](https://github.com/jeansordes/dot-navigator/compare/1.21.6...1.21.7) (2025-09-25)
 
 ### Features
