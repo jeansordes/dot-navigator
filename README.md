@@ -17,12 +17,8 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 ## Features
 
 - **Hierarchical note organization** with a tree-like interface
-- **Performance optimized for large vaults**, meaning you can expand all 10K notes of your vault at once on your phone, it will still run and scroll smoothly 👌
-- **Optimized for mobile as well as desktop**, (e.g. the top menu on desktop is at the bottom of the screen on mobile for easier access)
-- **Schema-aware suggestions** that surface virtual child notes defined in `.schema.yml` files so you can scaffold structures before the notes exist
-
-<img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
-
+- **Performance optimized for very large vaults**, meaning you can expand all 10K notes from your vault at once on your phone, it will still run and scroll smoothly 👌
+- **Designed and optimized for mobile before desktop**
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
 - **UI for renaming a note and its children** with a nice UI
@@ -31,7 +27,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 - **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI or with a command dedicated for that)
 
-<img width="943" height="714" src="https://github.com/user-attachments/assets/dcf1fefe-16aa-4641-bb1a-deb2fce0f805" />
+<img width="722" height="470" alt="CleanShot 2025-09-26 at 23 13 38@2x" src="https://github.com/user-attachments/assets/3d0ceb40-2910-48fa-8eea-8c4500d91e87" />
 
 - **Customizable context menus** (click the "…" button or do a right click on a file or folder)
 
