@@ -11,7 +11,7 @@ import { TreeUtils } from './TreeUtils';
 import createDebug from 'debug'; 
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
-import { SchemaManager } from '../utils/schema/SchemaManager';
+import { RuleManager } from '../utils/schema/RuleManager';
 
 export class VirtualTreeManager {
   private app: App;
@@ -20,7 +20,7 @@ export class VirtualTreeManager {
   private rootContainer?: HTMLElement;
   private renameManager?: RenameManager;
   private settings?: PluginSettings;
-  private schemaManager?: SchemaManager;
+  private ruleManager?: RuleManager;
   private cacheManager = new TreeCacheManager();
   private usingCachedData = false;
 
@@ -29,12 +29,12 @@ export class VirtualTreeManager {
     onExpansionChange?: () => void,
     renameManager?: RenameManager,
     settings?: PluginSettings,
-    schemaManager?: SchemaManager,
+    ruleManager?: RuleManager,
   ) {
     this.app = app;
     this.renameManager = renameManager;
     this.settings = settings;
-    this.schemaManager = schemaManager;
+    this.ruleManager = ruleManager;
 
     // Schema suggestions are now pre-calculated, so no need to apply them on expansion
     this.onExpansionChange = onExpansionChange;
@@ -48,7 +48,7 @@ export class VirtualTreeManager {
     const vaultPath = this.app.vault.getRoot().path;
 
     const cachedData = await this.cacheManager.loadCache(vaultPath);
-    const shouldUseCache = await CacheUtils.shouldUseCache(cachedData, this.app, this.settings, this.schemaManager);
+    const shouldUseCache = await CacheUtils.shouldUseCache(cachedData, this.app, this.settings, this.ruleManager);
 
     if (shouldUseCache && cachedData) {
       await this.loadFromCache(cachedData, rootContainer, expanded);
@@ -81,7 +81,7 @@ export class VirtualTreeManager {
     // Pre-calculate ALL schema suggestions for the entire tree
     await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
-      this.schemaManager,
+      this.ruleManager,
       this.settings 
     );
 
@@ -103,7 +103,7 @@ export class VirtualTreeManager {
       parentMap,
       this.app,
       this.settings,
-      this.schemaManager
+      this.ruleManager
     );
 
     debug('Virtual Tree init (fresh build)', {
@@ -124,7 +124,7 @@ export class VirtualTreeManager {
       // Pre-calculate ALL schema suggestions for the entire tree
       await SchemaUtils.applyAllSchemaSuggestionsToTree(
         root,
-        this.schemaManager,
+        this.ruleManager,
         this.settings
       );
 
@@ -137,7 +137,7 @@ export class VirtualTreeManager {
         parentMap,
         this.app,
         this.settings,
-        this.schemaManager
+        this.ruleManager
       );
 
       // If we're still using cached data, update to fresh data
@@ -170,7 +170,7 @@ export class VirtualTreeManager {
     const root = TreeUtils.buildTreeStructure(this.app);
     await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
-      this.schemaManager,
+      this.ruleManager,
       this.settings
     );
 
@@ -188,7 +188,7 @@ export class VirtualTreeManager {
           parentMap,
           this.app,
           this.settings,
-          this.schemaManager
+          this.ruleManager
         );
       }
     } catch (e) {
@@ -231,8 +231,8 @@ export class VirtualTreeManager {
   /**
    * Update the schema manager reference and refresh the tree
    */
-  async updateSchemaManager(schemaManager: SchemaManager | undefined): Promise<void> {
-    this.schemaManager = schemaManager;
+  async updateRuleManager(ruleManager: RuleManager | undefined): Promise<void> {
+    this.ruleManager = ruleManager;
     // Refresh the tree data with the new schema manager
     if (this.vt && this.rootContainer) {
       await this.updateOnVaultChange();

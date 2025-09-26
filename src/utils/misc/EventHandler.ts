@@ -24,7 +24,7 @@ export class DendronEventHandler {
         this.refreshCallback = refreshCallback;
         this.schemaReloadCallback = schemaReloadCallback;
         this.schemaConfigUpdateCallback = schemaConfigUpdateCallback;
-        this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || 'dendron.yaml');
+        this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || 'dot-navigator-rules.json');
         if (debounceTime !== undefined) {
             this.debounceWaitTime = debounceTime;
         }

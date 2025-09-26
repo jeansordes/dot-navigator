@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import { TreeCacheManager, type CachedTreeData, type VaultStats } from './TreeCacheManager';
 import { PluginSettings } from '../types';
-import { SchemaManager } from '../utils/schema/SchemaManager';
+import { RuleManager } from '../utils/schema/RuleManager';
 import type { VItem } from './virtualData';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:cache-utils');
@@ -33,14 +33,14 @@ export class CacheUtils {
     cachedData: CachedTreeData | null,
     app: App,
     settings?: PluginSettings,
-    schemaManager?: SchemaManager
+    ruleManager?: RuleManager
   ): Promise<boolean> {
     if (!cachedData) {
       debug('No cache found, will build tree');
       return false;
     }
 
-    const cacheValid = await CacheUtils.isCacheValid(cachedData, app, settings, schemaManager);
+    const cacheValid = await CacheUtils.isCacheValid(cachedData, app, settings, ruleManager);
     if (cacheValid) {
       debug('Using valid cache for vault:', app.vault.getRoot().path);
       return true;
@@ -57,11 +57,11 @@ export class CacheUtils {
     cache: CachedTreeData,
     app: App,
     settings?: PluginSettings,
-    schemaManager?: SchemaManager
+    ruleManager?: RuleManager
   ): Promise<boolean> {
     const currentStats = CacheUtils.getVaultStats(app);
     const currentSettingsHash = CacheUtils.computeSettingsHash(settings);
-    const currentSchemaVersion = await CacheUtils.getSchemaVersion(schemaManager);
+    const currentSchemaVersion = await CacheUtils.getSchemaVersion(ruleManager);
 
     return (
       cache.fileStats.totalFiles === currentStats.totalFiles &&
@@ -81,7 +81,7 @@ export class CacheUtils {
     parentMap: Map<string, string | undefined>,
     app: App,
     settings?: PluginSettings,
-    schemaManager?: SchemaManager
+    ruleManager?: RuleManager
   ): Promise<void> {
     try {
       const vaultPath = app.vault.getRoot().path;
@@ -92,7 +92,7 @@ export class CacheUtils {
         fileStats: CacheUtils.getVaultStats(app),
         tree: data,
         parentMap: Object.fromEntries(parentMap),
-        schemaVersion: await CacheUtils.getSchemaVersion(schemaManager),
+        schemaVersion: await CacheUtils.getSchemaVersion(ruleManager),
         settingsHash: CacheUtils.computeSettingsHash(settings)
       };
 
@@ -136,11 +136,11 @@ export class CacheUtils {
   /**
    * Get schema version for cache validation
    */
-  private static async getSchemaVersion(schemaManager?: SchemaManager): Promise<string> {
-    if (!schemaManager) return 'none';
+  private static async getSchemaVersion(ruleManager?: RuleManager): Promise<string> {
+    if (!ruleManager) return 'none';
     try {
-      const index = await schemaManager.ensureLatest();
-      return index.entries.size.toString();
+      const index = await ruleManager.ensureLatest();
+      return index.rules.length.toString();
     } catch {
       return 'error';
     }

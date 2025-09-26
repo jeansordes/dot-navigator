@@ -1,5 +1,5 @@
-import { SchemaManager } from '../utils/schema/SchemaManager';
-import { SchemaSuggester } from '../utils/schema/SchemaSuggester';
+import { RuleManager } from '../utils/schema/RuleManager';
+import { RuleSuggester } from '../utils/schema/RuleSuggester';
 import { PluginSettings, TreeNode } from '../types';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:schema-utils');
@@ -14,23 +14,23 @@ export class SchemaUtils {
    */
   static async applyAllSchemaSuggestionsToTree(
     root: TreeNode,
-    schemaManager: SchemaManager | undefined,
+    ruleManager: RuleManager | undefined,
     settings: PluginSettings | undefined
   ): Promise<void> {
     const shouldUseSchema = settings?.enableSchemaSuggestions ?? true;
     debug('Schema suggestions enabled:', shouldUseSchema);
 
-    if (!shouldUseSchema || !schemaManager) {
+    if (!shouldUseSchema || !ruleManager) {
       if (!shouldUseSchema) debug('Schema suggestions disabled in settings');
-      if (!schemaManager) debug('No schema manager available');
+      if (!ruleManager) debug('No rule manager available');
       return;
     }
 
     try {
-      const schemaIndex = await schemaManager.ensureLatest();
-      debug('Applying schema suggestions to ALL nodes with', Array.from(schemaIndex.entries.keys()).length, 'schemas available');
+      const ruleIndex = await ruleManager.ensureLatest();
+      debug('Applying rule suggestions to ALL nodes with', ruleIndex.rules.length, 'rules available');
 
-      const suggester = new SchemaSuggester(schemaIndex);
+      const suggester = new RuleSuggester(ruleIndex);
 
       // Apply suggestions to ALL nodes in the tree - no filtering
       suggester.apply(root, () => true); // Always return true to process all nodes
@@ -48,22 +48,22 @@ export class SchemaUtils {
     root: TreeNode,
     _expandedPaths: string[],
     _isInitialLoad: boolean,
-    schemaManager: SchemaManager | undefined,
+    ruleManager: RuleManager | undefined,
     settings: PluginSettings | undefined,
     _processedSuggestionNodes: Set<string>
   ): Promise<void> {
     // For backward compatibility, delegate to the new method
-    await SchemaUtils.applyAllSchemaSuggestionsToTree(root, schemaManager, settings);
+    await SchemaUtils.applyAllSchemaSuggestionsToTree(root, ruleManager, settings);
   }
 
   /**
    * Get the current schema version for caching purposes
    */
-  static async getSchemaVersion(schemaManager: SchemaManager | undefined): Promise<string> {
-    if (!schemaManager) return 'none';
+  static async getSchemaVersion(ruleManager: RuleManager | undefined): Promise<string> {
+    if (!ruleManager) return 'none';
     try {
-      const index = await schemaManager.ensureLatest();
-      return index.entries.size.toString();
+      const index = await ruleManager.ensureLatest();
+      return index.rules.length.toString();
     } catch {
       return 'error';
     }

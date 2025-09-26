@@ -126,10 +126,10 @@ export function addSchemaConfigurationSection(
   };
 
   pathSetting.addText((text) => {
-    text.setValue(settings.dendronConfigFilePath || 'dendron.yaml')
-      .setPlaceholder('dendron.yaml')
+    text.setValue(settings.dendronConfigFilePath || 'dot-navigator-rules.json')
+      .setPlaceholder('dot-navigator-rules.json')
       .onChange(async (value) => {
-        const path = value || 'dendron.yaml';
+        const path = value || 'dot-navigator-rules.json';
         settings.dendronConfigFilePath = path;
         await callbacks.saveSettings();
         // Update UI validation immediately
@@ -160,17 +160,12 @@ export function addSchemaConfigurationSection(
         } else {
           // Create and open new file
           try {
-            const defaultConfig = {
-              version: 1,
-              schemas: [
-                {
-                  id: 'root',
-                  parent: 'root',
-                  namespace: true,
-                  children: []
-                }
-              ]
-            };
+            const defaultConfig = [
+              {
+                pattern: "example.*",
+                children: ["notes", "tasks"]
+              }
+            ];
 
             const newFile = await app.vault.create(configPath, JSON.stringify(defaultConfig, null, 2));
             await app.workspace.getLeaf().openFile(newFile);
@@ -179,7 +174,7 @@ export function addSchemaConfigurationSection(
             validatePathUI(configPath);
             await reloadConfigIfNeeded(configPath);
           } catch (error: unknown) {
-            console.error('Failed to create/open dendron config file:', error);
+            console.error('Failed to create/open rule config file:', error);
             const message = error instanceof Error ? error.message : String(error);
             new Notice(`Failed to create/open "${configPath}": ${message}`);
           }
@@ -188,5 +183,5 @@ export function addSchemaConfigurationSection(
   });
 
   // Initial validation - only update UI, don't reload config
-  validatePathUI(settings.dendronConfigFilePath || 'dendron.yaml');
+  validatePathUI(settings.dendronConfigFilePath || 'dot-navigator-rules.json');
 }

@@ -6,7 +6,7 @@ import PluginMainPanel from './views/components/PluginMainPanel';
 import createDebug from 'debug';
 import { DotNavigatorSettingTab } from './settings/SettingsTab';
 import { RenameManager } from './utils/rename/RenameManager';
-import { SchemaManager } from './utils/schema/SchemaManager';
+import { RuleManager } from './utils/schema/RuleManager'; 
 
 const debug = createDebug('dot-navigator:main');
 
@@ -14,24 +14,24 @@ export default class DotNavigatorPlugin extends Plugin {
     settings: PluginSettings;
     private pluginMainPanel: PluginMainPanel | null = null;
     private renameManager?: RenameManager;
-    private schemaManager?: SchemaManager;
+    private ruleManager?: RuleManager;
 
-    getSchemaManager(): SchemaManager | undefined {
-        return this.schemaManager;
+    getRuleManager(): RuleManager | undefined {
+        return this.ruleManager;
     }
 
     getPluginMainPanel(): PluginMainPanel | null {
         return this.pluginMainPanel;
     }
 
-    updateSchemaManager(): void {
-        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || 'dendron.yaml');
+    updateRuleManager(): void {
+        this.ruleManager = new RuleManager(this.app, this.settings.dendronConfigFilePath || 'dot-navigator-rules.json');
     }
 
-    async updateSchemaConfigPath(): Promise<void> {
-        // The PluginMainPanel handles updating the SchemaManager
+    async updateRuleConfigPath(): Promise<void> {
+        // The PluginMainPanel handles updating the RuleManager
         if (this.pluginMainPanel) {
-            await this.pluginMainPanel.updateSchemaConfigPath();
+            await this.pluginMainPanel.updateRuleConfigPath();
         }
     }
 
@@ -63,7 +63,7 @@ export default class DotNavigatorPlugin extends Plugin {
         
         await this.loadSettings();
 
-        this.schemaManager = new SchemaManager(this.app, this.settings.dendronConfigFilePath || 'dendron.yaml');
+        this.ruleManager = new RuleManager(this.app, this.settings.dendronConfigFilePath || 'dot-navigator-rules.json');
 
         // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);
@@ -75,7 +75,7 @@ export default class DotNavigatorPlugin extends Plugin {
         this.registerView(
             FILE_TREE_VIEW_TYPE,
             (leaf) => {
-                this.pluginMainPanel = new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.schemaManager);
+                this.pluginMainPanel = new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.ruleManager);
                 return this.pluginMainPanel;
             }
         );
