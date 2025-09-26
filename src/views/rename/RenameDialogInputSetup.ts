@@ -70,7 +70,8 @@ export function setupPathInput(
                 validatePath: () => validatePath(pathInput.value, app, contentEl),
                 validateAndShowWarning: () => validateAndShowWarning(pathInput.value.trim(), getNameInput().value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl),
                 updateAllFileItems: (childrenList) => updateAllFileItems(childrenList, data, getModeSelection(), pathInput.value.trim(), getNameInput().value.trim(), app)
-            }
+            },
+            data.path
         );
         autocompleteState = getState();
         setAutocompleteState(autocompleteState);

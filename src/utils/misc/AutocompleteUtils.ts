@@ -3,9 +3,60 @@
  */
 
 import { performFuzzySearch, createHighlightedText } from './FuzzySearchUtils';
+
 import { autoResize, updateSuggestionSelection } from '../ui/UIUtils';
 import { t } from '../../i18n';
 import { setIcon } from 'obsidian';
+
+/**
+ * Get the parent path of a given path
+ * For "Notes/prj/subdir", returns "Notes/prj"
+ * For "Notes", returns "" (no parent)
+ */
+export function getParentPath(path: string): string {
+    const pathParts = path.split('/');
+    if (pathParts.length <= 1) {
+        return ''; // No parent for root level or single component
+    }
+    return pathParts.slice(0, -1).join('/');
+}
+
+/**
+ * Extract grandparent directory from a file path for path suggestions
+ * For "Notes/prj.s2ee.job-commercial.md", returns ["Notes/prj"] (only the grandparent)
+ */
+export function extractParentPaths(filePath: string): string[] {
+    // Remove extension if present
+    const pathWithoutExt = filePath.replace(/\.[^.]+$/, '');
+
+    const pathParts = pathWithoutExt.split('/');
+    const parentPaths: string[] = [];
+
+    // Handle directory-based paths
+    if (pathParts.length > 1) {
+        const directoryPath = pathParts.slice(0, -1).join('/');
+        const lastPart = pathParts[pathParts.length - 1];
+
+        // If the last part contains dots (hierarchical), extract the grandparent
+        if (lastPart.includes('.')) {
+            const hierarchicalParts = lastPart.split('.');
+            // The grandparent is everything except the last two hierarchical parts
+            // (immediate parent + current node)
+            if (hierarchicalParts.length > 2) {
+                const grandparentHierarchical = hierarchicalParts.slice(0, -2).join('.');
+                const grandparentPath = directoryPath ? `${directoryPath}/${grandparentHierarchical}` : grandparentHierarchical;
+                if (grandparentPath.trim()) {
+                    parentPaths.push(grandparentPath);
+                }
+            }
+        }
+        // If no hierarchical structure, the grandparent would be the directory itself
+        // But since we want to exclude immediate parent and root, we don't add anything here
+    }
+    // For root-level files with hierarchical names, there is no grandparent to suggest
+
+    return parentPaths;
+}
 
 export interface AutocompleteCallbacks {
     validatePath: () => void;
@@ -29,7 +80,8 @@ export function setupPathAutocomplete(
     input: HTMLTextAreaElement,
     container: HTMLElement,
     allDirectories: string[],
-    callbacks: AutocompleteCallbacks
+    callbacks: AutocompleteCallbacks,
+    currentFilePath?: string
 ): () => AutocompleteState {
     // Create a mutable state object
     const state: AutocompleteState = {
@@ -91,7 +143,35 @@ export function setupPathAutocomplete(
             return;
         }
 
-        const matches = performFuzzySearch(query.trim(), allDirectories);
+        let matches = performFuzzySearch(query.trim(), allDirectories);
+
+        // Prepend parent path of current query (highest priority)
+        const queryTrimmed = query.trim();
+        if (queryTrimmed) {
+            // Extract parent of current query input
+            const queryParent = getParentPath(queryTrimmed);
+            if (queryParent && queryParent !== queryTrimmed) {
+            const queryParentSuggestion: { item: string; score: number; matches: Array<{ start: number; end: number }> } = {
+                item: queryParent,
+                score: 1001, // Highest score to ensure it appears first
+                matches: [{ start: 0, end: queryParent.length }] // Highlight entire text
+            };
+                matches = [queryParentSuggestion, ...matches];
+            }
+        }
+
+        // Prepend parent paths from current file if available (lower priority)
+        if (currentFilePath) {
+            const parentPaths = extractParentPaths(currentFilePath);
+            const parentSuggestions = parentPaths.map(parentPath => ({
+                item: parentPath,
+                score: 1000, // High score to ensure parent paths appear first
+                matches: [{ start: 0, end: parentPath.length }] // Highlight entire text
+            }));
+
+            // Add to the beginning, but after query parent if it exists
+            matches = [...parentSuggestions, ...matches];
+        }
 
         // Add a header to clarify what the suggestions are for, show result count
         const header = state.suggestionsContainer.createEl('div', {
@@ -125,8 +205,8 @@ export function setupPathAutocomplete(
         state.suggestionElements = [];
         state.currentSuggestionIndex = -1;
 
-        // Show all matches, but limit visible items to 10 with scrolling
-        matches.forEach((matchResult, index) => {
+        // Show all matches, but limit visible items to 100 with scrolling
+        matches.slice(0, 100).forEach((matchResult, index) => {
             const suggestion = listContainer.createEl('div', {
                 cls: 'rename-path-suggestion'
             });
