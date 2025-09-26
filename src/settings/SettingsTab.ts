@@ -166,15 +166,15 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   private async reloadConfig(): Promise<void> {
     try {
       // Get the config file path from settings
-      const configPath = this.plugin.settings.dendronConfigFilePath || 'dendron.yaml';
+      const configPath = this.plugin.settings.dendronConfigFilePath || 'dot-navigator-rules.json';
 
-      // Update the schema manager and event handler to use the new config path
-      await this.plugin.updateSchemaConfigPath();
+      // Update the rule manager and event handler to use the new config path
+      await this.plugin.updateRuleConfigPath();
 
-      // Refresh the schema manager to reload the config file
-      const schemaManager = this.plugin.getSchemaManager();
-      if (schemaManager) {
-        await schemaManager.refresh(true); // Force refresh from disk
+      // Refresh the rule manager to reload the config file
+      const ruleManager = this.plugin.getRuleManager();
+      if (ruleManager) {
+        await ruleManager.refresh(true); // Force refresh from disk
         new Notice(`Reloaded Dendron config: ${configPath}`);
       }
 

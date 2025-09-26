@@ -19,7 +19,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Hierarchical note organization** with a tree-like interface
 - **Performance optimized for large vaults**, meaning you can expand all 10K notes of your vault at once on your phone, it will still run and scroll smoothly 👌
 - **Optimized for mobile as well as desktop**, (e.g. the top menu on desktop is at the bottom of the screen on mobile for easier access)
-- **Schema-aware suggestions** that surface virtual child notes defined in `.schema.yml` files so you can scaffold structures before the notes exist
+- **Rule-based suggestions** that surface virtual child notes based on configurable JSON rules so you can scaffold structures before the notes exist
 
 <img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
 
@@ -54,6 +54,86 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 <img width="1178" height="432" src="https://github.com/user-attachments/assets/8f3da2eb-6fb4-4ae9-b893-141539fb10e9" />
 
 - **Internationalization support**, based on the language set in the settings, defaulting to English. (As of now, only English and French 🇫🇷 are supported, you can request a new language by creating an issue)
+
+## Rule Configuration
+
+Dot Navigator supports **rule-based suggestions** that automatically suggest virtual child notes for existing files. This allows you to scaffold note hierarchies before the actual notes exist.
+
+### Setting Up Rule Configuration
+
+1. **Create a configuration file** named `dot-navigator-rules.json` in your vault root, or specify a custom path in settings
+2. **Define rules** as a JSON array of rule objects
+
+### Rule Syntax
+
+Each rule object can have these properties:
+
+- **`pattern`** (required): String or array of strings defining which files to match
+- **`exclude`** (optional): String or array of strings defining files to exclude from matching
+- **`children`** (required): Array of strings defining suggested child note names
+
+### Pattern Syntax
+
+Dot Navigator uses enhanced glob patterns with special wildcards:
+
+- **`*`** matches any sequence of characters **within a single path segment** (stops at dots)
+- **`**`** matches any sequence of characters **across multiple path segments** (matches dots)
+
+For more complex pattern matching, you can use **regex patterns** by prefixing with `/`.
+
+### Examples
+
+```json
+[
+  {
+    "pattern": ["prj.*"],
+    "children": ["roadmap", "ideas", "issues"]
+  },
+  {
+    "pattern": ["work.**"],
+    "exclude": ["work.archives"],
+    "children": ["notes", "tasks"]
+  },
+  {
+    "pattern": ["/^blog\\.2025\\.[0-9]$/"],
+    "children": ["draft", "published"]
+  }
+]
+```
+
+**What this does:**
+- Files matching `prj.*` (like `prj.frontend`, `prj.backend`) will suggest children `roadmap`, `ideas`, `issues`
+- Files matching `work.**` (like `work.tasks`, `work.2024.tasks`, `work.deep.nested`) will suggest `notes`, `tasks` (except `work.archives`)
+- Files matching `/^blog\.2025\.[0-9]$/` (regex for single-digit months) will suggest `draft`, `published`
+
+### Configuration File Location
+
+The configuration can be stored in:
+
+1. **JSON file**: `dot-navigator-rules.json` (recommended)
+2. **Markdown file**: `dot-navigator-rules.md` with JSON in a code block:
+
+   ````markdown
+   # Dot Navigator Rules
+
+   ```json
+   [
+     {
+       "pattern": ["prj.*"],
+       "children": ["roadmap", "ideas"]
+     }
+   ]
+   ```
+   ````
+
+### Creating the Configuration File
+
+1. Open the **Dot Navigator settings** in Obsidian
+2. Go to **Schema Configuration** section
+3. Click **"Create new file"** to generate a template
+4. Edit the generated file with your rules
+
+The plugin will automatically reload rules when the configuration file changes.
 
 ## Available Commands
 

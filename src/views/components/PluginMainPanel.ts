@@ -9,8 +9,8 @@ interface ObsidianInternalApp extends App {
 
 interface DotNavigatorPluginInterface {
   saveSettings(): Promise<void>;
-  updateSchemaManager(): void;
-  getSchemaManager(): SchemaManager | undefined;
+  updateRuleManager(): void;
+  getRuleManager(): RuleManager | undefined;
 }
 import { t } from '../../i18n';
 import { FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON } from '../../types';
@@ -23,7 +23,7 @@ import { FileOperations } from '../misc/FileOperations';
 import { PersistenceManager } from './PersistenceManager';
 import { ViewInitialization } from './ViewInitialization';
 import { TreeOperations } from '../tree/TreeOperations';
-import { SchemaManager } from '../../utils/schema/SchemaManager';
+import { RuleManager } from '../../utils/schema/RuleManager';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -42,7 +42,7 @@ export default class PluginMainPanel extends ItemView {
     private layout: ViewLayout | null = null;
     private vtManager: VirtualTreeManager | null = null;
     private renameManager?: RenameManager;
-    private schemaManager?: SchemaManager;
+    private ruleManager?: RuleManager;
     private fileOperations: FileOperations;
     private persistenceManager: PersistenceManager;
     private treeOperations: TreeOperations;
@@ -52,13 +52,13 @@ export default class PluginMainPanel extends ItemView {
 
     private plugin: DotNavigatorPluginInterface; // Reference to the main plugin instance
 
-    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, plugin: DotNavigatorPluginInterface, renameManager?: RenameManager, schemaManager?: SchemaManager) {
+    constructor(leaf: WorkspaceLeaf, settings: PluginSettings, plugin: DotNavigatorPluginInterface, renameManager?: RenameManager, ruleManager?: RuleManager) {
         super(leaf);
         this.instanceId = ++PluginMainPanel.instanceCounter;
         this.settings = settings;
         this.plugin = plugin;
         this.renameManager = renameManager;
-        this.schemaManager = schemaManager;
+        this.ruleManager = ruleManager;
 
         // Initialize file operations
         this.fileOperations = new FileOperations(this.app, this.renameManager);
@@ -83,7 +83,7 @@ export default class PluginMainPanel extends ItemView {
             this.app,
             this.refresh.bind(this),
             120,
-            this.settings.dendronConfigFilePath || 'dendron.yaml',
+            this.settings.dendronConfigFilePath || 'dot-navigator-rules.json',
             this.reloadSchemaConfig.bind(this),
             this.handleSchemaConfigRename.bind(this)
         );
@@ -146,7 +146,7 @@ export default class PluginMainPanel extends ItemView {
         this.vtManager = new VirtualTreeManager(this.app, () => {
             this._syncHeaderToggle();
             this.persistenceManager.persistExpandedNodesDebounced();
-        }, this.renameManager, this.settings, this.schemaManager);
+        }, this.renameManager, this.settings, this.ruleManager);
         await this.vtManager.init(viewRoot, this.settings?.expandedNodes);
         // Access internal instance for highlight calls
         this.virtualTree = this.vtManager.getInstance();
@@ -245,8 +245,8 @@ export default class PluginMainPanel extends ItemView {
 
     async reloadSchemaConfig(): Promise<void> {
         // Reload the schema configuration using the schema manager
-        if (this.schemaManager) {
-            await this.schemaManager.refresh(true);
+        if (this.ruleManager) {
+            await this.ruleManager.refresh(true);
             new Notice(`Dendron config reloaded: ${this.settings.dendronConfigFilePath || 'dendron.yaml'}`);
         }
     }
@@ -256,18 +256,18 @@ export default class PluginMainPanel extends ItemView {
         this.settings.dendronConfigFilePath = newPath;
         await this.plugin.saveSettings();
 
-        // Update the main plugin's schema manager with the new path
-        this.plugin.updateSchemaManager();
-        this.schemaManager = this.plugin.getSchemaManager()!;
+        // Update the main plugin's rule manager with the new path
+        this.plugin.updateRuleManager();
+        this.ruleManager = this.plugin.getRuleManager()!;
 
         // Update all components with the new path
-        await this.updateSchemaConfigPath();
+        await this.updateRuleConfigPath();
     }
 
-    async updateSchemaConfigPath(): Promise<void> {
-        // Update the main plugin's schema manager with the new path
-        this.plugin.updateSchemaManager();
-        this.schemaManager = this.plugin.getSchemaManager()!;
+    async updateRuleConfigPath(): Promise<void> {
+        // Update the main plugin's rule manager with the new path
+        this.plugin.updateRuleManager();
+        this.ruleManager = this.plugin.getRuleManager()!;
 
         // Update the event handler to watch the new config file path
         this.eventHandler.unregisterFileEvents();
@@ -275,15 +275,15 @@ export default class PluginMainPanel extends ItemView {
             this.app,
             this.refresh.bind(this),
             120,
-            this.settings.dendronConfigFilePath || 'dendron.yaml',
+            this.settings.dendronConfigFilePath || 'dot-navigator-rules.json',
             this.reloadSchemaConfig.bind(this),
             this.handleSchemaConfigRename.bind(this)
         );
         this.eventHandler.registerFileEvents();
 
-        // Update the schema manager reference in VirtualTreeManager
+        // Update the rule manager reference in VirtualTreeManager
         if (this.vtManager) {
-            await this.vtManager.updateSchemaManager(this.schemaManager);
+            await this.vtManager.updateRuleManager(this.ruleManager);
         }
     }
 

@@ -62,7 +62,13 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
 
     if (node.nodeType === TreeNodeType.FOLDER) {
       name = base.replace(/ \(\d+\)$/u, '');
+    } else if (node.nodeType === TreeNodeType.SUGGESTION) {
+      // Suggestion nodes: extract the last segment after the last dot
+      const lastDotIndex = base.lastIndexOf('.');
+      name = lastDotIndex >= 0 ? base.substring(lastDotIndex + 1) : base;
+      name = name.replace(/ \(\d+\)$/u, '');
     } else {
+      // File nodes: remove extension if present
       const matched = base.match(/([^.]+)\.[^.]+$/u);
       name = (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
     }
