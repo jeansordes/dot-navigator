@@ -1,3 +1,9 @@
+## [1.21.10](https://github.com/jeansordes/dot-navigator/compare/1.21.9...1.21.10) (2025-09-26)
+
+### Features
+
+* **autocomplete:** enhance path suggestion functionality ([e0e85e1](https://github.com/jeansordes/dot-navigator/commit/e0e85e182bf4b9ee81f24d9c18f047fd8753bd71))
+
 ## [1.21.9](https://github.com/jeansordes/dot-navigator/compare/1.21.8...1.21.9) (2025-09-26)
 
 ### Features
