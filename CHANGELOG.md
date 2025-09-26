@@ -1,3 +1,9 @@
+## [1.21.9](https://github.com/jeansordes/dot-navigator/compare/1.21.8...1.21.9) (2025-09-26)
+
+### Features
+
+* **ui:** enhance rename dialog and schema parsing ([3b04085](https://github.com/jeansordes/dot-navigator/commit/3b04085c6f391176dfcb3950889c160dbb3b3b18))
+
 ## [1.21.8](https://github.com/jeansordes/dot-navigator/compare/1.21.7...1.21.8) (2025-09-25)
 
 ### Features
