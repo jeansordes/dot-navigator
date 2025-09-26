@@ -1,11 +1,12 @@
 import { App, Platform, Scope } from 'obsidian';
 import { RenameDialogData, RenameMode } from '../../types';
+import { t } from '../../i18n';
 import { parsePath } from '../../utils/misc/PathUtils';
 import { autoResize } from '../../utils/ui/UIUtils';
 import { createHints } from '../../utils/rename/RenameDialogUIUtils';
 import { validateAndShowWarning } from '../../utils/validation/PathValidationUtils';
 import type { RenameProgress } from './RenameProgress';
-import { setupMobileHeader } from './RenameDialogMobileSetup';
+import { setupMobileHeader, MobileHeaderConfig } from './RenameDialogMobileSetup';
 import { setupPathInput, setupNameInputListeners, setupExtensionInput } from './RenameDialogInputSetup';
 import { setupInputNavigationForAll } from './RenameDialogNavigationSetup';
 import { setupChildrenContainer, setupModeContainer } from './RenameDialogContainerSetup';
@@ -28,6 +29,7 @@ export interface RenameDialogUISetupParams {
     getAutocompleteState: () => AutocompleteState | null;
     setAutocompleteState: (state: AutocompleteState | null) => void;
     closeModal: () => void;
+    getMobileHeaderConfig?: () => MobileHeaderConfig;
 }
 
 export interface RenameDialogUISetupResult {
@@ -56,7 +58,8 @@ export function setupRenameDialogContent({
     getModeSelection,
     getAutocompleteState,
     setAutocompleteState,
-    closeModal
+    closeModal,
+    getMobileHeaderConfig
 }: RenameDialogUISetupParams): RenameDialogUISetupResult {
     contentEl.empty();
     contentEl.addClass('rename-dialog-content');
@@ -72,7 +75,12 @@ export function setupRenameDialogContent({
     let layoutContainer = contentEl;
 
     if (Platform.isMobile) {
-        layoutContainer = setupMobileHeader(contentEl, attemptSubmit, closeModal);
+        const config = getMobileHeaderConfig ? getMobileHeaderConfig() : {
+            submitButtonText: t('renameDialogConfirm'),
+            onSubmit: attemptSubmit,
+            onClose: closeModal
+        };
+        layoutContainer = setupMobileHeader(contentEl, config);
     }
 
     if (renameProgress) {
@@ -114,6 +122,7 @@ export function setupRenameDialogContent({
     const extensionInput = setupExtensionInput(inputContainer, data, pathInput, nameInput, app, contentEl, handlePostOperationInteraction);
     setupNameInputListeners(nameInput, pathInput, extensionInput, data, app, contentEl, handlePostOperationInteraction);
 
+
     setupInputNavigationForAll(
         pathInput,
         nameInput,
@@ -141,8 +150,15 @@ export function setupRenameDialogContent({
     createHints(layoutContainer, data);
 
     setTimeout(() => {
-        nameInput.focus();
-        nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
+        // Focus the path input if it exists and is visible (for files), otherwise focus name input
+        if (data.kind !== 'folder' && pathInput && !pathInput.hasClass('is-hidden')) {
+            pathInput.focus();
+            // Position cursor at the end for path navigation
+            pathInput.setSelectionRange(pathInput.value.length, pathInput.value.length);
+        } else {
+            nameInput.focus();
+            nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
+        }
         validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || data.extension || '', data.path, app, contentEl);
     }, 0);
 

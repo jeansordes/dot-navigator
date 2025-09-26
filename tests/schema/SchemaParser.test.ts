@@ -1,289 +1,173 @@
-import { parseSchemaFile } from '../../src/utils/schema/SchemaParser';
+import {
+  parseAndValidate,
+  expectNoErrors,
+  expectEntryCount,
+  expectEntryExists,
+  expectSchemaEntry,
+} from './SchemaParser.helpers';
+import {
+  basicSchemaYaml,
+  choicePatternYaml,
+  invalidSchemaYaml,
+  jsonInYamlCodeblock,
+  jsonInJsonCodeblock,
+  regularYamlContent,
+  rawJsonContent,
+  jsonInMdFile,
+  yamlInMdCodeblock,
+  yamlInUnspecifiedCodeblock,
+} from './SchemaParser.fixtures';
 
 describe('SchemaParser', () => {
-  it('parses basic schema entries', () => {
-    const yaml = `
-version: 1
-schemas:
-  - id: root
-    parent: root
-    namespace: true
-    children:
-      - type: schema
-        id: notes
-  - id: notes
-    title: Notes
-    pattern:
-      type: static
-      value: notes
-    children:
-      - type: note
-        id: notes.index
-`;
+  describe('Basic Schema Parsing', () => {
+    it('parses basic schema entries', () => {
+      const { result, entries } = parseAndValidate(basicSchemaYaml, 'test.schema.yml');
 
-    const result = parseSchemaFile(yaml, 'test.schema.yml');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(2);
+      expectNoErrors(result);
+      expectEntryCount(result, 2);
 
-    const [root, notes] = result.entries;
-    expect(root.id).toBe('root');
-    expect(root.parent).toBe('root');
-    expect(root.namespace).toBe(true);
-    expect(root.children).toHaveLength(1);
-    expect(root.children[0]).toEqual({ type: 'schema', id: 'notes' });
+      const root = expectEntryExists(entries, 'root');
+      expectSchemaEntry(root, {
+        parent: 'root',
+        namespace: true,
+        children: [{ type: 'schema', id: 'notes' }],
+      });
 
-    expect(notes.id).toBe('notes');
-    expect(notes.pattern).toEqual({ type: 'static', value: 'notes' });
-    expect(notes.children).toHaveLength(1);
-    expect(notes.children[0]).toEqual({ type: 'note', id: 'notes.index' });
+      const notes = expectEntryExists(entries, 'notes');
+      expectSchemaEntry(notes, {
+        pattern: { type: 'static', value: 'notes' },
+        children: [{ type: 'note', id: 'notes.index' }],
+      });
+    });
+
+    it('parses choice pattern and string shorthand children', () => {
+      const { result, entries } = parseAndValidate(choicePatternYaml, 'projects.schema.yml');
+
+      expectNoErrors(result);
+      expectEntryCount(result, 2);
+
+      const projects = expectEntryExists(entries, 'projects');
+      expectSchemaEntry(projects, {
+        pattern: { type: 'choice', values: ['web', 'app'] },
+        children: [
+          { type: 'schema', id: 'tasks' },
+          { type: 'note', id: 'projects.index' },
+        ],
+      });
+    });
+
+    it('reports errors for invalid entries', () => {
+      const { result } = parseAndValidate(invalidSchemaYaml, 'invalid.schema.yml');
+
+      expectEntryCount(result, 0);
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
   });
 
-  it('parses choice pattern and string shorthand children', () => {
-    const yaml = `
-schemas:
-  - id: projects
-    pattern:
-      type: choice
-      items:
-        - value: web
-        - value: app
-    children:
-      - tasks
-      - type: note
-        id: projects.index
-  - id: tasks
-    pattern:
-      type: static
-      value: tasks
-`;
+  describe('Codeblock Parsing', () => {
+    it('parses JSON from YAML codeblock in file with Obsidian frontmatter', () => {
+      const { result, entries } = parseAndValidate(jsonInYamlCodeblock, 'dendron-config.yaml');
 
-    const result = parseSchemaFile(yaml, 'projects.schema.yml');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(2);
+      expectNoErrors(result);
+      expectEntryCount(result, 2);
+      expect(result.version).toBe(1);
 
-    const projects = result.entries[0];
-    expect(projects.pattern).toEqual({ type: 'choice', values: ['web', 'app'] });
-    expect(projects.children).toEqual([
-      { type: 'schema', id: 'tasks' },
-      { type: 'note', id: 'projects.index' },
-    ]);
+      const notes = expectEntryExists(entries, 'Notes');
+      expectSchemaEntry(notes, {
+        parent: 'root',
+        namespace: true,
+        children: [{ type: 'schema', id: 'prj-template' }],
+      });
+
+      const prjTemplate = expectEntryExists(entries, 'prj-template');
+      expectSchemaEntry(prjTemplate, {
+        parent: 'Notes',
+        pattern: { type: 'regexp', value: '^prj[._](?!.*\\b(ideas|roadmap)\\b).*' },
+        children: [
+          { type: 'note', id: 'roadmap' },
+          { type: 'note', id: 'ideas' },
+        ],
+      });
+    });
+
+    it('parses JSON from codeblock with json language marker', () => {
+      const { result, entries } = parseAndValidate(jsonInJsonCodeblock, 'config.json');
+
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
+
+      const entry = expectEntryExists(entries, 'test');
+      expectSchemaEntry(entry, {
+        children: [{ type: 'note', id: 'test.note' }],
+      });
+    });
+
+    it('parses YAML in .md files with codeblock', () => {
+      const { result, entries } = parseAndValidate(yamlInMdCodeblock, 'dendron-config.md');
+
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
+
+      const entry = expectEntryExists(entries, 'md-yaml-test');
+      expectSchemaEntry(entry, {
+        children: [],
+      });
+    });
+
+    it('parses YAML in .md files with codeblock without language specifier', () => {
+      const { result, entries } = parseAndValidate(yamlInUnspecifiedCodeblock, 'dendron-config.md');
+
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
+
+      const entry = expectEntryExists(entries, 'md-unspecified-test');
+      expectSchemaEntry(entry, {
+        children: [],
+      });
+    });
   });
 
-  it('reports errors for invalid entries', () => {
-    const yaml = `
-schemas:
-  - title: Missing id
-    children:
-      - {}
-`;
+  describe('Direct Content Parsing', () => {
+    it('falls back to YAML parsing when no JSON codeblock found', () => {
+      const { result, entries } = parseAndValidate(regularYamlContent, 'config.yaml');
 
-    const result = parseSchemaFile(yaml, 'invalid.schema.yml');
-    expect(result.entries).toHaveLength(0);
-    expect(result.errors.length).toBeGreaterThan(0);
-  });
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
 
-  it('parses JSON from codeblock in file with Obsidian frontmatter', () => {
-    const content = `---
-created: 2025-09-23
----
+      const entry = expectEntryExists(entries, 'test');
+      expectSchemaEntry(entry, {
+        children: [{ type: 'note', id: 'test.note' }],
+      });
+    });
 
-\`\`\`yaml
-{
-  "version": 1,
-  "schemas": [
-    {
-      "id": "Notes",
-      "parent": "root",
-      "namespace": true,
-      "children": [
-        {
-          "id": "prj-template",
-          "type": "schema"
-        }
-      ]
-    },
-    {
-      "id": "prj-template",
-      "parent": "Notes",
-      "pattern": {
-        "type": "regex",
-        "value": "^prj[._](?!.*\\\\b(ideas|roadmap)\\\\b).*"
-      },
-      "children": [
-        {
-          "id": "roadmap",
-          "type": "note"
-        },
-        {
-          "id": "ideas",
-          "type": "note"
-        }
-      ]
-    }
-  ]
-}
-\`\`\`
-`;
+    it('parses raw JSON when no codeblocks present', () => {
+      const { result, entries } = parseAndValidate(rawJsonContent, 'raw-json.txt');
 
-    const result = parseSchemaFile(content, 'dendron-config.yaml');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(2);
-    expect(result.version).toBe(1);
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
 
-    const [notes, prjTemplate] = result.entries;
-    expect(notes.id).toBe('Notes');
-    expect(notes.parent).toBe('root');
-    expect(notes.namespace).toBe(true);
-    expect(notes.children).toHaveLength(1);
-    expect(notes.children[0]).toEqual({ type: 'schema', id: 'prj-template' });
+      const entry = expectEntryExists(entries, 'raw-json-test');
+      expectSchemaEntry(entry, {
+        children: [],
+      });
+    });
 
-    expect(prjTemplate.id).toBe('prj-template');
-    expect(prjTemplate.parent).toBe('Notes');
-    expect(prjTemplate.pattern).toEqual({ type: 'regexp', value: '^prj[._](?!.*\\b(ideas|roadmap)\\b).*' });
-    expect(prjTemplate.children).toHaveLength(2);
-    expect(prjTemplate.children[0]).toEqual({ type: 'note', id: 'roadmap' });
-    expect(prjTemplate.children[1]).toEqual({ type: 'note', id: 'ideas' });
-  });
+    it('parses JSON in .md files with frontmatter', () => {
+      const { result, entries } = parseAndValidate(jsonInMdFile, 'dendron-config.md');
 
-  it('parses JSON from codeblock with json language marker', () => {
-    const content = `---
-title: My Config
----
+      expectNoErrors(result);
+      expectEntryCount(result, 1);
+      expect(result.version).toBe(1);
 
-\`\`\`json
-{
-  "version": 1,
-  "schemas": [
-    {
-      "id": "test",
-      "children": [
-        {
-          "type": "note",
-          "id": "test.note"
-        }
-      ]
-    }
-  ]
-}
-\`\`\`
-`;
-
-    const result = parseSchemaFile(content, 'config.json');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(1);
-    expect(result.version).toBe(1);
-
-    const entry = result.entries[0];
-    expect(entry.id).toBe('test');
-    expect(entry.children).toHaveLength(1);
-    expect(entry.children[0]).toEqual({ type: 'note', id: 'test.note' });
-  });
-
-  it('falls back to YAML parsing when no JSON codeblock found', () => {
-    const content = `---
-title: Regular YAML
----
-
-version: 1
-schemas:
-  - id: test
-    children:
-      - type: note
-        id: test.note
-`;
-
-    const result = parseSchemaFile(content, 'config.yaml');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(1);
-    expect(result.version).toBe(1);
-
-    const entry = result.entries[0];
-    expect(entry.id).toBe('test');
-    expect(entry.children).toHaveLength(1);
-    expect(entry.children[0]).toEqual({ type: 'note', id: 'test.note' });
-  });
-
-  it('parses raw JSON when no codeblocks present', () => {
-    const content = `Some text before
-{
-  "version": 1,
-  "schemas": [
-    {
-      "id": "raw-json-test",
-      "children": []
-    }
-  ]
-}
-Some text after`;
-
-    const result = parseSchemaFile(content, 'raw-json.txt');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(1);
-    expect(result.version).toBe(1);
-
-    const entry = result.entries[0];
-    expect(entry.id).toBe('raw-json-test');
-  });
-
-  it('parses the actual dendron-config.yaml content', () => {
-    const content = `---
-created: 2025-09-23
----
-
-\`\`\`yaml
-{
-  "version": 1,
-  "schemas": [
-    {
-      "id": "Notes",
-      "parent": "root",
-      "namespace": true,
-      "children": [
-        {
-          "id": "prj-template",
-          "type": "schema"
-        }
-      ]
-    },
-    {
-      "id": "prj-template",
-      "parent": "Notes",
-      "pattern": {
-        "type": "regex",
-        "value": "^prj[._](?!.*\\\\b(ideas|roadmap)\\\\b).*"
-      },
-      "children": [
-        {
-          "id": "roadmap",
-          "type": "note"
-        },
-        {
-          "id": "ideas",
-          "type": "note"
-        }
-      ]
-    }
-  ]
-}
-\`\`\`
-`;
-
-    const result = parseSchemaFile(content, 'dendron-config.yaml');
-    expect(result.errors).toHaveLength(0);
-    expect(result.entries).toHaveLength(2);
-    expect(result.version).toBe(1);
-
-    const notes = result.entries.find(e => e.id === 'Notes');
-    const prjTemplate = result.entries.find(e => e.id === 'prj-template');
-
-    expect(notes).toBeDefined();
-    expect(notes!.parent).toBe('root');
-    expect(notes!.namespace).toBe(true);
-    expect(notes!.children).toHaveLength(1);
-
-    expect(prjTemplate).toBeDefined();
-    expect(prjTemplate!.parent).toBe('Notes');
-    expect(prjTemplate!.pattern).toEqual({ type: 'regexp', value: '^prj[._](?!.*\\b(ideas|roadmap)\\b).*' });
-    expect(prjTemplate!.children).toHaveLength(2);
+      const entry = expectEntryExists(entries, 'md-json-test');
+      expectSchemaEntry(entry, {
+        children: [],
+      });
+    });
   });
 });

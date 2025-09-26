@@ -14,29 +14,35 @@ import {
 const debug = createDebug('dot-navigator:schema:parser');
 
 /**
- * Extracts the first complete JSON object from a file content.
- * Looks for JSON in codeblocks (```json or ```yaml) or raw JSON in the content.
+ * Extracts the first complete structured content (JSON or YAML) from a file.
+ * Looks for content in codeblocks (```json, ```yaml, or ```) or raw JSON in the content.
  */
-function extractJSON(content: string): string | null {
-  // First, try to find JSON within codeblocks
-  const codeblockRegex = /```(?:json|yaml)\s*\n?([\s\S]*?)```/g;
+function extractStructuredContent(content: string): string | null {
+  // First, try to find content within codeblocks (json, yaml, or unspecified language)
+  const codeblockRegex = /```(?:json|yaml)?\s*\n?([\s\S]*?)```/g;
   let match;
 
   while ((match = codeblockRegex.exec(content)) !== null) {
     const codeblockContent = match[1].trim();
     if (codeblockContent) {
+      // Try to validate as JSON first
       try {
-        // Validate that it's valid JSON
         JSON.parse(codeblockContent);
         return codeblockContent;
       } catch {
-        // Not valid JSON, continue searching
-        continue;
+        // Not valid JSON, try to validate as YAML
+        try {
+          parse(codeblockContent);
+          return codeblockContent;
+        } catch {
+          // Not valid YAML either, continue searching
+          continue;
+        }
       }
     }
   }
 
-  // If no valid JSON found in codeblocks, try to find raw JSON objects
+  // If no valid content found in codeblocks, try to find raw JSON objects
   // Look for objects starting with { and ending with }
   const jsonObjectRegex = /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
   let jsonMatch;
@@ -217,29 +223,36 @@ export function parseSchemaFile(contents: string, filePath: string): SchemaParse
   const errors: SchemaError[] = [];
   let doc: unknown;
 
-  // First, try to extract and parse JSON from the file
-  const jsonContent = extractJSON(contents);
-  if (jsonContent) {
+  // Strip Obsidian frontmatter if present before any parsing
+  let contentToParse = contents;
+  const frontmatterMatch = contents.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
+  if (frontmatterMatch) {
+    contentToParse = frontmatterMatch[1];
+  }
+
+  // First, try to extract and parse structured content (JSON/YAML) from the file
+  const structuredContent = extractStructuredContent(contentToParse);
+  if (structuredContent) {
+    // Try to parse as JSON first
     try {
-      doc = JSON.parse(jsonContent);
+      doc = JSON.parse(structuredContent);
       debug('Parsed JSON content from file %s', filePath);
-    } catch (error) {
-      errors.push({ file: filePath, message: 'Failed to parse extracted JSON', details: error instanceof Error ? error.message : error });
-      // Continue to try YAML parsing as fallback
+    } catch (jsonError) {
+      // If JSON parsing fails, try YAML
+      try {
+        doc = parse(structuredContent);
+        debug('Parsed YAML content from file %s', filePath);
+      } catch (yamlError) {
+        errors.push({ file: filePath, message: 'Failed to parse extracted content as JSON or YAML', details: { jsonError: jsonError instanceof Error ? jsonError.message : jsonError, yamlError: yamlError instanceof Error ? yamlError.message : yamlError } });
+        // Continue to try parsing the entire content as YAML
+      }
     }
   }
 
   // If no JSON was found or JSON parsing failed, try YAML parsing
   if (!doc) {
     try {
-      // Strip Obsidian frontmatter if present before parsing YAML
-      let yamlContent = contents;
-      const frontmatterMatch = contents.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
-      if (frontmatterMatch) {
-        yamlContent = frontmatterMatch[1];
-      }
-
-      doc = parse(yamlContent);
+      doc = parse(contentToParse);
       debug('Parsed YAML content from file %s', filePath);
     } catch (error) {
       errors.push({ file: filePath, message: 'Failed to parse YAML', details: error instanceof Error ? error.message : error });

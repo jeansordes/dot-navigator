@@ -1,16 +1,17 @@
 /* Tree View Styles */
 
 .dotn_view {
-    user-select: none;
-    color: var(--dotn_color-text-clickable);
-    font-size: var(--dotn_font-size);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 0 !important;
-    overflow: hidden;
-    position: relative;
-    /* Create positioning context for the entire view */
+    &.workspace-leaf-content {
+        user-select: none;
+        color: var(--dotn_color-text-clickable);
+        font-size: var(--dotn_font-size);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 0 !important;
+        overflow: hidden;
+        position: relative;
+    }
 
     .dotn_view-header {
         display: flex;

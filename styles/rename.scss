@@ -539,6 +539,31 @@
 .rename-main-file {
     background: rgba(var(--color-blue-rgb), 0.03);
     border-left: 3px solid var(--color-blue);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rename-copy-button {
+    cursor: pointer;
+    margin: 4px;
+    color: var(--dotn_color-text-clickable);
+    min-width: var(--dotn_button-size);
+    height: var(--dotn_button-size);
+    line-height: var(--dotn_button-size);
+    border-radius: var(--dotn_border-radius);
+    background-color: var(--dotn_bg-hover);
+    position: relative;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        color: var(--dotn_color-text-hover);
+        background-color: var(--background-modifier-hover);
+    }
 }
 
 .rename-file-diff {

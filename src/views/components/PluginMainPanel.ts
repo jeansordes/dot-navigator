@@ -281,13 +281,6 @@ export default class PluginMainPanel extends ItemView {
         if (this.vtManager) {
             await this.vtManager.updateSchemaManager(this.schemaManager);
         }
-
-        // Refresh the schema to load the new config file
-        if (this.schemaManager) {
-            this.schemaManager.refresh(true).catch(error => {
-                console.error('Failed to refresh schema after config path update:', error);
-            });
-        }
     }
 
     // Incremental refresh and legacy rebuild paths removed; manager handles updates

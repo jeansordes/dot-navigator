@@ -86,6 +86,8 @@ export class DendronEventHandler {
                     console.error('Failed to update schema config path:', error);
                 });
             }
+            // Don't queue a refresh here, let the callback handle it to avoid using stale schema manager
+            return;
         }
 
         // Defer to unified rebuild path; debounce lightly for stability
@@ -121,13 +123,9 @@ export class DendronEventHandler {
 
     private handleMetadataChange = (file: TFile) => {
         const path = file.path;
+        // Note: schemaReloadCallback is already called in handleFileModify, so we skip it here
+        // to avoid duplicate schema reloads when editing schema files
         if (this.isSchemaFile(path)) {
-            // Reload schema configuration when config file is modified
-            if (this.schemaReloadCallback) {
-                this.schemaReloadCallback().catch(error => {
-                    console.error('Failed to reload schema config:', error);
-                });
-            }
             this.queueRefresh(path, true, true);
             return;
         }

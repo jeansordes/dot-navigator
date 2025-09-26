@@ -1,4 +1,5 @@
 import { App, Modal, Platform } from 'obsidian';
+import { t } from '../../i18n';
 import { RenameDialogData, RenameMode, RenameOptions, RenameProgress as RenameProgressData } from '../../types';
 import { loadDirectories } from '../../utils/misc/PathLoadingUtils';
 import { shouldProceedWithRename } from '../../utils/rename/RenameLogicUtils';
@@ -6,6 +7,7 @@ import { hideWarning } from '../../utils/validation/PathValidationUtils';
 import { shouldShowModeSelection as shouldShowModeSelectionUtil } from '../../utils/rename/RenameDialogUIUtils';
 import { RenameProgress } from './RenameProgress';
 import { setupRenameDialogContent } from './RenameDialogContent';
+import type { MobileHeaderConfig } from './RenameDialogMobileSetup';
 import type { AutocompleteState } from '../../utils/misc/AutocompleteUtils';
 import { showNoChangesMessage as showNoChangesMessageHelper, hideInfoMessage as hideInfoMessageHelper } from './RenameDialogMessages';
 import {
@@ -39,6 +41,7 @@ export class RenameDialog extends Modal {
     private mobileTouchMoveHandler?: (event: TouchEvent) => void;
     private mobileTouchEndHandler?: (event: TouchEvent) => void;
     private mobileKeyboardHandler?: MobileKeyboardHandler;
+    private mobileSubmitButton?: HTMLButtonElement;
 
     constructor(
         app: App,
@@ -67,7 +70,49 @@ export class RenameDialog extends Modal {
         return this.allDirectories;
     }
 
+    private getMobileHeaderConfig(): MobileHeaderConfig {
+        const isProgressVisible = this.isProgressVisible();
+
+        return {
+            submitButtonText: isProgressVisible ? 'Done' : t('renameDialogConfirm'),
+            onSubmit: isProgressVisible ? () => this.close() : () => this.attemptSubmit(),
+            onClose: () => this.close()
+        };
+    }
+
+    private isProgressVisible(): boolean {
+        if (!this.renameProgress) {
+            return false;
+        }
+        const progressEl = this.renameProgress.getElement();
+        // If the element is not attached to the DOM yet, consider it hidden
+        if (!progressEl.parentElement) {
+            return false;
+        }
+        return !progressEl.hasClass('is-hidden');
+    }
+
+    private attemptSubmit(): void {
+        if (this.shouldProceedWithRename()) {
+            this.handleRename();
+        } else {
+            this.showNoChangesMessage();
+        }
+    }
+
+    private updateMobileSubmitButton(): void {
+        if (Platform.isMobile && this.mobileSubmitButton) {
+            const config = this.getMobileHeaderConfig();
+            this.mobileSubmitButton.textContent = config.submitButtonText;
+            // Update the click handler
+            this.mobileSubmitButton.onclick = () => config.onSubmit();
+        }
+    }
+
     onOpen(): void {
+        // Add dotn_view class to make CSS variables available
+        this.contentEl.addClass('dotn_view');
+
         const {
             pathInput,
             nameInput,
@@ -91,7 +136,8 @@ export class RenameDialog extends Modal {
             getModeSelection: () => this.modeSelection,
             getAutocompleteState: () => this.autocompleteState,
             setAutocompleteState: (state) => { this.autocompleteState = state; },
-            closeModal: () => this.close()
+            closeModal: () => this.close(),
+            getMobileHeaderConfig: () => this.getMobileHeaderConfig()
         });
 
         this.pathInput = pathInput;
@@ -100,6 +146,11 @@ export class RenameDialog extends Modal {
         this.modeContainer = modeContainer ?? undefined;
         this.childrenListEl = childrenListEl;
         this.autocompleteState = autocompleteState;
+
+        // Store reference to mobile submit button for dynamic updates
+        if (Platform.isMobile) {
+            this.mobileSubmitButton = this.contentEl.querySelector('.rename-mobile-submit-button') as HTMLButtonElement;
+        }
 
         // Initialize mobile keyboard handler if on mobile
         if (Platform.isMobile) {
@@ -125,10 +176,12 @@ export class RenameDialog extends Modal {
 
     private showProgress(options: { reset?: boolean } = {}): void {
         showProgressHelper(this.getProgressContext(), options);
+        this.updateMobileSubmitButton();
     }
 
     private hideProgress(): void {
         hideProgressHelper(this.getProgressContext());
+        this.updateMobileSubmitButton();
     }
 
     private leaveRenamingState(keepProgressVisible: boolean): void {

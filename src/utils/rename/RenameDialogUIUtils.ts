@@ -119,6 +119,42 @@ export function createFileItem(
     // Create inline diff for the file
     const diffContainer = fileItem.createEl('div', { cls: 'rename-file-diff' });
     callbacks.updateFileDiff(diffContainer, filePath, isMainFile);
+
+    if (isMainFile) {
+        // Add copy button for main file (after the diff)
+        const copyButton = fileItem.createEl('div', {
+            cls: 'rename-copy-button',
+            attr: { 'aria-label': 'Copy file path', 'role': 'button', 'tabindex': '0' }
+        });
+        setIcon(copyButton, 'copy');
+
+        const copyAction = async () => {
+            const diffContainer = fileItem.querySelector('.rename-file-diff');
+            if (diffContainer) {
+                const textToCopy = diffContainer.textContent || '';
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    // Show check icon for 1 second
+                    setIcon(copyButton, 'check');
+                    setTimeout(() => {
+                        setIcon(copyButton, 'copy');
+                    }, 1000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            }
+        };
+
+        copyButton.addEventListener('click', copyAction);
+
+        // Add keyboard support for accessibility
+        copyButton.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                copyAction();
+            }
+        });
+    }
 }
 
 /**

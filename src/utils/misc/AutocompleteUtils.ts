@@ -265,10 +265,11 @@ export function navigateSuggestions(
         }
     }
 
+    // Dispatch input event while navigating flag is still set
+    input.dispatchEvent(new Event('input'));
+
     // Reset navigating flag after navigation is complete
     input.removeAttribute('data-navigating');
-
-    input.dispatchEvent(new Event('input'));
 
     return state;
 }
