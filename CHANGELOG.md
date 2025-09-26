@@ -1,3 +1,9 @@
+## [1.21.11](https://github.com/jeansordes/dot-navigator/compare/1.21.10...1.21.11) (2025-09-26)
+
+### Bug Fixes
+
+* ensure schema manager updates when config path changes via UI ([3e06a95](https://github.com/jeansordes/dot-navigator/commit/3e06a950dda3e98a9c80e0a85ad303af10451b23))
+
 ## [1.21.10](https://github.com/jeansordes/dot-navigator/compare/1.21.9...1.21.10) (2025-09-26)
 
 ### Features
