@@ -174,9 +174,10 @@ export class RenameProgress {
                     } else if (completed < total) {
                         displayText = `${t('renameDialogProgressCancelling')} ${completed}/${total}`;
                     } else {
+                        const counter = total > 0 ? `${total}/${total} ` : '';
                         displayText = failed === 0
-                            ? t('renameDialogProgressCancelled')
-                            : t('renameDialogProgressCancelIssues');
+                            ? `${counter}${t('renameDialogProgressCancelled')}`
+                            : `${counter}${t('renameDialogProgressCancelIssues')}`;
                     }
                     break;
                 default:
@@ -187,9 +188,10 @@ export class RenameProgress {
                     } else if (completed < total) {
                         displayText = `${completed}/${total}`;
                     } else {
+                        const counter = total > 0 ? `${total}/${total} ` : '';
                         displayText = failed === 0
-                            ? t('renameDialogProgressCompleted')
-                            : t('renameDialogProgressFailed');
+                            ? `${counter}${t('renameDialogProgressCompleted')}`
+                            : `${counter}${t('renameDialogProgressFailed')}`;
                     }
                     break;
             }
@@ -241,7 +243,8 @@ export class RenameProgress {
         this.setButtonState(this.cancelButtonEl, 'hidden');
         this.setButtonState(this.undoButtonEl, 'hidden');
 
-        this.progressTextEl.textContent = t('renameDialogProgressCancelled');
+        const counter = this.totalFiles > 0 ? `${this.totalFiles}/${this.totalFiles} ` : '';
+        this.progressTextEl.textContent = `${counter}${t('renameDialogProgressCancelled')}`;
     }
 
     showRevertCancelled(): void {
@@ -250,7 +253,8 @@ export class RenameProgress {
         this.setButtonState(this.cancelButtonEl, 'hidden');
         this.setButtonState(this.undoButtonEl, 'hidden');
 
-        this.progressTextEl.textContent = t('renameDialogProgressCancelled');
+        const counter = this.totalFiles > 0 ? `${this.totalFiles}/${this.totalFiles} ` : '';
+        this.progressTextEl.textContent = `${counter}${t('renameDialogProgressCancelled')}`;
     }
 
     showRevertFailed(): void {
@@ -259,7 +263,8 @@ export class RenameProgress {
         this.setButtonState(this.cancelButtonEl, 'enabled');
         this.setButtonState(this.undoButtonEl, 'enabled');
 
-        this.progressTextEl.textContent = t('renameDialogProgressCancelIssues');
+        const counter = this.totalFiles > 0 ? `${this.totalFiles}/${this.totalFiles} ` : '';
+        this.progressTextEl.textContent = `${counter}${t('renameDialogProgressCancelIssues')}`;
     }
 
     /**
