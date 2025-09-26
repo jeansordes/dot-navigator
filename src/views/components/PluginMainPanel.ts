@@ -265,6 +265,10 @@ export default class PluginMainPanel extends ItemView {
     }
 
     async updateSchemaConfigPath(): Promise<void> {
+        // Update the main plugin's schema manager with the new path
+        this.plugin.updateSchemaManager();
+        this.schemaManager = this.plugin.getSchemaManager()!;
+
         // Update the event handler to watch the new config file path
         this.eventHandler.unregisterFileEvents();
         this.eventHandler = new DendronEventHandler(
