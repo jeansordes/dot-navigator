@@ -1,3 +1,9 @@
+## [1.22.3](https://github.com/jeansordes/dot-navigator/compare/1.22.2...1.22.3) (2025-09-27)
+
+### Performance Improvements
+
+* **startup:** optimize plugin startup performance ([1018fc3](https://github.com/jeansordes/dot-navigator/commit/1018fc381c41cf6057db4e9b0d15292482727972))
+
 ## [1.22.2](https://github.com/jeansordes/dot-navigator/compare/1.22.1...1.22.2) (2025-09-27)
 
 ## [1.22.1](https://github.com/jeansordes/dot-navigator/compare/1.21.11...1.22.1) (2025-09-27)
