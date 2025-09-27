@@ -1,9 +1,12 @@
 import { RuleManager } from '../utils/schema/RuleManager';
 import { RuleSuggester } from '../utils/schema/RuleSuggester';
-import { PluginSettings, TreeNode } from '../types';
+import { PluginSettings, TreeNode, TreeNodeType } from '../types';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:schema-utils');
 const debugError = debug.extend('error');
+
+// Module-level storage for rule suggesters (not currently used but kept for future extensibility)
+const _ruleSuggesterMap = new WeakMap<TreeNode, RuleSuggester>();
 
 /**
  * Utility functions for handling schema suggestions in the virtual tree
@@ -15,7 +18,8 @@ export class SchemaUtils {
   static async applyAllSchemaSuggestionsToTree(
     root: TreeNode,
     ruleManager: RuleManager | undefined,
-    settings: PluginSettings | undefined
+    settings: PluginSettings | undefined,
+    processAllNodes: boolean = false
   ): Promise<void> {
     const shouldUseSchema = settings?.enableSchemaSuggestions ?? true;
     debug('Schema suggestions enabled:', shouldUseSchema);
@@ -32,12 +36,101 @@ export class SchemaUtils {
 
       const suggester = new RuleSuggester(ruleIndex);
 
-      // Apply suggestions to ALL nodes in the tree - no filtering
-      suggester.apply(root, () => true); // Always return true to process all nodes
+      // OPTIMIZATION: Only apply suggestions to expanded nodes initially
+      // This dramatically reduces startup time by avoiding processing all files upfront
+      const isExpandedOrRoot = (node: TreeNode): boolean => {
+        // Always process root level
+        if (!node.path.includes('/')) return true;
+
+        // For now, only process nodes that would be visible on first load
+        // This could be made configurable or based on settings later
+        return false; // Skip most nodes initially
+      };
+
+      if (processAllNodes) {
+        // For background caching: process ALL nodes immediately
+        suggester.apply(root, () => true);
+      } else {
+        // For initial load: only process expanded nodes, then background process remaining
+        suggester.apply(root, isExpandedOrRoot);
+
+        // Process remaining nodes in the background after initial render
+        setTimeout(() => {
+          this.applySuggestionsToRemainingNodes(root, suggester);
+        }, 100); // Small delay to ensure initial render is complete
+      }
 
     } catch (error) {
       debugError('Failed to apply schema suggestions:', error);
     }
+  }
+
+  /**
+   * Apply schema suggestions to remaining nodes in the background
+   */
+  private static applySuggestionsToRemainingNodes(root: TreeNode, suggester: RuleSuggester): void {
+    debug('Starting background processing of remaining nodes for schema suggestions');
+
+    const nodesToProcess: TreeNode[] = [];
+    const visited = new Set<string>();
+
+    // Collect all nodes that haven't been processed yet
+    const collectUnprocessedNodes = (node: TreeNode): void => {
+      if (visited.has(node.path)) return;
+      visited.add(node.path);
+
+      // Skip if already processed (has suggestions loaded flag)
+      if (node._suggestionsLoaded) {
+        // Still visit children in case they need processing
+        node.children.forEach(child => collectUnprocessedNodes(child));
+        return;
+      }
+
+      nodesToProcess.push(node);
+      node.children.forEach(child => collectUnprocessedNodes(child));
+    };
+
+    collectUnprocessedNodes(root);
+
+    debug(`Found ${nodesToProcess.length} nodes to process in background`);
+
+    // Process nodes in batches to avoid blocking the UI
+    let _processedCount = 0;
+    const batchSize = 50; // Process 50 nodes at a time
+
+    const processBatch = () => {
+      const batch = nodesToProcess.splice(0, batchSize);
+      if (batch.length === 0) {
+        debug('Background processing of schema suggestions completed');
+        return;
+      }
+
+      for (const node of batch) {
+        const childrenToAdd = suggester.getChildren(node.path);
+        if (childrenToAdd.length > 0) {
+          // Add virtual children nodes
+          for (const childName of childrenToAdd) {
+            const childPath = `${node.path}/${childName}`;
+            if (!node.children.has(childName)) {
+              const childNode: TreeNode = {
+                path: childPath,
+                nodeType: TreeNodeType.SUGGESTION,
+                children: new Map(),
+              };
+              node.children.set(childName, childNode);
+            }
+          }
+        }
+        node._suggestionsLoaded = true;
+        _processedCount++;
+      }
+
+      // Continue processing in next animation frame
+      requestAnimationFrame(processBatch);
+    };
+
+    // Start background processing
+    requestAnimationFrame(processBatch);
   }
 
   /**

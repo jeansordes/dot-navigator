@@ -110,10 +110,10 @@ export class CacheUtils {
     const files = app.vault.getFiles();
     const folders = app.vault.getAllFolders();
 
-    let lastModified = 0;
-    for (const file of files) {
-      lastModified = Math.max(lastModified, file.stat?.mtime ?? 0);
-    }
+    // Optimize lastModified calculation - use reduce for better performance
+    const lastModified = files.reduce((max, file) => {
+      return Math.max(max, file.stat?.mtime ?? 0);
+    }, 0);
 
     return {
       totalFiles: files.length,

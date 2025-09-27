@@ -52,7 +52,9 @@ export interface TreeNode {
     nodeType: TreeNodeType;
     obsidianResource?: TFile | TFolder;
     children: Map<string, TreeNode>;
-}
+    // Flag to track if schema suggestions have been loaded for this node
+    _suggestionsLoaded?: boolean;
+} 
 
 // Types for the virtual tree component
 // Base item shape for input data (no computed fields)

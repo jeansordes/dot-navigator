@@ -2,13 +2,13 @@ import { App } from 'obsidian';
 import { ComplexVirtualTree } from '../views/tree/VirtualizedTree';
 import { buildVirtualizedData } from './virtualData';
 import { RenameManager } from '../utils/rename/RenameManager';
-import { PluginSettings } from '../types';
+import { PluginSettings, TreeNode } from '../types';
 import { TreeCacheManager, type CachedTreeData } from './TreeCacheManager';
 import { SchemaUtils } from './SchemaUtils';
 import { CacheUtils } from './CacheUtils';
 import { TreeRenderUtils } from './TreeRenderUtils';
 import { TreeUtils } from './TreeUtils';
-import createDebug from 'debug'; 
+import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
 import { RuleManager } from '../utils/schema/RuleManager';
@@ -23,6 +23,7 @@ export class VirtualTreeManager {
   private ruleManager?: RuleManager;
   private cacheManager = new TreeCacheManager();
   private usingCachedData = false;
+  private rootTreeNode?: TreeNode;
 
   constructor(
     app: App,
@@ -36,7 +37,7 @@ export class VirtualTreeManager {
     this.settings = settings;
     this.ruleManager = ruleManager;
 
-    // Schema suggestions are now pre-calculated, so no need to apply them on expansion
+    // Schema suggestions are now processed in background, no need for lazy loading on expansion
     this.onExpansionChange = onExpansionChange;
   }
 
@@ -77,12 +78,13 @@ export class VirtualTreeManager {
 
   private async buildAndRenderFreshTree(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     const root = TreeUtils.buildTreeStructure(this.app);
+    this.rootTreeNode = root; // Store reference for lazy loading
 
-    // Pre-calculate ALL schema suggestions for the entire tree
+    // Pre-calculate schema suggestions only for root level initially (lazy loading for others)
     await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
       this.ruleManager,
-      this.settings 
+      this.settings
     );
 
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
@@ -121,11 +123,12 @@ export class VirtualTreeManager {
 
       const root = TreeUtils.buildTreeStructure(this.app);
 
-      // Pre-calculate ALL schema suggestions for the entire tree
+      // Pre-calculate ALL schema suggestions for the entire tree (for caching)
       await SchemaUtils.applyAllSchemaSuggestionsToTree(
         root,
         this.ruleManager,
-        this.settings
+        this.settings,
+        true // processAllNodes = true for background caching
       );
 
       const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
@@ -238,4 +241,5 @@ export class VirtualTreeManager {
       await this.updateOnVaultChange();
     }
   }
+
 }
