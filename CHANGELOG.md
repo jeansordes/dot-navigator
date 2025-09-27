@@ -1,3 +1,11 @@
+## [1.22.1](https://github.com/jeansordes/dot-navigator/compare/1.21.11...1.22.1) (2025-09-27)
+
+### Features
+
+* **rename-progress:** add progress counters to rename dialog status messages ([2015e1f](https://github.com/jeansordes/dot-navigator/commit/2015e1f353eddf52dc6f617f0a77d2288c03f941))
+* **rules:** implement rule-based configuration system ([3265fb9](https://github.com/jeansordes/dot-navigator/commit/3265fb97fe7dc8cce6ba16b6e398c68c1f9c91f1))
+* **ui:** improve schema config path setting layout ([04ac103](https://github.com/jeansordes/dot-navigator/commit/04ac103f6aa5fac678b1ac850222b55a3908a4a5))
+
 # [1.22.0](https://github.com/jeansordes/dot-navigator/compare/1.21.11...1.22.0) (2025-09-27)
 
 ### Features
