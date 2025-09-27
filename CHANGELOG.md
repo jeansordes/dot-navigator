@@ -1,3 +1,9 @@
+## [1.22.4](https://github.com/jeansordes/dot-navigator/compare/1.22.3...1.22.4) (2025-09-27)
+
+### Bug Fixes
+
+* **ui:** tweak suggestions line height and color ([45b1499](https://github.com/jeansordes/dot-navigator/commit/45b149972fbe2d0bd782e4dd6bfcdd086a8bb8fc))
+
 ## [1.22.3](https://github.com/jeansordes/dot-navigator/compare/1.22.2...1.22.3) (2025-09-27)
 
 ### Performance Improvements
