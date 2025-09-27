@@ -1,3 +1,9 @@
+## [1.22.5](https://github.com/jeansordes/dot-navigator/compare/1.22.4...1.22.5) (2025-09-27)
+
+### Bug Fixes
+
+* **ui:** tweak line height for suggestions on mobile ([901b494](https://github.com/jeansordes/dot-navigator/commit/901b49478e2b7e591726830f3eef82da3d245410))
+
 ## [1.22.4](https://github.com/jeansordes/dot-navigator/compare/1.22.3...1.22.4) (2025-09-27)
 
 ### Bug Fixes
