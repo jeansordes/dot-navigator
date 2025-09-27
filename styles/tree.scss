@@ -114,6 +114,10 @@
         line-height: 20px;
     }
 
+    &.dotn_view-mobile .dotn_tree-item-title[data-node-kind="suggestion"] {
+        line-height: inherit;
+    }
+
     /* YAML custom title styles */
     .yaml-filename {
         color: inherit;
