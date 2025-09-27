@@ -23,6 +23,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Rule-based suggestions** that surface virtual child notes based on configurable JSON rules so you can scaffold structures before the notes exist
 
 <img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
+
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
 - **UI for renaming a note and its children** with a nice UI
