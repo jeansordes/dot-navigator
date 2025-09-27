@@ -1,3 +1,5 @@
+## [1.22.2](https://github.com/jeansordes/dot-navigator/compare/1.22.1...1.22.2) (2025-09-27)
+
 ## [1.22.1](https://github.com/jeansordes/dot-navigator/compare/1.21.11...1.22.1) (2025-09-27)
 
 ### Features
