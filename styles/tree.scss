@@ -108,9 +108,10 @@
 
     /* Schema-suggested virtual nodes styling */
     .dotn_tree-item-title[data-node-kind="suggestion"] {
-        border: 1px dashed var(--dotn_accent-color);
-        color: var(--dotn_accent-color);
+        border: 1px dashed var(--frame-muted-color);
+        color: var(--frame-muted-color);
         background-color: unset;
+        line-height: 20px;
     }
 
     /* YAML custom title styles */
