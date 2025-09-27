@@ -14,6 +14,26 @@
     padding: 0;
 }
 
+.dotnav-schema-config-path {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+
+    & .setting-item-control {
+        justify-content: space-between;
+
+        & input[type="text"] {
+            flex: 1;
+        }
+    }
+}
+
+@media (max-width: 686px) {
+    .dotnav-schema-config-path .setting-item-control {
+        flex-direction: column;
+    }
+}
+
 /* Built-in item icons in settings */
 .dotn-builtin-icon {
     display: inline-flex;

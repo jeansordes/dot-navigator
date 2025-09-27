@@ -54,7 +54,8 @@ export function addSchemaConfigurationSection(
   // Dendron config file path
   const pathSetting = new Setting(containerEl)
     .setName(t('settingsDendronConfigFilePath'))
-    .setDesc(t('settingsDendronConfigFilePathDesc'));
+    .setDesc(t('settingsDendronConfigFilePathDesc'))
+    .setClass('dotnav-schema-config-path');
 
   // Validation message container
   const validationContainer = containerEl.createEl('div', {
