@@ -174,7 +174,8 @@ export class VirtualTreeManager {
     await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
       this.ruleManager,
-      this.settings
+      this.settings,
+      true // Process all nodes immediately for settings changes
     );
 
     const { data, parentMap } = buildVirtualizedData(this.app, root, this.settings);
