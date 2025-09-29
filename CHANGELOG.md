@@ -1,3 +1,9 @@
+## [1.22.6](https://github.com/jeansordes/dot-navigator/compare/1.22.5...1.22.6) (2025-09-29)
+
+### Bug Fixes
+
+* ensure schema suggestions appear immediately when settings change ([e789e82](https://github.com/jeansordes/dot-navigator/commit/e789e82dfc90c99bb49e15eb5ef5311fe9b24d84))
+
 ## [1.22.5](https://github.com/jeansordes/dot-navigator/compare/1.22.4...1.22.5) (2025-09-27)
 
 ### Bug Fixes
