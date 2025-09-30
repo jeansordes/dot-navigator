@@ -1,3 +1,9 @@
+# [1.23.0](https://github.com/jeansordes/dot-navigator/compare/1.22.7...1.23.0) (2025-09-30)
+
+### Features
+
+* add CMD+click to open files in new tab ([2547213](https://github.com/jeansordes/dot-navigator/commit/2547213dc11b7788cb6eb01efad03667e91c4231))
+
 ## [1.22.7](https://github.com/jeansordes/dot-navigator/compare/1.22.6...1.22.7) (2025-09-30)
 
 ### Features
