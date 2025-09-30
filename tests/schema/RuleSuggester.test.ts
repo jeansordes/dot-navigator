@@ -1,5 +1,16 @@
 import { RuleSuggester } from '../../src/utils/schema/RuleSuggester';
 import type { RuleIndex } from '../../src/utils/schema/RuleTypes';
+import { TreeNode, TreeNodeType } from '../../src/types';
+
+function createNode(path: string, type: TreeNodeType): TreeNode {
+  return {
+    path,
+    nodeType: type,
+    obsidianResource: undefined,
+    children: new Map<string, TreeNode>(),
+  };
+}
+
 
 describe('RuleSuggester', () => {
   let suggester: RuleSuggester;
@@ -186,6 +197,185 @@ describe('RuleSuggester', () => {
       // Should NOT match (doesn't match pattern)
       expect(suggester.getChildren('Notes/prj.md')).toEqual([]);
       expect(suggester.getChildren('Notes/other.md')).toEqual([]);
+    });
+  });
+
+  describe('apply', () => {
+    it('should create hierarchical suggestion nodes for dotted children', () => {
+      const dottedIndex: RuleIndex = {
+        rules: [{
+          pattern: ["prj.*"],
+          children: ["foo.bar", "simple"],
+          sourcePath: 'test.json'
+        }],
+        errors: [],
+        files: new Map()
+      };
+      suggester.updateIndex(dottedIndex);
+
+      const root = createNode('/', TreeNodeType.FOLDER);
+      const prjFile = createNode('prj.test.md', TreeNodeType.FILE);
+      root.children.set('prj.test.md', prjFile);
+
+      suggester.apply(root);
+
+      // Check that 'simple' child was created as a direct suggestion with .md
+      expect(prjFile.children.has('prj.test.simple.md')).toBe(true);
+      const simpleNode = prjFile.children.get('prj.test.simple.md');
+      expect(simpleNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(simpleNode?.path).toBe('prj.test.simple.md');
+
+      // Check that 'foo' was created as a suggestion node
+      expect(prjFile.children.has('prj.test.foo.md')).toBe(true);
+      const fooNode = prjFile.children.get('prj.test.foo.md');
+      expect(fooNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(fooNode?.path).toBe('prj.test.foo.md');
+
+      // Check that 'foo.bar' was created as a suggestion
+      expect(fooNode?.children.has('prj.test.foo.bar.md')).toBe(true);
+      const barNode = fooNode?.children.get('prj.test.foo.bar.md');
+      expect(barNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(barNode?.path).toBe('prj.test.foo.bar.md');
+    });
+
+    it('should handle multiple levels of dotted children', () => {
+      const multiLevelIndex: RuleIndex = {
+        rules: [{
+          pattern: ["test.*"],
+          children: ["a.b.c"],
+          sourcePath: 'test.json'
+        }],
+        errors: [],
+        files: new Map()
+      };
+      suggester.updateIndex(multiLevelIndex);
+
+      const root = createNode('/', TreeNodeType.FOLDER);
+      const testFile = createNode('test.file.md', TreeNodeType.FILE);
+      root.children.set('test.file.md', testFile);
+
+      suggester.apply(root);
+
+      // Check hierarchy: test.file -> a.md -> a.b.md -> a.b.c.md
+      const aNode = testFile.children.get('test.file.a.md');
+      expect(aNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+
+      const abNode = aNode?.children.get('test.file.a.b.md');
+      expect(abNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+
+      const abcNode = abNode?.children.get('test.file.a.b.c.md');
+      expect(abcNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+    });
+
+    it('should not create duplicate nodes when multiple rules suggest the same hierarchy', () => {
+      const duplicateIndex: RuleIndex = {
+        rules: [
+          {
+            pattern: ["prj.*"],
+            children: ["foo.bar"],
+            sourcePath: 'test1.json'
+          },
+          {
+            pattern: ["prj.*"],
+            children: ["foo.bar"], // Same suggestion from different rule
+            sourcePath: 'test2.json'
+          }
+        ],
+        errors: [],
+        files: new Map()
+      };
+      suggester.updateIndex(duplicateIndex);
+
+      const root = createNode('/', TreeNodeType.FOLDER);
+      const prjFile = createNode('prj.test.md', TreeNodeType.FILE);
+      root.children.set('prj.test.md', prjFile);
+
+      suggester.apply(root);
+
+      // Should still only have one 'foo.md' and one 'bar.md' node
+      expect(prjFile.children.size).toBe(1); // Only 'foo.md'
+      const fooNode = prjFile.children.get('prj.test.foo.md');
+      expect(fooNode?.children.size).toBe(1); // Only 'bar.md'
+    });
+
+    it('should handle wildcards in hierarchical children without adding .md to wildcards', () => {
+      const wildcardIndex: RuleIndex = {
+        rules: [{
+          pattern: ["prj.*"],
+          children: ["productions.*.inspi"],
+          sourcePath: 'test.json'
+        }],
+        errors: [],
+        files: new Map()
+      };
+      suggester.updateIndex(wildcardIndex);
+
+      const root = createNode('/', TreeNodeType.FOLDER);
+      const prjFile = createNode('prj.test.md', TreeNodeType.FILE);
+      root.children.set('prj.test.md', prjFile);
+
+      suggester.apply(root);
+
+      // Check hierarchy: prj.test -> productions.md -> productions.*.md -> productions.*.inspi.md
+      const productionsNode = prjFile.children.get('prj.test.productions.md');
+      expect(productionsNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(productionsNode?.path).toBe('prj.test.productions.md');
+
+      const wildcardNode = productionsNode?.children.get('prj.test.productions.*.md');
+      expect(wildcardNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(wildcardNode?.path).toBe('prj.test.productions.*.md');
+
+      const inspiNode = wildcardNode?.children.get('prj.test.productions.*.inspi.md');
+      expect(inspiNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+      expect(inspiNode?.path).toBe('prj.test.productions.*.inspi.md');
+    });
+
+    it('should not create suggestion nodes when FILE or VIRTUAL nodes already exist with the same path, but should create child suggestions under them', () => {
+      const hierarchicalIndex: RuleIndex = {
+        rules: [{
+          pattern: ["prj.*"],
+          children: ["ideas.goal", "roadmap.plan"],
+          sourcePath: 'test.json'
+        }],
+        errors: [],
+        files: new Map()
+      };
+      suggester.updateIndex(hierarchicalIndex);
+
+      const root = createNode('/', TreeNodeType.FOLDER);
+      const prjFile = createNode('prj.test.md', TreeNodeType.FILE);
+      root.children.set('prj.test.md', prjFile);
+
+      // Pre-create a FILE node that would be the first level of 'ideas.goal'
+      const existingIdeasFile = createNode('prj.test.ideas.md', TreeNodeType.FILE);
+      prjFile.children.set('prj.test.ideas.md', existingIdeasFile);
+
+      // Pre-create a VIRTUAL node that would be the first level of 'roadmap.plan'
+      const existingRoadmapVirtual = createNode('prj.test.roadmap.md', TreeNodeType.VIRTUAL);
+      prjFile.children.set('prj.test.roadmap.md', existingRoadmapVirtual);
+
+      suggester.apply(root);
+
+      // Should still have the pre-existing FILE and VIRTUAL nodes
+      expect(prjFile.children.size).toBe(2);
+      expect(prjFile.children.has('prj.test.ideas.md')).toBe(true);
+      expect(prjFile.children.has('prj.test.roadmap.md')).toBe(true);
+
+      // Verify the existing nodes are still FILE and VIRTUAL, not SUGGESTION
+      const ideasNode = prjFile.children.get('prj.test.ideas.md');
+      expect(ideasNode?.nodeType).toBe(TreeNodeType.FILE);
+
+      const roadmapNode = prjFile.children.get('prj.test.roadmap.md');
+      expect(roadmapNode?.nodeType).toBe(TreeNodeType.VIRTUAL);
+
+      // But should now have child suggestions under the existing FILE/VIRTUAL nodes
+      expect(ideasNode?.children.has('prj.test.ideas.goal.md')).toBe(true);
+      const goalNode = ideasNode?.children.get('prj.test.ideas.goal.md');
+      expect(goalNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
+
+      expect(roadmapNode?.children.has('prj.test.roadmap.plan.md')).toBe(true);
+      const planNode = roadmapNode?.children.get('prj.test.roadmap.plan.md');
+      expect(planNode?.nodeType).toBe(TreeNodeType.SUGGESTION);
     });
   });
 });

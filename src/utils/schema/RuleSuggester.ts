@@ -164,22 +164,7 @@ export class RuleSuggester {
 
       // Add suggestion nodes for each child
       for (const childId of children) {
-        const childPath = node.path ? `${node.path}.${childId}` : childId;
-
-        // Check if this suggestion node already exists
-        if (node.children.has(childPath)) {
-          continue;
-        }
-
-        // Create suggestion node
-        const suggestionNode: TreeNode = {
-          path: childPath,
-          nodeType: TreeNodeType.SUGGESTION,
-          obsidianResource: undefined,
-          children: new Map(),
-        };
-
-        node.children.set(childPath, suggestionNode);
+        this.createSuggestionHierarchy(node, childId, nodeMap);
         totalSuggestions++;
       }
     }
@@ -214,6 +199,61 @@ export class RuleSuggester {
       }
     }
     return null;
+  }
+
+  /**
+   * Create a hierarchy of suggestion nodes for a child ID that may contain dots
+   * For example, "foo.bar" with parent "parent.md" creates:
+   * - "parent.foo.md" (foo file)
+   * - "parent.foo.bar.md" (bar file)
+   * Uses accumulated segments to build proper Dendron-style paths
+   */
+  private createSuggestionHierarchy(parentNode: TreeNode, childId: string, nodeMap: Map<string, TreeNode>): void {
+    const segments = childId.split('.');
+
+    let currentNode = parentNode;
+    // Start with the parent path minus .md extension (Dendron-style hierarchy)
+    const currentPath = parentNode.nodeType === TreeNodeType.FILE && parentNode.path.endsWith('.md')
+      ? parentNode.path.slice(0, -3)
+      : parentNode.path;
+
+    // Accumulate segments as we build the hierarchy
+    let accumulatedSegments = '';
+
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+
+      // Add this segment to the accumulated path
+      accumulatedSegments += (accumulatedSegments ? '.' : '') + segment;
+
+      // Build the path for this level
+      const segmentPath = `${currentPath}.${accumulatedSegments}.md`;
+
+      // Check if this node already exists (as FILE, VIRTUAL, or SUGGESTION)
+      let segmentNode = currentNode.children.get(segmentPath);
+      if (!segmentNode) {
+        // Check if there's already a FILE or VIRTUAL node with this path
+        const existingNode = nodeMap.get(segmentPath);
+        if (existingNode && (existingNode.nodeType === TreeNodeType.FILE || existingNode.nodeType === TreeNodeType.VIRTUAL)) {
+          // Use the existing FILE/VIRTUAL node instead of creating a suggestion
+          segmentNode = existingNode;
+        } else {
+          // Create the suggestion node
+          segmentNode = {
+            path: segmentPath,
+            nodeType: TreeNodeType.SUGGESTION,
+            obsidianResource: undefined,
+            children: new Map(),
+          };
+
+          currentNode.children.set(segmentPath, segmentNode);
+          nodeMap.set(segmentPath, segmentNode);
+        }
+      }
+
+      currentNode = segmentNode;
+      // currentPath stays the same (base path) for all levels
+    }
   }
 
   /**

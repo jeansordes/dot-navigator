@@ -24,6 +24,9 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
 
+- **Hierarchical suggestions from dotted children** - when a rule specifies children like `["foo.bar"]`, it creates nested suggestion nodes where "foo" contains "bar" as a child, allowing for deeper scaffolding of note hierarchies
+- **Double-click to create notes from suggestions** - quickly create suggested notes by double-clicking on them in the tree view
+
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
 - **UI for renaming a note and its children** with a nice UI
@@ -88,7 +91,7 @@ For more complex pattern matching, you can use **regex patterns** by prefixing w
 [
   {
     "pattern": ["prj.*"],
-    "children": ["roadmap", "ideas", "issues"]
+    "children": ["roadmap", "ideas", "issues", "architecture.backend", "architecture.frontend"]
   },
   {
     "pattern": ["work.**"],
@@ -103,9 +106,16 @@ For more complex pattern matching, you can use **regex patterns** by prefixing w
 ```
 
 **What this does:**
-- Files matching `prj.*` (like `prj.frontend`, `prj.backend`) will suggest children `roadmap`, `ideas`, `issues`
+- Files matching `prj.*` (like `prj.frontend`, `prj.backend`) will suggest children `roadmap`, `ideas`, `issues`, and hierarchical children `architecture.backend` and `architecture.frontend`
 - Files matching `work.**` (like `work.tasks`, `work.2024.tasks`, `work.deep.nested`) will suggest `notes`, `tasks` (except `work.archives`)
 - Files matching `/^blog\.2025\.[0-9]$/` (regex for single-digit months) will suggest `draft`, `published`
+
+**Hierarchical Children:**
+For dotted children like `"architecture.backend"`, the plugin creates nested suggestion nodes. In the tree view, you'll see:
+- `architecture/` (intermediate folder-like node)
+  - `backend` (clickable suggestion that creates `backend.md`)
+
+You can create deeply nested hierarchies by using multiple dots, such as `"a.b.c.d"`.
 
 ### Configuration File Location
 
@@ -149,6 +159,10 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 
 ### Note creation
 - **Create Child Note**: Will create a new child note for the currently active file with the node name being "untitled" (e.g. if you trigger this command on `a.md`, it will create `a.untitled.md`) and will open the rename dialog for the new note (you can customize the name of the new note in the settings)
+
+### Suggestion Interaction
+- **Double-click suggestions**: Quickly create suggested notes by double-clicking on them in the tree view
+- **Single-click suggestions**: Focus/navigate to the suggestion in the tree
 
 ### Rename
 - **Rename Current File**: Opens the rename dialog for the current file or folder

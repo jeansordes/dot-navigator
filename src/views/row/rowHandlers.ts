@@ -158,11 +158,11 @@ export function onRowClick(
   if (!titleEl) return;
 
   const kindAttr = titleEl.getAttribute('data-node-kind');
-  if (!kindAttr || !['file', 'folder', 'virtual'].includes(kindAttr)) return;
+  if (!kindAttr || !['file', 'folder', 'virtual', 'suggestion'].includes(kindAttr)) return;
 
   // Type predicate to safely narrow the type
   const isMenuItemKind = (value: string): value is MenuItemKind => {
-    return ['file', 'folder', 'virtual'].includes(value);
+    return ['file', 'folder', 'virtual', 'suggestion'].includes(value);
   };
 
   if (!isMenuItemKind(kindAttr)) return;
@@ -222,6 +222,19 @@ export function onRowClick(
       handleTitleClick(app, kind, id, idx, vt, setSelectedId);
     }, FILE_CLICK_DELAY);
     pendingFileClicks.set(id, timeoutId);
+    return;
+  }
+
+  if (kind === 'suggestion') {
+    if (e.detail >= 2) {
+      clearPending();
+      // Double-click on suggestion creates the note
+      handleActionButtonClick(app, 'create-note', id, kind, vt, undefined, e, renameManager);
+      return;
+    }
+
+    // Single click on suggestion focuses it
+    handleTitleClick(app, kind, id, idx, vt, setSelectedId);
     return;
   }
 

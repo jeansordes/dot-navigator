@@ -243,7 +243,14 @@ export class SchemaSuggester {
   }
 
   private ensureNode(root: TreeNode, path: string, map: Map<string, TreeNode>): TreeNode | null {
-    if (map.has(path)) return map.get(path) ?? null;
+    if (map.has(path)) {
+      const existingNode = map.get(path);
+      // Don't return FILE or VIRTUAL nodes as suggestions
+      if (existingNode && (existingNode.nodeType === TreeNodeType.FILE || existingNode.nodeType === TreeNodeType.VIRTUAL)) {
+        return null; // Don't create suggestion for existing file/virtual nodes
+      }
+      return existingNode ?? null;
+    }
     if (!path) return null;
 
     const parentPath = this.computeParentPath(path);

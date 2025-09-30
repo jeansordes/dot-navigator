@@ -64,8 +64,13 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
       name = base.replace(/ \(\d+\)$/u, '');
     } else if (node.nodeType === TreeNodeType.SUGGESTION) {
       // Suggestion nodes: extract the last segment after the last dot
-      const lastDotIndex = base.lastIndexOf('.');
-      name = lastDotIndex >= 0 ? base.substring(lastDotIndex + 1) : base;
+      // First remove .md extension if present (for leaf suggestion nodes)
+      let baseForName = base;
+      if (baseForName.endsWith('.md')) {
+        baseForName = baseForName.slice(0, -3);
+      }
+      const lastDotIndex = baseForName.lastIndexOf('.');
+      name = lastDotIndex >= 0 ? baseForName.substring(lastDotIndex + 1) : baseForName;
       name = name.replace(/ \(\d+\)$/u, '');
     } else {
       // File nodes: remove extension if present

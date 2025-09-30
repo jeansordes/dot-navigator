@@ -187,4 +187,46 @@ describe('buildVirtualizedData', () => {
       expect(result.data[0].name).toBe('My awesome note title');
     });
   });
+
+  describe('suggestion node display names', () => {
+    it('correctly extracts display names for suggestion nodes with .md extensions', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['prj.test.md', {
+            path: 'prj.test.md',
+            nodeType: TreeNodeType.FILE,
+            children: new Map([
+              ['prj.test.foo.md', {
+                path: 'prj.test.foo.md',
+                nodeType: TreeNodeType.SUGGESTION,
+                children: new Map([
+                  ['prj.test.foo.bar.md', {
+                    path: 'prj.test.foo.bar.md',
+                    nodeType: TreeNodeType.SUGGESTION,
+                    children: new Map()
+                  }]
+                ])
+              }]
+            ])
+          }]
+        ])
+      };
+
+      const result = buildVirtualizedData(mockApp, rootNode);
+
+      expect(result.data).toHaveLength(1);
+      const prjNode = result.data[0];
+      expect(prjNode.name).toBe('Test'); // SENTENCE_CASE transformation
+
+      expect(prjNode.children).toHaveLength(1);
+      const fooNode = prjNode.children![0];
+      expect(fooNode.name).toBe('Foo'); // Display name should strip .md and apply SENTENCE_CASE
+
+      expect(fooNode.children).toHaveLength(1);
+      const barNode = fooNode.children![0];
+      expect(barNode.name).toBe('Bar'); // Display name should strip .md and apply SENTENCE_CASE
+    });
+  });
 });
