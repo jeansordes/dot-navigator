@@ -121,8 +121,8 @@ export class FileUtils {
         }
     }
     
-    public static async openFile(app: App, file: TFile): Promise<void> {
-        const leaf = app.workspace.getLeaf(false);
+    public static async openFile(app: App, file: TFile, newTab = false): Promise<void> {
+        const leaf = app.workspace.getLeaf(newTab);
         if (leaf) {
             await leaf.openFile(file);
         }

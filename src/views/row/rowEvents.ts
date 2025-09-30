@@ -226,10 +226,13 @@ export function shouldShowFor(item: MoreMenuItem, kind: MenuItemKind): boolean {
   return show.includes(kind);
 }
 
-export function handleTitleClick(app: App, kind: string | null, id: string, idx: number, vt: VirtualTreeLike, setSelectedId: (id: string) => void): void {
+export function handleTitleClick(app: App, kind: string | null, id: string, idx: number, vt: VirtualTreeLike, setSelectedId: (id: string) => void, ev?: MouseEvent): void {
   if (kind === 'file') {
     const file = app.vault.getAbstractFileByPath(id);
-    if (file instanceof TFile) FileUtils.openFile(app, file);
+    if (file instanceof TFile) {
+      const openInNewTab = ev?.metaKey || ev?.ctrlKey; // CMD on Mac, CTRL on Windows/Linux
+      FileUtils.openFile(app, file, openInNewTab);
+    }
     vt.selectedIndex = idx;
     setSelectedId(id);
   } else {

@@ -210,7 +210,7 @@ export function onRowClick(
         applySelection();
         return;
       }
-      handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+      handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
       return;
     }
 
@@ -219,7 +219,7 @@ export function onRowClick(
     clearPending();
     const timeoutId = window.setTimeout(() => {
       pendingFileClicks.delete(id);
-      handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+      handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
     }, FILE_CLICK_DELAY);
     pendingFileClicks.set(id, timeoutId);
     return;
@@ -234,7 +234,7 @@ export function onRowClick(
     }
 
     // Single click on suggestion focuses it
-    handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+    handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
     return;
   }
 
@@ -244,13 +244,13 @@ export function onRowClick(
       applySelection();
       return;
     }
-    handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+    handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
     return;
   }
 
   if (tryTouchDoubleTapRename()) return;
 
-  handleTitleClick(app, kind, id, idx, vt, setSelectedId);
+  handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
 }
 
 export function onRowContextMenu(app: App, vt: VirtualTreeLike, e: MouseEvent, row: HTMLElement, renameManager?: RenameManager): void {
