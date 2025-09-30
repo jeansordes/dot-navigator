@@ -150,15 +150,9 @@ export function setupRenameDialogContent({
     createHints(layoutContainer, data);
 
     setTimeout(() => {
-        // Focus the path input if it exists and is visible (for files), otherwise focus name input
-        if (data.kind !== 'folder' && pathInput && !pathInput.hasClass('is-hidden')) {
-            pathInput.focus();
-            // Position cursor at the end for path navigation
-            pathInput.setSelectionRange(pathInput.value.length, pathInput.value.length);
-        } else {
-            nameInput.focus();
-            nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
-        }
+        // Focus the name input (second input) when opening the modal
+        nameInput.focus();
+        nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
         validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || data.extension || '', data.path, app, contentEl);
     }, 0);
 

@@ -1,3 +1,9 @@
+## [1.22.7](https://github.com/jeansordes/dot-navigator/compare/1.22.6...1.22.7) (2025-09-30)
+
+### Features
+
+* **schema:** add hierarchical suggestions from dotted children ([4da343c](https://github.com/jeansordes/dot-navigator/commit/4da343c589f5b3677ee2e19ef1f9175cf7355dfa))
+
 ## [1.22.6](https://github.com/jeansordes/dot-navigator/compare/1.22.5...1.22.6) (2025-09-29)
 
 ### Bug Fixes
