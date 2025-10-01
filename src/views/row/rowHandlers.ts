@@ -240,7 +240,11 @@ export function onRowClick(
 
   if (e.detail >= 2) {
     clearPending();
-    if (triggerRename()) {
+    if (kind === 'virtual') {
+      // For virtual nodes, create and open the file (same as suggestions)
+      handleActionButtonClick(app, 'create-note', id, kind, vt, undefined, e, renameManager);
+      return;
+    } else if (triggerRename()) {
       applySelection();
       return;
     }
