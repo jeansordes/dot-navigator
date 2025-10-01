@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import { renameWithProgress, RenameWithProgressDependencies } from '../src/utils/rename/RenameWithProgress';
-import { RenameMode, RenameOptions, RenameProgress } from '../src/types';
+import { RenameMode, RenameOptions } from '../src/types';
 import { createMockApp, createMockFile } from './setup';
 
 // Mock the i18n function
