@@ -10,3 +10,8 @@ How to commit the current discussion:
    ```bash
    git commit
    ```
+4. If the commit fails because of ci
+   1. try to fix the issues
+   2. run `npm run ci` to check if the issues are fixed
+   3. stage the changes
+   4. try to commit again
