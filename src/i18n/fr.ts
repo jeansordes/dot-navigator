@@ -122,7 +122,9 @@ export default {
     renameDialogProgressCancelling: 'Annulation...',
     renameDialogProgressCancelled: 'Annulé',
     renameDialogProgressCancelIssues: 'Annulé avec des erreurs',
-    
+    renameDialogProgressFailedFiles: 'Échec du renommage de {{count}} fichier(s) :',
+    renameDialogUndo: 'Annuler',
+
     // Rename notices
     noticeRenameStarted: 'Début de l\'opération de renommage...',
     noticeRenameCompleted: 'Renommage terminé : {{successful}} réussis, {{failed}} échoués',

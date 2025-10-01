@@ -17,6 +17,7 @@ export class RenameProgress {
     private progressTextEl: HTMLElement;
     private cancelButtonEl: HTMLElement;
     private undoButtonEl: HTMLElement;
+    private failedRenamesEl: HTMLElement;
     private readonly DEFAULT_PROGRESS_TEXT = t('renameDialogProgressInitializing');
     private isCompleted = false;
     private totalFiles = 0;
@@ -29,6 +30,7 @@ export class RenameProgress {
         this.progressTextEl = this.progressEl.querySelector('.rename-progress-text') as HTMLElement;
         this.cancelButtonEl = this.progressEl.querySelector('.rename-progress-cancel') as HTMLElement;
         this.undoButtonEl = this.progressEl.querySelector('.rename-progress-undo') as HTMLElement;
+        this.failedRenamesEl = this.progressEl.querySelector('.rename-progress-failed-list') as HTMLElement;
         this.setButtonState(this.cancelButtonEl, 'enabled');
         this.setButtonState(this.undoButtonEl, 'hidden');
     }
@@ -43,6 +45,10 @@ export class RenameProgress {
         // Progress bar container (will be populated with individual blocks)
         const progressBarContainer = document.createElement('div');
         progressBarContainer.className = 'rename-progress-bar-container';
+
+        // Failed renames list (initially hidden)
+        const failedRenamesList = document.createElement('div');
+        failedRenamesList.className = 'rename-progress-failed-list rename-progress-failed-list-hidden';
 
         // Action buttons container
         const actionButtons = document.createElement('div');
@@ -96,6 +102,7 @@ export class RenameProgress {
 
         // Assemble the container
         container.appendChild(progressBarContainer);
+        container.appendChild(failedRenamesList);
         container.appendChild(actionButtons);
 
         return container;
@@ -199,6 +206,9 @@ export class RenameProgress {
 
         this.progressTextEl.textContent = displayText ?? '';
 
+        // Update failed renames list
+        this.updateFailedRenamesList(progress.errors);
+
         if (phase === 'rollback') {
             // Action buttons handled via explicit state helpers
         } else {
@@ -213,6 +223,53 @@ export class RenameProgress {
         }
 
         this.isCompleted = completed === total;
+    }
+
+    /**
+     * Update the failed renames list display
+     */
+    private updateFailedRenamesList(errors: Array<{ path: string; error: string }>): void {
+        // Clear existing content
+        this.failedRenamesEl.empty();
+
+        if (errors.length === 0) {
+            // Hide the list if there are no errors
+            this.failedRenamesEl.addClass('rename-progress-failed-list-hidden');
+            return;
+        }
+
+        // Show the list
+        this.failedRenamesEl.removeClass('rename-progress-failed-list-hidden');
+
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'rename-progress-failed-header';
+        header.textContent = t('renameDialogProgressFailedFiles', { count: String(errors.length) });
+        this.failedRenamesEl.appendChild(header);
+
+        // Create list container
+        const listContainer = document.createElement('div');
+        listContainer.className = 'rename-progress-failed-items';
+
+        // Add each failed rename item
+        for (const error of errors) {
+            const item = document.createElement('div');
+            item.className = 'rename-progress-failed-item';
+
+            const pathEl = document.createElement('div');
+            pathEl.className = 'rename-progress-failed-path';
+            pathEl.textContent = error.path;
+
+            const errorEl = document.createElement('div');
+            errorEl.className = 'rename-progress-failed-error';
+            errorEl.textContent = error.error;
+
+            item.appendChild(pathEl);
+            item.appendChild(errorEl);
+            listContainer.appendChild(item);
+        }
+
+        this.failedRenamesEl.appendChild(listContainer);
     }
 
     /**
@@ -305,6 +362,10 @@ export class RenameProgress {
         this.progressBlocks.forEach(block => block.remove());
         this.progressBlocks = [];
         this.totalFiles = 0;
+
+        // Clear failed renames list
+        this.failedRenamesEl.empty();
+        this.failedRenamesEl.addClass('rename-progress-failed-list-hidden');
 
         this.progressTextEl.textContent = this.DEFAULT_PROGRESS_TEXT;
         this.setButtonState(this.cancelButtonEl, 'enabled');

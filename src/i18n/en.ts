@@ -123,6 +123,7 @@ export default {
     renameDialogProgressCancelling: 'Cancelling...',
     renameDialogProgressCancelled: 'Cancelled',
     renameDialogProgressCancelIssues: 'Cancelled with issues',
+    renameDialogProgressFailedFiles: 'Failed to rename {{count}} file(s):',
     renameDialogUndo: 'Undo',
     renameDialogCancel: 'Cancel',
     

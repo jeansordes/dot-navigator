@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import { renameWithProgress, RenameWithProgressDependencies } from '../src/utils/rename/RenameWithProgress';
-import { RenameMode, RenameOptions } from '../src/types';
+import { RenameMode, RenameOptions, RenameProgress } from '../src/types';
 import { createMockApp, createMockFile } from './setup';
 
 // Mock the i18n function
@@ -185,6 +185,49 @@ describe('renameWithProgress', () => {
                 newPath: 'tree.md',
                 success: true
             });
+        });
+    });
+
+    describe('failed renames tracking', () => {
+        it('should track failed renames in progress errors array', async () => {
+            const originalPath = 'file.md';
+            const newPath = 'existing-file.md'; // This will fail due to name conflict
+
+            const options: RenameOptions = {
+                originalPath,
+                newPath,
+                newTitle: 'existing-file',
+                mode: RenameMode.FILE_ONLY,
+                kind: 'file'
+            };
+
+            const mainFile = createMockFile(originalPath);
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockReturnValue(mainFile);
+
+            // Mock fileManager.renameFile to fail with a conflict error
+            const error = new Error('File already exists');
+            jest.spyOn(app.fileManager, 'renameFile').mockRejectedValue(error);
+
+            const mockOnProgress = jest.fn();
+            const operations = await renameWithProgress(deps, app, options, mockOnProgress);
+
+            // Verify the operation failed
+            expect(operations).toHaveLength(1);
+            expect(operations[0]).toEqual({
+                originalPath: 'file.md',
+                newPath: 'existing-file.md',
+                success: false,
+                error: 'File already exists'
+            });
+
+            // Verify progress tracking includes the error
+            expect(mockOnProgress).toHaveBeenCalled();
+            const lastCall = mockOnProgress.mock.calls[mockOnProgress.mock.calls.length - 1][0];
+            expect(lastCall.failed).toBe(1);
+            expect(lastCall.errors).toEqual([{
+                path: 'file.md',
+                error: 'File already exists'
+            }]);
         });
     });
 });
