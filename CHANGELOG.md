@@ -1,3 +1,13 @@
+# [1.24.0](https://github.com/jeansordes/dot-navigator/compare/1.23.0...1.24.0) (2025-10-01)
+
+### Bug Fixes
+
+* make virtual node double-click create and open file instead of opening rename modal ([3cf08a3](https://github.com/jeansordes/dot-navigator/commit/3cf08a371d700aebc527644f3b5b8f205568003a))
+
+### Features
+
+* **rename:** add failed renames list to progress container ([8fea438](https://github.com/jeansordes/dot-navigator/commit/8fea4380fcdcc36813b109474c780f6f444ff248))
+
 # [1.23.0](https://github.com/jeansordes/dot-navigator/compare/1.22.7...1.23.0) (2025-09-30)
 
 ### Features
