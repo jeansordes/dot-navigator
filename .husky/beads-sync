@@ -1,0 +1,71 @@
+#!/usr/bin/env sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$repo_root"
+
+issues_file=".beads/issues.jsonl"
+
+if ! command -v bd >/dev/null 2>&1; then
+  echo "beads: bd command not found; skipping Beads sync" >&2
+  exit 0
+fi
+
+if [ ! -d ".beads" ]; then
+  exit 0
+fi
+
+case "${1:-}" in
+  export-stage)
+    if ! bd export --no-memories -o "$issues_file" >/dev/null 2>&1; then
+      bd bootstrap --yes >/dev/null 2>&1 || true
+      if [ -f "$issues_file" ]; then
+        bd import "$repo_root/$issues_file" >/dev/null 2>&1 || true
+      fi
+      bd export --no-memories -o "$issues_file" >/dev/null 2>&1 || {
+        echo "beads: export failed; run 'bd bootstrap --yes && bd import .beads/issues.jsonl'" >&2
+        exit 1
+      }
+    fi
+    git add "$issues_file"
+    ;;
+  export-check)
+    before=$(git diff -- "$issues_file")
+    if ! bd export --no-memories -o "$issues_file" >/dev/null 2>&1; then
+      bd bootstrap --yes >/dev/null 2>&1 || true
+      if [ -f "$issues_file" ]; then
+        bd import "$repo_root/$issues_file" >/dev/null 2>&1 || true
+      fi
+      bd export --no-memories -o "$issues_file" >/dev/null 2>&1 || {
+        echo "beads: export failed before push" >&2
+        exit 1
+      }
+    fi
+    after=$(git diff -- "$issues_file")
+    if [ "$before" != "$after" ] || ! git diff --quiet -- "$issues_file"; then
+      echo "beads: .beads/issues.jsonl changed during export; commit it before pushing" >&2
+      exit 1
+    fi
+    ;;
+  import)
+    if [ -f "$issues_file" ]; then
+      bd bootstrap --yes >/dev/null 2>&1 || true
+      import_log=$(mktemp)
+      if ! bd import "$repo_root/$issues_file" >"$import_log" 2>&1; then
+        if grep -q "nothing to commit" "$import_log"; then
+          rm -f "$import_log"
+          exit 0
+        fi
+        cat "$import_log" >&2
+        rm -f "$import_log"
+        echo "beads: import failed; run 'bd import .beads/issues.jsonl'" >&2
+        exit 1
+      fi
+      rm -f "$import_log"
+    fi
+    ;;
+  *)
+    echo "usage: $0 {export-stage|export-check|import}" >&2
+    exit 2
+    ;;
+esac

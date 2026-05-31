@@ -277,6 +277,9 @@ bd close <id>         # Complete work
 - Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
 - Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- The local Beads database is ignored. The portable task state is `.beads/issues.jsonl`.
+- Husky hooks run `.husky/beads-sync` to export before commits, import after checkout/merge/rebase, and block pushes when tasks were not exported.
+- If hooks are unavailable, manually run `bd bootstrap --yes && bd import .beads/issues.jsonl` after pulling, and `bd export --no-memories -o .beads/issues.jsonl && git add .beads/issues.jsonl` before committing.
 
 ## Session Completion
 
@@ -285,7 +288,7 @@ When ending a work session:
 1. File Beads issues for remaining work.
 2. Run quality gates if code changed.
 3. Update issue status where appropriate.
-4. Export issue state with `bd export --no-memories -o .beads/issues.jsonl`.
+4. Trust the Husky pre-commit hook to export `.beads/issues.jsonl`; if not committing, export manually.
 5. Commit task/code changes when the user requested a commit.
 6. Pull, rebase, or push only when explicitly requested by the user.
 <!-- END BEADS INTEGRATION -->

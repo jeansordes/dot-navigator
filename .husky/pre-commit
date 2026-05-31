@@ -1,1 +1,2 @@
+sh .husky/beads-sync export-stage
 npm run ci
