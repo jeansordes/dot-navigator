@@ -7,11 +7,14 @@ const debugError = debug.extend('error');
 import type { VItem } from '../../core/virtualData';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { renderRow } from '../row/rowRender';
-// import { logRenderWindow, scheduleWidthAdjust } from './renderUtils';
+import { applyTreeDataUpdate } from './treeDataUpdate';
+import { growRowPool, maybeScheduleRowWidthAdjust, renderVisibleRows } from './treeRenderPass';
 import { expandAllInData } from './treeOps';
 import { setupAttachment, attachToViewBodyImpl } from '../utils/attachUtils'; 
 import { collapseAll as collapseAllAction, revealPath as revealAction, selectPath as selectPathAction } from './treeActions';
 import { bindRowHandlers, onRowClick as handleRowClick, onRowContextMenu as handleRowContextMenu } from '../row/rowHandlers';
+import type { RowDragController } from '../row/rowDragDrop';
+import { attachTreeDragController, detachTreeDragController } from './treeDragAttach';
 import { RenameManager } from '../../utils/rename/RenameManager';
 // import { updateInstanceStyles } from './styleSheet';
 
@@ -28,14 +31,11 @@ export class ComplexVirtualTree extends VirtualTree {
   private _ctxMenuBound?: WeakSet<HTMLElement>;
   // Width management for rows
   private _widthAdjustTimer?: number;
+  private _maxRowWidth = 0;
   private _lastScrollTop: number = 0;
-  // Debug state
-  private _dbgLastStart = -1;
-  private _dbgLastEnd = -1;
-  private _dbgLastScroll = -1;
-  private _dbgLastLog = 0;
   // Rename manager
   private _renameManager?: RenameManager;
+  private _dragController?: RowDragController;
 
   // Cast this to access VirtualTree properties with proper typing
   private get virtualTree(): VirtualTreeLike {
@@ -83,6 +83,13 @@ export class ComplexVirtualTree extends VirtualTree {
       setAttached: (b: boolean) => { this._isAttached = b; },
       setBoundScroll: (fn: () => void) => { this._boundScroll = fn; }
     });
+
+    detachTreeDragController(this._dragController);
+    this._dragController = attachTreeDragController({
+      virtualTree: this.virtualTree,
+      viewBody,
+      renameManager: this._renameManager,
+    });
   }
 
   private _observeResize(viewBody: HTMLElement): void {
@@ -115,66 +122,15 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public setParentMap(map: Map<string, string | undefined>): void { this.parentMap = map; }
 
-  // Update underlying data without recreating the tree to avoid flicker/scroll jumps
   public updateData(data: VItem[], parentMap: Map<string, string | undefined>): void {
-    const vt = this.virtualTree;
-    const scrollContainer = vt.scrollContainer;
-    const host = scrollContainer instanceof HTMLElement ? scrollContainer : vt.container;
-    const prevScrollTop = host.scrollTop;
-
-    // Build maps to compute diffs (by id)
-    const buildMap = (items: VItem[]): Map<string, VItem> => {
-      const map = new Map<string, VItem>();
-      const walk = (arr: VItem[]) => {
-        for (const it of arr) {
-          map.set(it.id, it);
-          if (Array.isArray(it.children) && it.children.length) walk(it.children);
-        }
-      };
-      walk(items);
-      return map;
-    };
-    const oldData = vt.data as unknown as VItem[] | undefined;
-    const oldMap = Array.isArray(oldData) ? buildMap(oldData) : new Map<string, VItem>();
-    const newMap = buildMap(data);
-
-    // Compute dirty ids where row content must be rebuilt (icon/actions/name changes)
-    const dirtyIds = new Set<string>();
-    newMap.forEach((n, id) => {
-      const o = oldMap.get(id);
-      if (!o) return;
-      const kindChanged = o.kind !== n.kind;
-      const extChanged = (o.extension || '') !== (n.extension || '');
-      const nameChanged = o.name !== n.name;
-      const titleChanged = o.title !== n.title;
-      if (kindChanged || extChanged || nameChanged || titleChanged) dirtyIds.add(id);
-    });
-
-    // Swap data and recompute visible rows based on current expansion map
-    vt.data = data;
-    this.setParentMap(parentMap);
-    vt._recomputeVisible();
-
-    // Mark dirty rows for renderer to rebuild row content
-    try { (vt as unknown as { dirtyIds?: Set<string> }).dirtyIds = dirtyIds; } catch { /* ignore */ }
-
-    // Reapply selection by id if any
-    this._reapplySelection();
-
-    // Keep focus index within bounds
-    if (vt.focusedIndex >= vt.total) {
-      vt.focusedIndex = Math.max(0, vt.total - 1);
-    }
-
-    // Preserve scrollTop where possible; clamp if new content is shorter
-    const newTotalPx = vt.total * vt.rowHeight;
-    const maxScrollTop = Math.max(0, newTotalPx - host.clientHeight);
-    if (prevScrollTop > maxScrollTop) {
-      host.scrollTop = maxScrollTop; // only set when it actually changes
-    }
-    // Render with updated data
-    vt._render();
-    this._onExpansionChange?.();
+    applyTreeDataUpdate(
+      this.virtualTree,
+      data,
+      parentMap,
+      (map) => this.setParentMap(map),
+      () => this._reapplySelection(),
+      () => this._onExpansionChange?.()
+    );
   }
 
   public expandAll(): void {
@@ -220,7 +176,15 @@ export class ComplexVirtualTree extends VirtualTree {
 
   // Override row click handling to support toggle/create/open
   public _onRowClick(e: MouseEvent, row: HTMLElement): void {
-    handleRowClick(this.app, this.virtualTree, e, row, (sid) => { this._selectedId = sid; }, this._renameManager);
+    handleRowClick(
+      this.app,
+      this.virtualTree,
+      e,
+      row,
+      (sid) => { this._selectedId = sid; },
+      this._renameManager,
+      () => this._dragController?.shouldSuppressClick() ?? false
+    );
   }
 
   // Forwarders that notify expansion changes so the header button stays in sync
@@ -259,104 +223,20 @@ export class ComplexVirtualTree extends VirtualTree {
     handleRowContextMenu(this.app, this.virtualTree, e, row, this._renameManager);
   }
 
-  // Override render to use TanStack Virtual items when available
   public _render(): void {
     this._ensurePoolCapacity();
-    // Scroll container isn't required here; TanStack Virtual manages scrolling.
-
     const vItems = this.getVirtualItems?.() ?? [];
-
-    // Ensure our row pool is large enough for the current virtual window
-    if (vItems.length > this.virtualTree.poolSize) {
-      const start = this.virtualTree.poolSize;
-      const end = vItems.length;
-      const host = this.virtualTree.virtualizer;
-      if (host instanceof HTMLElement) {
-        for (let i = start; i < end; i++) {
-          const row = document.createElement('div');
-          row.className = 'tree-row';
-          row.dataset.poolIndex = String(i);
-          row.addEventListener('click', (ev) => { if (ev instanceof MouseEvent) this._onRowClick(ev, row); });
-          row.addEventListener('contextmenu', (ev) => { if (ev instanceof MouseEvent) this._onRowContextMenu(ev, row); });
-          host.appendChild(row);
-          this.virtualTree.pool.push(row);
-        }
-        this.virtualTree.poolSize = end;
-      }
-    }
-
-    const total: number = this.virtualTree.total;
-
-    const poolSize = this.virtualTree.poolSize;
-    for (let i = 0; i < poolSize; i++) {
-      const row: HTMLElement = this.virtualTree.pool[i];
-      const vRow = vItems[i];
-      if (!vRow) {
-        row.classList.add('is-hidden');
-        continue;
-      }
-      const itemIndex: number = vRow.index;
-      if (itemIndex < 0 || itemIndex >= total) {
-        row.classList.add('is-hidden');
-        continue;
-      }
-      const item = this.virtualTree.visible[itemIndex];
-      this._renderRow(row, item, itemIndex, vRow.start);
-      row.classList.remove('is-hidden');
-    }
-
-    // After rendering rows, adjust widths when scrolling is idle to ensure
-    // a consistent max width across rows and enable horizontal scroll.
-    try {
-      const usesTS = (this.virtualTree as unknown as { usesTanstack?: () => boolean }).usesTanstack?.() === true;
-      const isScrolling = (this.virtualTree as unknown as { isScrolling?: () => boolean }).isScrolling?.() === true;
-      if (usesTS && !isScrolling) this._adjustWidthDebounced();
-    } catch { /* non-fatal */ }
-  }
-
-  private _adjustWidthDebounced(): void {
-    if (this._widthAdjustTimer) window.clearTimeout(this._widthAdjustTimer);
-    this._widthAdjustTimer = window.setTimeout(() => {
-      this._widthAdjustTimer = undefined as unknown as number;
-      this._adjustWidthNow();
-    }, 120);
-  }
-
-  private _adjustWidthNow(): void {
-    try {
-      const vt = this.virtualTree;
-      const rows = vt.pool.filter(r => !r.classList.contains('is-hidden'));
-      if (rows.length === 0) return;
-
-      let max = 0;
-      const prevWidths: string[] = [];
-      for (const row of rows) {
-        prevWidths.push(row.style.width);
-        row.style.width = ''; // Clear any inline width completely
-        const w = Math.floor(row.scrollWidth);
-        if (w > max) max = w;
-      }
-
-      const sc = (vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container);
-      const minPanelWidth = sc.clientWidth || 0;
-      const finalWidth = Math.max(max, minPanelWidth) - 1; // Subtract 1px to prevent horizontal scrolling
-      /**
-       * I have no idea why I need to subtract 1px to prevent horizontal scrolling,
-       * the conditions in which this happened were on a macos machine
-       * (so maybe it's related to the retina display, with pixels being
-       * half the size of the physical pixels, and thus inducing approximations
-       * in the roundings somehow - that's my only theory.
-       * I've tried many things, and at the end, this seems to do the trick,
-       * but it's still a mystery)
-       */
-      const widthPx = finalWidth > 0 ? `${finalWidth}px` : '';
-      for (let i = 0; i < rows.length; i++) {
-        rows[i].style.width = widthPx || prevWidths[i] || '';
-      }
-
-      const vz = vt.virtualizer;
-      if (vz instanceof HTMLElement && vz.style.width !== widthPx) vz.style.width = widthPx;
-    } catch { /* ignore */ }
+    growRowPool(this.virtualTree, vItems.length, (row) => {
+      row.addEventListener('click', (ev) => { if (ev instanceof MouseEvent) this._onRowClick(ev, row); });
+      row.addEventListener('contextmenu', (ev) => { if (ev instanceof MouseEvent) this._onRowContextMenu(ev, row); });
+    });
+    renderVisibleRows(this.virtualTree, vItems, (row, item, idx, start) => this._renderRow(row, item, idx, start));
+    maybeScheduleRowWidthAdjust(this.virtualTree, {
+      getTimer: () => this._widthAdjustTimer,
+      setTimer: (n) => { this._widthAdjustTimer = n; },
+      getMaxWidth: () => this._maxRowWidth,
+      setMaxWidth: (n) => { this._maxRowWidth = n; },
+    });
   }
 
   // Reapply selection by id after the visible list changes so highlight stays on the same item.
@@ -371,6 +251,9 @@ export class ComplexVirtualTree extends VirtualTree {
   public ensureSelectedVisible(): void { /* intentionally empty */ }
 
   public destroy(): void {
+    detachTreeDragController(this._dragController);
+    this._dragController = undefined;
+
     const scrollContainer = this.virtualTree.scrollContainer;
     if (scrollContainer instanceof HTMLElement && this._boundScroll) {
       scrollContainer.removeEventListener('scroll', this._boundScroll);

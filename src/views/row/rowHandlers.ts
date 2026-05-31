@@ -132,8 +132,15 @@ export function onRowClick(
   e: MouseEvent,
   row: HTMLElement,
   setSelectedId: (id: string) => void,
-  renameManager?: RenameManager
+  renameManager?: RenameManager,
+  shouldSuppressClick?: () => boolean
 ): void {
+  if (shouldSuppressClick?.()) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
   const id = row.dataset.id!;
   const idx = Number(row.dataset.index!);
   const item: RowItem = vt.visible[idx];

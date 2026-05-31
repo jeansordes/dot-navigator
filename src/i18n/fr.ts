@@ -130,6 +130,9 @@ export default {
     noticeRenameCompleted: 'Renommage terminé : {{successful}} réussis, {{failed}} échoués',
     noticeRenameCancelled: 'Opération de renommage annulée',
     noticeRenameUndone: 'Opération de renommage annulée',
+    noticeMovedFile: '{{count}} fichier(s) déplacé(s)',
+    noticeMoveFailed: 'Échec du déplacement de {{count}} fichier(s)',
+    noticeMovePartial: '{{success}} fichier(s) déplacé(s), {{failed}} échoué(s)',
 
     // Rename notification
     renameNotificationSuccess: '{{count}} fichier(s) renommé(s) avec succès',

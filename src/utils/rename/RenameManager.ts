@@ -1,6 +1,7 @@
 import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
-import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameTriggerSource } from '../../types';
+import { computeMoveDestination, getDragLeaf, type DraggableKind, type DropTargetKind } from './DragMoveUtils';
+import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
 import { RenameDialog } from '../../views/rename/RenameDialog';
 import { ViewLayout } from '../../core/ViewLayout';
 import { t } from '../../i18n';
@@ -217,5 +218,84 @@ export class RenameManager {
      */
     getUndoStackSize(): number {
         return this.undoStack.length;
+    }
+
+    /**
+     * Move a file or folder via drag-and-drop (renames children for dotted files).
+     */
+    async moveByDragAndDrop(
+        draggedPath: string,
+        draggedKind: DraggableKind,
+        targetPath: string,
+        targetKind: DropTargetKind
+    ): Promise<boolean> {
+        const newPath = computeMoveDestination({
+            draggedPath,
+            draggedKind,
+            targetPath,
+            targetKind,
+        });
+
+        if (!newPath || newPath === draggedPath) {
+            return false;
+        }
+
+        if (this.app.vault.getAbstractFileByPath(newPath)) {
+            new Notice(t('noticeFileExists', { path: newPath }));
+            return false;
+        }
+
+        const { leaf } = getDragLeaf(draggedPath, draggedKind);
+        const options: RenameOptions = {
+            originalPath: draggedPath,
+            newPath,
+            newTitle: leaf,
+            mode: draggedKind === 'file' ? RenameMode.FILE_AND_CHILDREN : RenameMode.FILE_ONLY,
+            kind: draggedKind,
+        };
+
+        try {
+            const operations = await RenameUtils.renameWithProgress(this.app, options);
+            const successful = operations.filter(op => op.success);
+
+            if (successful.length === 0) {
+                const firstError = operations.find(op => op.error)?.error;
+                new Notice(firstError ?? t('noticeFailedRenameFile', { path: draggedPath }));
+                return false;
+            }
+
+            this.addToUndoStack(operations, options);
+            this.showMoveNotice(successful.length, operations.length - successful.length);
+            return true;
+        } catch (error) {
+            debug('Drag move failed:', error);
+            const message = error instanceof Error ? error.message : String(error);
+            new Notice(message);
+            return false;
+        }
+    }
+
+    private showMoveNotice(successCount: number, failCount: number): void {
+        let message: string;
+        if (failCount === 0) {
+            message = t('noticeMovedFile', { count: String(successCount) });
+        } else if (successCount === 0) {
+            message = t('noticeMoveFailed', { count: String(failCount) });
+        } else {
+            message = t('noticeMovePartial', {
+                success: String(successCount),
+                failed: String(failCount),
+            });
+        }
+
+        const notice = new Notice(message, 8000);
+        if (successCount > 0) {
+            const undoBtn = notice.messageEl.createEl('button', { text: t('renameNotificationUndo') });
+            undoBtn.className = 'mod-muted';
+            undoBtn.addEventListener('click', () => {
+                notice.hide();
+                void this.undoLastRename();
+            });
+        }
     }
 }
