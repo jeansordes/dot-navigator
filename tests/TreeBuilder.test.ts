@@ -1,9 +1,33 @@
-import { TFile, TFolder } from 'obsidian';
-import { TreeBuilder } from '../src/utils/tree/TreeBuilder';
-import { TreeNodeType } from '../src/types';
-import { createMockFile, createMockFolder } from './setup';
+import { TreeBuilder } from '../src/domain/tree/TreeBuilder';
+import { TreeNodeType } from '../src/domain/tree/TreeNode';
+import type { FileInfo, FolderInfo } from '../src/ports/VaultPort';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:tests');
+
+// Helper functions to create mock FileInfo and FolderInfo
+function createFileInfo(path: string, parentPath: string | null = null): FileInfo {
+  const parts = path.split('/');
+  const basename = parts[parts.length - 1];
+  const extDotIdx = basename.lastIndexOf('.');
+  const extension = extDotIdx >= 0 ? basename.substring(extDotIdx + 1) : '';
+  return {
+    path,
+    basename,
+    name: basename,
+    extension,
+    parentPath
+  };
+}
+
+function createFolderInfo(path: string, parentPath: string | null = null): FolderInfo {
+  const parts = path.split('/');
+  const name = parts[parts.length - 1] || path;
+  return {
+    path,
+    name,
+    parentPath
+  };
+}
 
 describe('TreeBuilder', () => {
     let treeBuilder: TreeBuilder;
@@ -15,16 +39,16 @@ describe('TreeBuilder', () => {
     describe('buildDendronStructure', () => {
         it('should create the expected tree structure for a complex file hierarchy', () => {
             // Create mock folders
-            const folderX = createMockFolder('x');
-            const folderY = createMockFolder('x/y', undefined, folderX);
-            const folderZ = createMockFolder('x/y/z', undefined, folderY);
+            const folderX = createFolderInfo('x', '/');
+            const folderY = createFolderInfo('x/y', 'x');
+            const folderZ = createFolderInfo('x/y/z', 'x/y');
             const folders = [folderX, folderY, folderZ];
 
             // Create mock files
             const files = [
-                createMockFile('x/file1.md', undefined, folderX),
-                createMockFile('x/y/file2.md', undefined, folderY),
-                createMockFile('x/y/z/file3.md', undefined, folderZ)
+                createFileInfo('x/file1.md', 'x'),
+                createFileInfo('x/y/file2.md', 'x/y'),
+                createFileInfo('x/y/z/file3.md', 'x/y/z')
             ];
 
             // Build the tree structure
@@ -63,7 +87,7 @@ describe('TreeBuilder', () => {
         });
 
         it('should handle empty folders', () => {
-            const emptyFolder = createMockFolder('empty');
+            const emptyFolder = createFolderInfo('empty', '/');
             const rootNode = treeBuilder.buildDendronStructure([emptyFolder], []);
 
             expect(rootNode.path).toBe('/');
@@ -78,12 +102,8 @@ describe('TreeBuilder', () => {
 
         it('should handle files without folders', () => {
             // Create a root folder for the file
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const rootFile = { 
-                path: 'root.md', 
-                basename: 'root.md',
-                parent: rootFolder
-            } as TFile;
+            const rootFolder = createFolderInfo('/', null);
+            const rootFile = createFileInfo('root.md', '/');
 
             const rootNode = treeBuilder.buildDendronStructure([rootFolder], [rootFile]);
 
@@ -105,12 +125,8 @@ describe('TreeBuilder', () => {
 
         it('should handle files with dots in their names', () => {
             // Create a root folder for the file
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const file = { 
-                path: 'hello.world.md', 
-                basename: 'hello.world.md',
-                parent: rootFolder
-            } as TFile;
+            const rootFolder = createFolderInfo('/', null);
+            const file = createFileInfo('hello.world.md', '/');
 
             const rootNode = treeBuilder.buildDendronStructure([rootFolder], [file]);
 
@@ -154,10 +170,10 @@ describe('TreeBuilder', () => {
         });
 
         it('should handle duplicate virtual paths', () => {
-            const rootFolder = { path: '/', name: '/' } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
             const files = [
-                { path: 'hello.world.md', basename: 'hello.world.md', parent: rootFolder } as TFile,
-                { path: 'hello.universe.md', basename: 'hello.universe.md', parent: rootFolder } as TFile
+                createFileInfo('hello.world.md', '/'),
+                createFileInfo('hello.universe.md', '/')
             ];
 
             const rootNode = treeBuilder.buildDendronStructure([rootFolder], files);
@@ -189,15 +205,11 @@ describe('TreeBuilder', () => {
 
         it('should handle virtual paths', () => {
             // Create the folder structure
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
-            const yFolder = { path: 'x/y', name: 'y', parent: xFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
+            const yFolder = createFolderInfo('x/y', 'x');
 
-            const file = { 
-                path: 'x/y/test.spec.ts', 
-                basename: 'test.spec.ts',
-                parent: yFolder
-            } as TFile;
+            const file = createFileInfo('x/y/test.spec.ts', 'x/y');
 
             const rootNode = treeBuilder.buildDendronStructure([rootFolder, xFolder, yFolder], [file]);
 
@@ -232,12 +244,8 @@ describe('TreeBuilder', () => {
 
         it('should handle circular parent paths', () => {
             // Create a root folder for the file
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const file = { 
-                path: 'test.ts', 
-                basename: 'test.ts',
-                parent: rootFolder
-            } as TFile;
+            const rootFolder = createFolderInfo('/', null);
+            const file = createFileInfo('test.ts', '/');
 
             const rootNode = treeBuilder.buildDendronStructure([rootFolder], [file]);
 
@@ -261,10 +269,10 @@ describe('TreeBuilder', () => {
     describe('getParentPath', () => {
         it('should handle folder paths', () => {
             const treeBuilder = new TreeBuilder();
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
-            const yFolder = { path: 'x/y', name: 'y', parent: xFolder } as TFolder;
-            const zFolder = { path: 'x/y/z', name: 'z', parent: yFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
+            const yFolder = createFolderInfo('x/y', 'x');
+            const zFolder = createFolderInfo('x/y/z', 'x/y');
 
             treeBuilder.buildDendronStructure([rootFolder, xFolder, yFolder, zFolder], []);
 
@@ -275,24 +283,20 @@ describe('TreeBuilder', () => {
 
         it('should handle file paths', () => {
             const treeBuilder = new TreeBuilder();
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
-            const yFolder = { path: 'x/y', name: 'y', parent: xFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
+            const yFolder = createFolderInfo('x/y', 'x');
 
-            const file = { 
-                path: 'x/y/test.ts', 
-                basename: 'test.ts',
-                parent: yFolder
-            } as TFile;
+            const file = createFileInfo('x/y/test.ts', 'x/y');
 
             debug('\n=== Test: should handle file paths ===');
             debug('Input structure:', {
                 folders: [
-                    { path: rootFolder.path, name: rootFolder.name, parent: rootFolder.parent?.path },
-                    { path: xFolder.path, name: xFolder.name, parent: xFolder.parent?.path },
-                    { path: yFolder.path, name: yFolder.name, parent: yFolder.parent?.path }
+                    { path: rootFolder.path, name: rootFolder.name, parent: rootFolder.parentPath },
+                    { path: xFolder.path, name: xFolder.name, parent: xFolder.parentPath },
+                    { path: yFolder.path, name: yFolder.name, parent: yFolder.parentPath }
                 ],
-                file: { path: file.path, basename: file.basename, parent: file.parent?.path }
+                file: { path: file.path, basename: file.basename, parent: file.parentPath }
             });
 
             treeBuilder.buildDendronStructure([rootFolder, xFolder, yFolder], [file]);
@@ -305,24 +309,20 @@ describe('TreeBuilder', () => {
 
         it('should handle virtual paths', () => {
             const treeBuilder = new TreeBuilder();
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
-            const yFolder = { path: 'x/y', name: 'y', parent: xFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
+            const yFolder = createFolderInfo('x/y', 'x');
 
-            const file = { 
-                path: 'x/y/test.spec.ts', 
-                basename: 'test.spec.ts',
-                parent: yFolder
-            } as TFile;
+            const file = createFileInfo('x/y/test.spec.ts', 'x/y');
 
             debug('\n=== Test: should handle virtual paths ===');
             debug('Input structure:', {
                 folders: [
-                    { path: rootFolder.path, name: rootFolder.name, parent: rootFolder.parent?.path },
-                    { path: xFolder.path, name: xFolder.name, parent: xFolder.parent?.path },
-                    { path: yFolder.path, name: yFolder.name, parent: yFolder.parent?.path }
+                    { path: rootFolder.path, name: rootFolder.name, parent: rootFolder.parentPath },
+                    { path: xFolder.path, name: xFolder.name, parent: xFolder.parentPath },
+                    { path: yFolder.path, name: yFolder.name, parent: yFolder.parentPath }
                 ],
-                file: { path: file.path, basename: file.basename, parent: file.parent?.path }
+                file: { path: file.path, basename: file.basename, parent: file.parentPath }
             });
 
             treeBuilder.buildDendronStructure([rootFolder, xFolder, yFolder], [file]);
@@ -343,19 +343,19 @@ describe('TreeBuilder', () => {
 
     describe('getNodeType and getChildrenAmount', () => {
         let treeBuilder: TreeBuilder;
-        let folders: TFolder[];
-        let files: TFile[];
+        let folders: FolderInfo[];
+        let files: FileInfo[];
 
         beforeEach(() => {
             treeBuilder = new TreeBuilder();
             
             // Setup test data with proper parent relationships
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
             folders = [rootFolder, xFolder];
             
             files = [
-                { path: 'x/test.spec.ts', basename: 'test.spec.ts', parent: xFolder } as TFile
+                createFileInfo('x/test.spec.ts', 'x')
             ];
 
             // Build initial structure
@@ -381,15 +381,11 @@ describe('TreeBuilder', () => {
     describe('getParentPath for virtual paths', () => {
         it('should handle virtual paths', () => {
             const treeBuilder = new TreeBuilder();
-            const rootFolder = { path: '/', name: '/' } as TFolder;
-            const xFolder = { path: 'x', name: 'x', parent: rootFolder } as TFolder;
-            const yFolder = { path: 'x/y', name: 'y', parent: xFolder } as TFolder;
+            const rootFolder = createFolderInfo('/', null);
+            const xFolder = createFolderInfo('x', '/');
+            const yFolder = createFolderInfo('x/y', 'x');
 
-            const file = { 
-                path: 'x/y/test.spec.ts', 
-                basename: 'test.spec.ts',
-                parent: yFolder
-            } as TFile;
+            const file = createFileInfo('x/y/test.spec.ts', 'x/y');
 
             treeBuilder.buildDendronStructure([rootFolder, xFolder, yFolder], [file]);
 

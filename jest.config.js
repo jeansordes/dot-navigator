@@ -2,7 +2,9 @@ export const preset = 'ts-jest';
 export const testEnvironment = 'node';
 export const moduleNameMapper = {
     '^src/(.*)$': '<rootDir>/src/$1',
-    '^obsidian$': '<rootDir>/tests/mocks/obsidian.ts'
+    '^obsidian$': '<rootDir>/tests/mocks/obsidian.ts',
+    // Handle ESM .js extensions in TypeScript imports
+    '^(\\.{1,2}/.*)\\.js$': '$1'
 };
 export const transform = {
     '^.+\\.tsx?$': ['ts-jest', {
@@ -13,6 +15,7 @@ export const transform = {
     }]
 };
 export const testRegex = '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$';
+export const testPathIgnorePatterns = ['<rootDir>/e2e/', '<rootDir>/node_modules/'];
 export const moduleFileExtensions = ['ts', 'tsx', 'js', 'jsx', 'json', 'node'];
 export const collectCoverage = true;
 export const coverageDirectory = 'coverage';

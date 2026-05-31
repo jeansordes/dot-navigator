@@ -1,7 +1,7 @@
 import { App, Platform, Scope } from 'obsidian';
 import { RenameDialogData, RenameMode } from '../../types';
 import { t } from '../../i18n';
-import { parsePath } from '../../utils/misc/PathUtils';
+import { parsePath } from '../../domain/file/PathUtils';
 import { autoResize } from '../../utils/ui/UIUtils';
 import { createHints } from '../../utils/rename/RenameDialogUIUtils';
 import { validateAndShowWarning } from '../../utils/validation/PathValidationUtils';

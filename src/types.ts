@@ -198,3 +198,27 @@ export type RenameTriggerSource =
     | 'auto-create'
     | 'quick-create'
     | 'other';
+
+// ==============================================
+// Virtual tree data types (for core/ and views/)
+// ==============================================
+
+/** Kind of item in the virtualized tree */
+export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
+
+/** Item in the virtualized tree data */
+export interface VItem {
+    id: string;
+    name: string;
+    originalName?: string;
+    title?: string;
+    kind: Kind;
+    extension?: string;
+    children?: VItem[];
+}
+
+/** Result of building virtualized data from tree */
+export interface VirtualizedData {
+    data: VItem[];
+    parentMap: Map<string, string | undefined>;
+}

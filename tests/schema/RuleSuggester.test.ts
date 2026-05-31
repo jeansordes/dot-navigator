@@ -1,5 +1,5 @@
 import { RuleSuggester } from '../../src/utils/schema/RuleSuggester';
-import type { RuleIndex } from '../../src/utils/schema/RuleTypes';
+import type { RuleIndex } from '../../src/domain/schema/RuleTypes';
 import { TreeNode, TreeNodeType } from '../../src/types';
 
 function createNode(path: string, type: TreeNodeType): TreeNode {

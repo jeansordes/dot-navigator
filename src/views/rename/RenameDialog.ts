@@ -9,8 +9,9 @@ import { RenameProgress } from './RenameProgress';
 import { setupRenameDialogContent } from './RenameDialogContent';
 import type { MobileHeaderConfig } from './RenameDialogMobileSetup';
 import type { AutocompleteState } from '../../utils/misc/AutocompleteUtils';
-import { showNoChangesMessage as showNoChangesMessageHelper, hideInfoMessage as hideInfoMessageHelper } from './RenameDialogMessages';
 import {
+    showNoChangesMessage as showNoChangesMessageHelper,
+    hideInfoMessage as hideInfoMessageHelper,
     showProgress as showProgressHelper,
     hideProgress as hideProgressHelper,
     leaveRenamingState as leaveRenamingStateHelper,

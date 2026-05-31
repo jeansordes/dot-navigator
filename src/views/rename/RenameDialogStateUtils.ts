@@ -1,6 +1,6 @@
 import { autoResize } from '../../utils/ui/UIUtils';
 import { hideWarning } from '../../utils/validation/PathValidationUtils';
-import { parsePath } from '../../utils/misc/PathUtils';
+import { parsePath } from '../../domain/file/PathUtils';
 import { updateAllFileItems } from '../../utils/file/FileDiffUtils';
 import { RenameUtils } from '../../utils/rename/RenameUtils';
 import type { RenameDialogData, RenameMode } from '../../types';

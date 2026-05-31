@@ -16,7 +16,6 @@ import { bindRowHandlers, onRowClick as handleRowClick, onRowContextMenu as hand
 import type { RowDragController } from '../row/rowDragDrop';
 import { attachTreeDragController, detachTreeDragController } from './treeDragAttach';
 import { RenameManager } from '../../utils/rename/RenameManager';
-// import { updateInstanceStyles } from './styleSheet';
 
 export class ComplexVirtualTree extends VirtualTree {
   private app: App;

@@ -1,4 +1,4 @@
-import { parseRuleFile } from '../../src/utils/schema/RuleParser';
+import { parseRuleFile } from '../../src/domain/schema/RuleParser';
 
 describe('RuleParser', () => {
   describe('parseRuleFile', () => {
