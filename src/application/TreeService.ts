@@ -7,6 +7,7 @@ import { TreeBuilder, TreeNode, TreeNodeType } from '../domain/tree/index.js';
 import type { VaultPort } from '../ports/VaultPort.js';
 import type { MetadataPort } from '../ports/MetadataPort.js';
 import { basename } from '../domain/file/PathUtils.js';
+import { applyAliasesToVirtualizedData, normalizeAliases, type AliasEntry } from '../core/aliasVirtualData.js';
 
 /**
  * Options for display name transformation
@@ -27,6 +28,10 @@ export interface VItem {
   title?: string;
   kind: 'folder' | 'file' | 'virtual' | 'suggestion';
   extension?: string;
+  isAlias?: boolean;
+  aliasPath?: string;
+  targetPath?: string;
+  targetKind?: VItem['kind'];
   children?: VItem[];
 }
 
@@ -162,7 +167,19 @@ export class TreeService {
       .sort(([, aNode], [, bNode]) => getSortKey(aNode).localeCompare(getSortKey(bNode)))
       .forEach(([, child]) => data.push(build(child, root.path)));
 
+    applyAliasesToVirtualizedData(data, parentMap, this.collectAliasEntries(), {
+      transformName,
+      getSortKey: (item) => item.title ?? item.name,
+    });
+
     return { data, parentMap };
+  }
+
+  private collectAliasEntries(): AliasEntry[] {
+    return this.vault.getFiles().flatMap(file => {
+      const aliases = normalizeAliases(this.metadata.getFrontmatterField(file.path, 'aliases'));
+      return aliases.map(alias => ({ alias, targetPath: file.path }));
+    });
   }
 
   /**

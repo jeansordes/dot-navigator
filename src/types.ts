@@ -66,6 +66,10 @@ export interface VirtualTreeBaseItem {
     kind: 'file' | 'folder' | 'virtual' | 'suggestion';
     // Optional file extension (present for files when available)
     extension?: string;
+    isAlias?: boolean;
+    aliasPath?: string;
+    targetPath?: string;
+    targetKind?: 'file' | 'folder' | 'virtual' | 'suggestion';
     children?: VirtualTreeBaseItem[];
     expanded?: boolean;
 }
@@ -214,6 +218,10 @@ export interface VItem {
     title?: string;
     kind: Kind;
     extension?: string;
+    isAlias?: boolean;
+    aliasPath?: string;
+    targetPath?: string;
+    targetKind?: Kind;
     children?: VItem[];
 }
 

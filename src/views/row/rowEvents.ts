@@ -13,6 +13,7 @@ import { DEFAULT_MORE_MENU } from '../../types';
 import { t } from '../../i18n';
 import { scrollIntoView } from '../../utils/misc/rowState';
 import { RenameManager } from '../../utils/rename/RenameManager';
+import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
 
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
   if (item.kind === 'file') {
@@ -24,6 +25,10 @@ export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: n
 
 export function handleActionButtonClick(app: App, action: string | null, id: string, kind: MenuItemKind, vt: VirtualTreeLike, anchorEl?: HTMLElement, ev?: MouseEvent, renameManager?: RenameManager): void {
   if (!action) return;
+  const treeItem = vt.visible.find(item => item.id === id);
+  const actionPath = treeItem ? resolveTargetPath(treeItem) : id;
+  const isShortcut = treeItem ? isShortcutItem(treeItem) : false;
+
   if (action === 'toggle') {
     // Use the VirtualTree's toggle so selection/focus and scroll are preserved
     try { vt.toggle(id); }
@@ -34,16 +39,17 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
       vt._render();
     }
   } else if (action === 'create-note') {
-    FileUtils.createAndOpenNote(app, id);
+    FileUtils.createAndOpenNote(app, actionPath);
   } else if (action === 'create-child') {
+    if (isShortcut) return;
     // @ts-expect-error - plugins registry exists at runtime
     const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-    FileUtils.createChildNote(app, id, plugin?.settings, plugin?.renameManager);
+    FileUtils.createChildNote(app, actionPath, plugin?.settings, plugin?.renameManager);
   } else if (action === 'more') {
     const menu = new Menu();
 
     const items = getConfiguredMenuItems(app);
-    const fileOrFolder = app.vault.getAbstractFileByPath(id);
+    const fileOrFolder = app.vault.getAbstractFileByPath(actionPath);
     const file = fileOrFolder instanceof TFile ? fileOrFolder : null;
     const folder = fileOrFolder instanceof TFolder ? fileOrFolder : null;
 
@@ -55,16 +61,18 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
       if (it.type === 'builtin') {
         hasAddedBuiltinItems = true;
         if (it.builtin === 'create-child') {
+          if (isShortcut) continue;
           menu.addItem((mi) => {
             mi.setTitle(t('commandCreateChildNote'))
               .setIcon(it.icon || 'copy-plus')
               .onClick(async () => {
                 // @ts-expect-error - plugins registry exists at runtime
                 const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-                await FileUtils.createChildNote(app, id, plugin?.settings, plugin?.renameManager);
+                await FileUtils.createChildNote(app, actionPath, plugin?.settings, plugin?.renameManager);
               });
           });
         } else if (it.builtin === 'delete') {
+          if (isShortcut) continue;
           if (!file && !folder) continue; // only for files or folders
           const isFile = !!file;
           const title = isFile ? t('menuDeleteFile') : t('menuDeleteFolder');
@@ -92,12 +100,13 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
             } catch { /* ignore */ }
           });
         } else if (it.builtin === 'rename') {
+          if (isShortcut) continue;
           menu.addItem((mi) => {
             mi.setTitle(t('menuRename'))
               .setIcon(it.icon || 'edit-3')
               .onClick(async () => {
                 if (renameManager) {
-                  await renameManager.showRenameDialog(id, kind);
+                  await renameManager.showRenameDialog(actionPath, kind);
                 }
               });
           });
@@ -227,8 +236,10 @@ export function shouldShowFor(item: MoreMenuItem, kind: MenuItemKind): boolean {
 }
 
 export function handleTitleClick(app: App, kind: string | null, id: string, idx: number, vt: VirtualTreeLike, setSelectedId: (id: string) => void, ev?: MouseEvent): void {
+  const item = vt.visible[idx];
+  const targetPath = item ? resolveTargetPath(item) : id;
   if (kind === 'file') {
-    const file = app.vault.getAbstractFileByPath(id);
+    const file = app.vault.getAbstractFileByPath(targetPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey; // CMD on Mac, CTRL on Windows/Linux
       FileUtils.openFile(app, file, openInNewTab);

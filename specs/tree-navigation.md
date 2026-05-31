@@ -49,3 +49,13 @@ En tant qu'utilisateur de Dot Navigator, je veux voir mes fichiers organisés da
 **When** je construis l'arbre  
 **Then** "readme" devrait avoir le titre "Welcome to My Vault"
 
+### 6. Les alias YAML sont affichés comme des raccourcis
+
+**Given** un vault vide  
+**And** le vault contient les fichiers : `target.md`, `target.child.md`  
+**And** `target.md` a un frontmatter avec l'alias `foo.bar`  
+**When** je construis l'arbre  
+**Then** "foo" devrait être un nœud virtuel  
+**And** "foo.bar" devrait être un raccourci vers `target.md`  
+**And** le raccourci devrait afficher les enfants de `target.md` dans un sous-arbre virtuel
+

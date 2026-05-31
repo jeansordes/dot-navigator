@@ -22,6 +22,10 @@ export function flattenTree(
       title: n.title,
       kind: n.kind,
       extension: n.extension,
+      isAlias: n.isAlias,
+      aliasPath: n.aliasPath,
+      targetPath: n.targetPath,
+      targetKind: n.targetKind,
       level,
       hasChildren 
     });

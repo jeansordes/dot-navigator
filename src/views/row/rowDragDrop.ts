@@ -102,6 +102,7 @@ export class RowDragController {
 
         const row = title.closest('.tree-row');
         if (!(row instanceof HTMLElement) || !row.dataset.id) return;
+        if (row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id) return;
 
         const isTouch = e.pointerType === 'touch' || (Platform.isMobile && e.pointerType !== 'mouse');
         this.pending = {

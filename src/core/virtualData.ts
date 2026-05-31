@@ -2,6 +2,7 @@ import { App } from 'obsidian';
 import { FileUtils } from '../utils/file/FileUtils';
 import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
 import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
+import { applyAliasesToVirtualizedData, normalizeAliases, type AliasEntry } from './aliasVirtualData';
 
 export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
@@ -12,6 +13,10 @@ export interface VItem {
   title?: string;
   kind: Kind;
   extension?: string;
+  isAlias?: boolean;
+  aliasPath?: string;
+  targetPath?: string;
+  targetKind?: Kind;
   children?: VItem[];
 }
 
@@ -125,5 +130,22 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     .sort(([_aKey, aNode], [_bKey, bNode]) => sortKey(aNode).localeCompare(sortKey(bNode)))
     .forEach(([, child]) => data.push(build(child, root.path)));
 
+  applyAliasesToVirtualizedData(data, parentMap, collectAliasEntries(app), {
+    transformName,
+    getSortKey: (item) => item.title ?? item.name,
+  });
+
   return { data, parentMap };
+}
+
+function collectAliasEntries(app: App): AliasEntry[] {
+  try {
+    return app.vault.getFiles().flatMap(file => {
+      const cache = app.metadataCache.getFileCache(file);
+      const aliases = normalizeAliases(cache?.frontmatter?.aliases);
+      return aliases.map(alias => ({ alias, targetPath: file.path }));
+    });
+  } catch {
+    return [];
+  }
 }

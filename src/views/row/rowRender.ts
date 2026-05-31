@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
-import { createActionButtons, createFolderIcon, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge } from './rowDom';
+import { createActionButtons, createFolderIcon, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon } from './rowDom';
 import { setRowIndentation } from '../../utils/misc/rowState';
 
 export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, itemIndex: number, app: App, startPx?: number): void {
@@ -42,6 +42,8 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
       if (isSelected) titleEl.classList.add('is-active'); else titleEl.classList.remove('is-active');
     }
     row.dataset.index = String(itemIndex);
+    if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
+    if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
     row.setAttribute('tabindex', isFocused ? '0' : '-1');
     row.setAttribute('aria-selected', String(isSelected));
     // aria-expanded handled above together with toggle button sync
@@ -51,6 +53,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   // Full (re)build for a new or dirty item
   row.classList.remove('row');
   row.classList.add('tree-row');
+  if (item.isAlias) row.classList.add('dotn_alias-row'); else row.classList.remove('dotn_alias-row');
   setRowIndentation(row, item.level);
 
   if (hasChildren && !isExpanded) row.classList.add('collapsed'); else row.classList.remove('collapsed');
@@ -63,6 +66,8 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     const ic = createFileIconOrBadge(item);
     if (ic) row.appendChild(ic);
   }
+  const aliasIcon = createAliasIcon(item);
+  if (aliasIcon) row.appendChild(aliasIcon);
   row.appendChild(createTitleElement(item));
   const extEl = maybeCreateExtension(item);
   if (extEl) row.appendChild(extEl);
@@ -74,6 +79,8 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   }
 
   row.dataset.id = item.id;
+  if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
+  if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
   row.dataset.index = String(itemIndex);
   row.setAttribute('role', 'treeitem');
   row.setAttribute('aria-level', String(item.level + 1));

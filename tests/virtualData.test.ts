@@ -229,4 +229,69 @@ describe('buildVirtualizedData', () => {
       expect(barNode.name).toBe('Bar'); // Display name should strip .md and apply SENTENCE_CASE
     });
   });
+
+  describe('aliases', () => {
+    it('adds alias shortcuts using alias dot paths', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['target.md', {
+            path: 'target.md',
+            nodeType: TreeNodeType.FILE,
+            children: new Map()
+          }]
+        ])
+      };
+      const app = {
+        vault: { getFiles: () => [{ path: 'target.md' }] },
+        metadataCache: { getFileCache: () => ({ frontmatter: { aliases: ['foo.bar'] } }) }
+      } as unknown as App;
+
+      const result = buildVirtualizedData(app, rootNode, { mySetting: 'default', transformDashesToSpaces: DashTransformation.NONE });
+
+      const foo = result.data.find(item => item.id === 'foo.md');
+      const alias = foo?.children?.find(item => item.aliasPath === 'foo.bar.md');
+      expect(alias).toMatchObject({
+        name: 'bar',
+        isAlias: true,
+        targetPath: 'target.md',
+        targetKind: 'file',
+      });
+    });
+
+    it('projects target children under the alias with alias-local ids', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['target.md', {
+            path: 'target.md',
+            nodeType: TreeNodeType.FILE,
+            children: new Map([
+              ['target.child.md', {
+                path: 'target.child.md',
+                nodeType: TreeNodeType.FILE,
+                children: new Map()
+              }]
+            ])
+          }]
+        ])
+      };
+      const app = {
+        vault: { getFiles: () => [{ path: 'target.md' }] },
+        metadataCache: { getFileCache: () => ({ frontmatter: { aliases: ['shortcut.target'] } }) }
+      } as unknown as App;
+
+      const result = buildVirtualizedData(app, rootNode, { mySetting: 'default', transformDashesToSpaces: DashTransformation.NONE });
+
+      const alias = result.data
+        .find(item => item.id === 'shortcut.md')
+        ?.children?.find(item => item.aliasPath === 'shortcut.target.md');
+      const child = alias?.children?.[0];
+      expect(child?.id).toContain(alias!.id);
+      expect(child?.targetPath).toBe('target.child.md');
+      expect(result.parentMap.get(child!.id)).toBe(alias!.id);
+    });
+  });
 });

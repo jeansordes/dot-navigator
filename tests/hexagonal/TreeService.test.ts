@@ -116,6 +116,43 @@ describe('TreeService', () => {
       const fileItem = folderItem?.children?.find(item => item.id === 'folder/file.md');
       expect(fileItem?.kind).toBe('file');
     });
+
+    it('should add aliases from frontmatter as shortcut items in dot-path position', () => {
+      vault.addFile('target.md');
+      metadata.setFrontmatter('target.md', { aliases: ['foo.bar'] });
+
+      const result = treeService.buildVirtualizedData(DashTransformation.NONE);
+
+      const foo = result.data.find(item => item.id === 'foo.md');
+      const alias = foo?.children?.find(item => item.aliasPath === 'foo.bar.md');
+      expect(foo?.kind).toBe('virtual');
+      expect(alias).toMatchObject({
+        name: 'bar',
+        kind: 'file',
+        isAlias: true,
+        aliasPath: 'foo.bar.md',
+        targetPath: 'target.md',
+        targetKind: 'file',
+      });
+      expect(result.parentMap.get(alias!.id)).toBe('foo.md');
+    });
+
+    it('should project target children under aliases with scoped ids', () => {
+      vault.addFile('target.md');
+      vault.addFile('target.child.md');
+      metadata.setFrontmatter('target.md', { aliases: ['shortcut.target'] });
+
+      const result = treeService.buildVirtualizedData(DashTransformation.NONE);
+      const shortcut = result.data
+        .find(item => item.id === 'shortcut.md')
+        ?.children?.find(item => item.aliasPath === 'shortcut.target.md');
+
+      expect(shortcut?.children).toHaveLength(1);
+      const projectedChild = shortcut!.children![0];
+      expect(projectedChild.id).toContain(shortcut!.id);
+      expect(projectedChild.targetPath).toBe('target.child.md');
+      expect(result.parentMap.get(projectedChild.id)).toBe(shortcut!.id);
+    });
   });
 });
 

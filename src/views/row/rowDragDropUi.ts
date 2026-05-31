@@ -33,6 +33,7 @@ export function resolveDropTarget(
 
     const row = el.closest('.tree-row');
     if (row instanceof HTMLElement && row.dataset.id) {
+        if (row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id) return null;
         const title = row.querySelector('.dotn_tree-item-title');
         const kindAttr = title?.getAttribute('data-node-kind') ?? null;
         if (isDropTargetKind(kindAttr)) {

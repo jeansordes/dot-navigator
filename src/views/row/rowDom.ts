@@ -63,6 +63,15 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   return icon;
 }
 
+export function createAliasIcon(item: RowItem): HTMLElement | null {
+  if (!item.isAlias) return null;
+  const icon = document.createElement('div');
+  icon.className = 'dotn_icon dotn_alias-icon';
+  icon.title = item.targetPath ? `Shortcut to ${item.targetPath}` : 'Shortcut';
+  setIcon(icon, 'corner-down-right');
+  return icon;
+}
+
 export function createTitleElement(item: RowItem): HTMLElement {
   const titleClass = item.kind === 'virtual' || item.kind === 'suggestion'
     ? 'dotn_tree-item-title mod-create-new'
@@ -71,9 +80,11 @@ export function createTitleElement(item: RowItem): HTMLElement {
       : 'dotn_tree-item-title';
   const title = document.createElement('div');
   title.className = titleClass;
-  title.title = item.id;
+  title.title = item.targetPath ? `${item.aliasPath ?? item.id} -> ${item.targetPath}` : item.id;
   title.setAttribute('data-node-kind', item.kind);
   title.setAttribute('data-path', item.id);
+  if (item.isAlias) title.setAttribute('data-alias', 'true');
+  if (item.targetPath) title.setAttribute('data-target-path', item.targetPath);
 
   const yamlTitle = item.title;
 

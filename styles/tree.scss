@@ -228,6 +228,20 @@
         box-sizing: border-box;
     }
 
+    .dotn_alias-icon {
+        color: var(--text-muted);
+        opacity: 0.85;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .dotn_alias-row .dotn_tree-item-title {
+        font-style: italic;
+    }
+
     /* Badge for unknown file extensions shown in place of an icon */
     .dotn_file-badge {
         display: inline-flex;
