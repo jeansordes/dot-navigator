@@ -132,13 +132,13 @@ export class RenameManager {
             this.addToUndoStack(operations, options);
 
             // Refresh dialog inputs to reflect new state when rename succeeded
-            if (operations.some(op => op.success)) {
+            if (operations.some(op => op.success && !op.rolledBack)) {
                 dialog.refreshDialogState(options.newPath, options.newTitle);
             }
 
             // Update all progress blocks with final states
             operations.forEach((op, index) => {
-                const state = op.success ? 'success' : 'error';
+                const state = op.rolledBack ? 'reverted' : op.success ? 'success' : 'error';
                 dialog.updateProgressBlock(index, state);
             });
 
@@ -146,7 +146,7 @@ export class RenameManager {
             const finalProgress: RenameProgress = {
                 total: operations.length,
                 completed: operations.length,
-                successful: operations.filter(op => op.success).length,
+                successful: operations.filter(op => op.success && !op.rolledBack).length,
                 failed: operations.filter(op => !op.success).length,
                 errors: operations.filter(op => !op.success).map(op => ({
                     path: op.originalPath,
@@ -169,7 +169,7 @@ export class RenameManager {
      */
     private addToUndoStack(operations: RenameOperation[], options: RenameOptions): void {
         // Only add if there were successful operations
-        const successfulOps = operations.filter(op => op.success);
+        const successfulOps = operations.filter(op => op.success && !op.rolledBack);
         if (successfulOps.length === 0) return;
 
         this.undoStack.push({ operations, options });
@@ -256,7 +256,8 @@ export class RenameManager {
 
         try {
             const operations = await RenameUtils.renameWithProgress(this.app, options);
-            const successful = operations.filter(op => op.success);
+            const successful = operations.filter(op => op.success && !op.rolledBack);
+            const failed = operations.filter(op => !op.success);
 
             if (successful.length === 0) {
                 const firstError = operations.find(op => op.error)?.error;
@@ -265,7 +266,7 @@ export class RenameManager {
             }
 
             this.addToUndoStack(operations, options);
-            this.showMoveNotice(successful.length, operations.length - successful.length);
+            this.showMoveNotice(successful.length, failed.length);
             return true;
         } catch (error) {
             debug('Drag move failed:', error);
