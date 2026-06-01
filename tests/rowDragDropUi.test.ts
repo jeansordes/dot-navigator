@@ -31,12 +31,9 @@ class FakeElement {
     }
 
     contains(element: FakeElement): boolean {
-        let current: FakeElement | null = element;
-        while (current) {
-            if (current === this) return true;
-            current = current.parent;
-        }
-        return false;
+        if (element === this) return true;
+        if (!element.parent) return false;
+        return this.contains(element.parent);
     }
 
     getAttribute(name: string): string | null {
@@ -49,12 +46,8 @@ class FakeElement {
     }
 
     private findClosestWithClass(className: string): FakeElement | null {
-        let current: FakeElement | null = this;
-        while (current) {
-            if (current.classes.includes(className)) return current;
-            current = current.parent;
-        }
-        return null;
+        if (this.classes.includes(className)) return this;
+        return this.parent?.findClosestWithClass(className) ?? null;
     }
 }
 
