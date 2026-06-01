@@ -185,6 +185,7 @@ export interface RenameOperation {
     newPath: string;
     success: boolean;
     error?: string;
+    rolledBack?: boolean;
 }
 
 export interface RenameDialogData {

@@ -229,5 +229,90 @@ describe('renameWithProgress', () => {
                 error: 'File already exists'
             }]);
         });
+
+        it('should stop after a main file failure instead of renaming children', async () => {
+            const originalPath = 'project.md';
+            const newPath = 'work.md';
+            const childPaths = ['project.tasks.md'];
+
+            const options: RenameOptions = {
+                originalPath,
+                newPath,
+                newTitle: 'work',
+                mode: RenameMode.FILE_AND_CHILDREN,
+                kind: 'file'
+            };
+
+            (deps.findChildrenFiles as jest.Mock).mockReturnValue(childPaths);
+            jest.spyOn(app.vault, 'getAbstractFileByPath')
+                .mockImplementation((path: string) => {
+                    if (path === originalPath) return createMockFile(path);
+                    if (childPaths.includes(path)) return createMockFile(path);
+                    return null;
+                });
+
+            const error = new Error('Main rename failed');
+            const renameSpy = jest.spyOn(app.fileManager, 'renameFile').mockRejectedValue(error);
+
+            const operations = await renameWithProgress(deps, app, options);
+
+            expect(operations).toHaveLength(1);
+            expect(operations[0]).toEqual({
+                originalPath: 'project.md',
+                newPath: 'work.md',
+                success: false,
+                error: 'Main rename failed'
+            });
+            expect(renameSpy).toHaveBeenCalledTimes(1);
+            expect(deps.revertSuccessfulOperations).not.toHaveBeenCalled();
+        });
+
+        it('should roll back earlier successful renames after a later batch failure', async () => {
+            const originalPath = 'project.md';
+            const newPath = 'work.md';
+            const childPaths = ['project.tasks.md'];
+
+            const options: RenameOptions = {
+                originalPath,
+                newPath,
+                newTitle: 'work',
+                mode: RenameMode.FILE_AND_CHILDREN,
+                kind: 'file'
+            };
+
+            (deps.findChildrenFiles as jest.Mock).mockReturnValue(childPaths);
+            jest.spyOn(app.vault, 'getAbstractFileByPath')
+                .mockImplementation((path: string) => {
+                    if (path === originalPath) return createMockFile(path);
+                    if (childPaths.includes(path)) return createMockFile(path);
+                    return null;
+                });
+
+            jest.spyOn(app.fileManager, 'renameFile')
+                .mockResolvedValueOnce()
+                .mockRejectedValueOnce(new Error('Child destination exists'));
+
+            const operations = await renameWithProgress(deps, app, options);
+
+            expect(operations).toEqual([
+                {
+                    originalPath: 'project.md',
+                    newPath: 'work.md',
+                    success: true,
+                    rolledBack: true
+                },
+                {
+                    originalPath: 'project.tasks.md',
+                    newPath: 'work.tasks.md',
+                    success: false,
+                    error: 'Child destination exists'
+                }
+            ]);
+            expect(deps.revertSuccessfulOperations).toHaveBeenCalledWith(
+                app,
+                operations,
+                undefined
+            );
+        });
     });
 });

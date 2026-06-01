@@ -39,6 +39,7 @@ export function resolveDropTarget(
         if (isDropTargetKind(kindAttr)) {
             return { targetPath: row.dataset.id, targetKind: kindAttr };
         }
+        return null;
     }
 
     if (viewBody.contains(el) && !el.closest('.dotn_view-header')) {

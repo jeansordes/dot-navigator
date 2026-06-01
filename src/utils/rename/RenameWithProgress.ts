@@ -23,187 +23,222 @@ export async function renameWithProgress(
     onProgress?: (progress: RenameProgress) => void
 ): Promise<RenameOperation[]> {
     deps.setAbortController(new AbortController());
-    debug("Starting rename operation", options);
+    try {
+        debug("Starting rename operation", options);
 
-    const operations: RenameOperation[] = [];
-    const createdDirectories: string[] = [];
-    const filesToRename: Array<{ from: string; to: string }> = [];
+        const operations: RenameOperation[] = [];
+        const createdDirectories: string[] = [];
+        const filesToRename: Array<{ from: string; to: string }> = [];
 
-    if (options.mode === RenameMode.FILE_ONLY || options.kind === "folder") {
-        filesToRename.push({
-            from: options.originalPath,
-            to: options.newPath
-        });
-    } else {
-        const children = deps.findChildrenFiles(app, options.originalPath);
-
-        const mainFile = app.vault.getAbstractFileByPath(options.originalPath);
-        if (mainFile instanceof TFile) {
+        if (options.mode === RenameMode.FILE_ONLY || options.kind === "folder") {
             filesToRename.push({
                 from: options.originalPath,
                 to: options.newPath
             });
+        } else {
+            const children = deps.findChildrenFiles(app, options.originalPath);
+
+            const mainFile = app.vault.getAbstractFileByPath(options.originalPath);
+            if (mainFile instanceof TFile) {
+                filesToRename.push({
+                    from: options.originalPath,
+                    to: options.newPath
+                });
+            }
+
+            const originalBaseName = options.originalPath.replace(/\.md$/i, "");
+            const newBaseName = options.newPath.replace(/\.md$/i, "");
+
+            for (const childPath of children) {
+                // Extract the original extension from the child path
+                const lastDotIndex = childPath.lastIndexOf('.');
+                const childExtension = lastDotIndex > 0 ? childPath.substring(lastDotIndex) : '';
+                const childBaseName = childPath.substring(0, lastDotIndex > 0 ? lastDotIndex : childPath.length);
+
+                const childSuffix = childBaseName.substring(originalBaseName.length);
+                const newChildPath = `${newBaseName}${childSuffix}${childExtension}`;
+
+                filesToRename.push({
+                    from: childPath,
+                    to: newChildPath
+                });
+            }
         }
 
-        const originalBaseName = options.originalPath.replace(/\.md$/i, "");
-        const newBaseName = options.newPath.replace(/\.md$/i, "");
-
-        for (const childPath of children) {
-            // Extract the original extension from the child path
-            const lastDotIndex = childPath.lastIndexOf('.');
-            const childExtension = lastDotIndex > 0 ? childPath.substring(lastDotIndex) : '';
-            const childBaseName = childPath.substring(0, lastDotIndex > 0 ? lastDotIndex : childPath.length);
-
-            const childSuffix = childBaseName.substring(originalBaseName.length);
-            const newChildPath = `${newBaseName}${childSuffix}${childExtension}`;
-
-            filesToRename.push({
-                from: childPath,
-                to: newChildPath
-            });
-        }
-    }
-
-    const progress: RenameProgress = {
-        total: filesToRename.length,
-        completed: 0,
-        successful: 0,
-        failed: 0,
-        errors: [],
-        phase: "forward"
-    };
-
-    debug("Files to rename:", filesToRename);
-    onProgress?.(progress);
-
-    const dirsToCreate = new Set<string>();
-    for (const { to } of filesToRename) {
-        const dirPath = to.substring(0, to.lastIndexOf("/"));
-        if (dirPath && !app.vault.getAbstractFileByPath(dirPath)) {
-            dirsToCreate.add(dirPath);
-        }
-    }
-
-    if (deps.getAbortController()?.signal.aborted) {
-        debug("Rename operation cancelled during directory preparation");
-        await handleCancellation(deps, app, operations, createdDirectories, onProgress);
-    }
-
-    const dirsArray = Array.from(dirsToCreate).sort();
-    if (dirsArray.length > 0) {
-        debug(`Creating ${dirsArray.length} directories...`);
-
-        const dirCreationProgress: RenameProgress = {
-            ...progress,
-            lastOperation: {
-                index: -1,
-                success: true,
-                path: "Preparing directories..."
-            },
-            message: t("renameDialogProgressPreparingDirectories"),
+        const progress: RenameProgress = {
+            total: filesToRename.length,
+            completed: 0,
+            successful: 0,
+            failed: 0,
+            errors: [],
             phase: "forward"
         };
-        onProgress?.(dirCreationProgress);
+
+        debug("Files to rename:", filesToRename);
+        onProgress?.(progress);
+
+        const dirsToCreate = new Set<string>();
+        for (const { to } of filesToRename) {
+            const dirPath = to.substring(0, to.lastIndexOf("/"));
+            if (dirPath && !app.vault.getAbstractFileByPath(dirPath)) {
+                dirsToCreate.add(dirPath);
+            }
+        }
 
         if (deps.getAbortController()?.signal.aborted) {
-            debug("Rename operation cancelled during directory creation");
+            debug("Rename operation cancelled during directory preparation");
             await handleCancellation(deps, app, operations, createdDirectories, onProgress);
         }
 
-        const dirPromises = dirsArray.map(async (dirPath) => {
+        const dirsArray = Array.from(dirsToCreate).sort();
+        if (dirsArray.length > 0) {
+            debug(`Creating ${dirsArray.length} directories...`);
+
+            const dirCreationProgress: RenameProgress = {
+                ...progress,
+                lastOperation: {
+                    index: -1,
+                    success: true,
+                    path: "Preparing directories..."
+                },
+                message: t("renameDialogProgressPreparingDirectories"),
+                phase: "forward"
+            };
+            onProgress?.(dirCreationProgress);
+
             if (deps.getAbortController()?.signal.aborted) {
-                throw new Error("Directory creation cancelled");
+                debug("Rename operation cancelled during directory creation");
+                await handleCancellation(deps, app, operations, createdDirectories, onProgress);
             }
+
+            const dirPromises = dirsArray.map(async (dirPath) => {
+                if (deps.getAbortController()?.signal.aborted) {
+                    throw new Error("Directory creation cancelled");
+                }
+
+                try {
+                    await app.vault.createFolder(dirPath);
+                    createdDirectories.push(dirPath);
+                    debug("Created directory:", dirPath);
+                    return { success: true, path: dirPath };
+                } catch (error) {
+                    debug("Failed to create directory:", dirPath, error);
+                    return { success: false, path: dirPath, error };
+                }
+            });
 
             try {
-                await app.vault.createFolder(dirPath);
-                createdDirectories.push(dirPath);
-                debug("Created directory:", dirPath);
-                return { success: true, path: dirPath };
-            } catch (error) {
-                debug("Failed to create directory:", dirPath, error);
-                return { success: false, path: dirPath, error };
-            }
-        });
-
-        try {
-            await Promise.all(dirPromises);
-        } catch {
-            if (deps.getAbortController()?.signal.aborted) {
-                debug("Directory creation cancelled");
-                await handleCancellation(deps, app, operations, createdDirectories, onProgress);
+                await Promise.all(dirPromises);
+            } catch {
+                if (deps.getAbortController()?.signal.aborted) {
+                    debug("Directory creation cancelled");
+                    await handleCancellation(deps, app, operations, createdDirectories, onProgress);
+                }
             }
         }
-    }
 
-    for (let i = 0; i < filesToRename.length; i++) {
+        for (let i = 0; i < filesToRename.length; i++) {
+            if (deps.getAbortController()?.signal.aborted) {
+                debug("Rename operation cancelled during file operations");
+                await handleCancellation(deps, app, operations, createdDirectories, onProgress);
+            }
+
+            const { from, to } = filesToRename[i];
+            const operation: RenameOperation = {
+                originalPath: from,
+                newPath: to,
+                success: false
+            };
+
+            try {
+                const file = app.vault.getAbstractFileByPath(from);
+                if (file instanceof TFile) {
+                    await app.fileManager.renameFile(file, to);
+                    operation.success = true;
+                    progress.successful++;
+                    debug("Successfully renamed file:", from, "->", to);
+                } else if (file instanceof TFolder) {
+                    await app.fileManager.renameFile(file, to);
+                    operation.success = true;
+                    progress.successful++;
+                    debug("Successfully renamed folder:", from, "->", to);
+                } else {
+                    throw new Error(`File or folder not found: ${from}`);
+                }
+            } catch (error) {
+                if (deps.getAbortController()?.signal.aborted) {
+                    debug("Rename operation cancelled during file operation");
+                    await handleCancellation(deps, app, operations, createdDirectories, onProgress);
+                }
+
+                operation.success = false;
+                operation.error = error instanceof Error ? error.message : String(error);
+                progress.failed++;
+                progress.errors.push({
+                    path: from,
+                    error: operation.error
+                });
+                debug("Failed to rename:", from, error);
+            }
+
+            operations.push(operation);
+            progress.completed++;
+
+            const updatedProgress: RenameProgress = {
+                ...progress,
+                lastOperation: {
+                    index: i,
+                    success: operation.success,
+                    path: from
+                },
+                phase: "forward"
+            };
+
+            onProgress?.(updatedProgress);
+
+            if (!operation.success) {
+                await rollbackAfterFailure(deps, app, operations, createdDirectories, onProgress);
+                break;
+            }
+        }
+
         if (deps.getAbortController()?.signal.aborted) {
-            debug("Rename operation cancelled during file operations");
+            debug("Rename operation cancelled after file operations finished");
             await handleCancellation(deps, app, operations, createdDirectories, onProgress);
         }
 
-        const { from, to } = filesToRename[i];
-        const operation: RenameOperation = {
-            originalPath: from,
-            newPath: to,
-            success: false
-        };
+        debug("Rename operation completed:", progress);
+        return operations;
+    } finally {
+        deps.setAbortController(null);
+    }
+}
 
-        try {
-            const file = app.vault.getAbstractFileByPath(from);
-            if (file instanceof TFile) {
-                await app.fileManager.renameFile(file, to);
-                operation.success = true;
-                progress.successful++;
-                debug("Successfully renamed file:", from, "->", to);
-            } else if (file instanceof TFolder) {
-                await app.fileManager.renameFile(file, to);
-                operation.success = true;
-                progress.successful++;
-                debug("Successfully renamed folder:", from, "->", to);
-            } else {
-                throw new Error(`File or folder not found: ${from}`);
-            }
-        } catch (error) {
-            if (deps.getAbortController()?.signal.aborted) {
-                debug("Rename operation cancelled during file operation");
-                await handleCancellation(deps, app, operations, createdDirectories, onProgress);
-            }
-
-            operation.success = false;
-            operation.error = error instanceof Error ? error.message : String(error);
-            progress.failed++;
-            progress.errors.push({
-                path: from,
-                error: operation.error
-            });
-            debug("Failed to rename:", from, error);
-        }
-
-        operations.push(operation);
-        progress.completed++;
-
-        const updatedProgress: RenameProgress = {
-            ...progress,
-            lastOperation: {
-                index: i,
-                success: operation.success,
-                path: from
-            },
-            phase: "forward"
-        };
-
-        onProgress?.(updatedProgress);
+async function rollbackAfterFailure(
+    deps: RenameWithProgressDependencies,
+    app: App,
+    operations: RenameOperation[],
+    createdDirectories: string[],
+    onProgress?: (progress: RenameProgress) => void
+): Promise<void> {
+    const successfulOperations = operations.filter(op => op.success);
+    if (successfulOperations.length === 0 && createdDirectories.length === 0) {
+        return;
     }
 
-    if (deps.getAbortController()?.signal.aborted) {
-        debug("Rename operation cancelled after file operations finished");
-        await handleCancellation(deps, app, operations, createdDirectories, onProgress);
+    debug("Rolling back rename operation after failure");
+    const revertErrors = await deps.revertSuccessfulOperations(app, operations, onProgress);
+    const directoryErrors = await removeCreatedDirectories(app, createdDirectories);
+    const allErrors = [...revertErrors, ...directoryErrors];
+
+    if (allErrors.length > 0) {
+        const errorDetails = allErrors.map(({ path, error }) => `${path}: ${error}`).join("; ");
+        throw new Error(`Rename failed and rollback encountered issues: ${errorDetails}`);
     }
 
-    debug("Rename operation completed:", progress);
-    deps.setAbortController(null);
-    return operations;
+    for (const operation of successfulOperations) {
+        operation.rolledBack = true;
+    }
 }
 
 async function handleCancellation(
