@@ -45,7 +45,6 @@ export default {
     noticeRenamedFile: 'Renamed to: {{newPath}}',
     noticeFailedRenameFile: 'Failed to rename: {{path}}',
     noticeNoParentNote: 'No parent note found',
-    noticeDontShowExpandCollapseAgain: "Don't show again",
     
     // Ribbon
     ribbonTooltip: 'Open Dot Navigator',
@@ -112,8 +111,6 @@ export default {
     settingsTipDoubleClickRenameDescription: 'Double-click any item in the tree view to quickly rename it',
     settingsTipDoubleClickChevronTitle: 'Double-click the chevron to expand or collapse all children',
     settingsTipDoubleClickChevronDescription: 'Double-click the triangle next to a folder to expand or collapse its entire subtree at once',
-    settingsHideExpandCollapseNotice: 'Hide expand/collapse notices',
-    settingsHideExpandCollapseNoticeDesc: 'When enabled, double-clicking the chevron will not show a confirmation notice (the chevron animation still plays)',
 
     // Rename dialog
     renameDialogTitle: 'Rename {{type}}',

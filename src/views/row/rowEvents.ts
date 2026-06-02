@@ -49,19 +49,7 @@ export function handleActionButtonClick(
       const isExpanded = vt.expanded.get(id) ?? false;
       if (isExpanded) vt.expandChildren?.(id);
       else vt.collapseChildren?.(id);
-      const label = isExpanded ? t('menuExpandChildren') : t('menuCollapseChildren');
-      // @ts-expect-error - plugins registry exists at runtime
-      const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-      const hideNotice = plugin?.settings?.hideExpandCollapseDoubleClickNotice === true;
-      showDoubleClickFeedback(isExpanded ? 'expand' : 'collapse', label, anchorEl, {
-        hideNotice,
-        persistHideNotice: plugin
-          ? async () => {
-              plugin.settings.hideExpandCollapseDoubleClickNotice = true;
-              await plugin.saveSettings();
-            }
-          : undefined,
-      });
+      showDoubleClickFeedback(isExpanded ? 'expand' : 'collapse', anchorEl);
       return;
     }
     // Use the VirtualTree's toggle so selection/focus and scroll are preserved

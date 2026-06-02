@@ -105,9 +105,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
 
     // Tips section
-    addTipsSection(containerEl, this.plugin.settings, {
-      saveSettings: this.plugin.saveSettings.bind(this.plugin),
-    });
+    addTipsSection(containerEl);
   }
 
   private describeItem(item: MoreMenuItem): string {

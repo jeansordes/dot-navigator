@@ -27,7 +27,6 @@ export interface PluginSettings {
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
     dendronConfigFilePath?: string; // Path to the rule config file (default: dot-navigator-rules.json)
     aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
-    hideExpandCollapseDoubleClickNotice?: boolean; // Skip notice after double-click expand/collapse all
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -43,7 +42,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Default rule config file path
     aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
-    hideExpandCollapseDoubleClickNotice: false,
 }
 
 export enum TreeNodeType {
