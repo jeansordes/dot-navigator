@@ -7,6 +7,45 @@ jest.mock('../src/utils/misc/YamlTitleUtils', () => ({
 }));
 
 describe('buildVirtualizedData aliases', () => {
+  it('places dotted aliases under the target note folder', () => {
+    const rootNode: TreeNode = {
+      path: '',
+      nodeType: TreeNodeType.VIRTUAL,
+      children: new Map([
+        ['notes', {
+          path: 'notes',
+          nodeType: TreeNodeType.FOLDER,
+          children: new Map([
+            ['notes/prj.ideas.edursenal.md', {
+              path: 'notes/prj.ideas.edursenal.md',
+              nodeType: TreeNodeType.FILE,
+              children: new Map()
+            }]
+          ])
+        }]
+      ])
+    };
+    const app = {
+      vault: { getFiles: () => [{ path: 'notes/prj.ideas.edursenal.md' }] },
+      metadataCache: {
+        getFileCache: () => ({ frontmatter: { aliases: ['prj.ideas.upgrade'] } })
+      }
+    } as unknown as App;
+
+    const result = buildVirtualizedData(app, rootNode, { mySetting: 'default', transformDashesToSpaces: DashTransformation.NONE });
+
+    const notes = result.data.find(item => item.id === 'notes');
+    const prj = notes?.children?.find(item => item.id === 'notes/prj.md');
+    const prjIdeas = prj?.children?.find(item => item.id === 'notes/prj.ideas.md');
+    const alias = prjIdeas?.children?.find(item => item.aliasPath === 'notes/prj.ideas.upgrade.md');
+    expect(alias).toMatchObject({
+      isAlias: true,
+      targetPath: 'notes/prj.ideas.edursenal.md',
+      name: 'upgrade',
+    });
+    expect(result.data.find(item => item.id === 'prj.md')).toBeUndefined();
+  });
+
   it('adds alias shortcuts using alias dot paths', () => {
     const rootNode: TreeNode = {
       path: '',
@@ -87,9 +126,10 @@ describe('buildVirtualizedData aliases', () => {
       aliasVirtualMode: 'all',
     });
 
-    const alias = result.data.find(item => item.isAlias === true);
+    const journal = result.data.find(item => item.id === 'journal');
+    const alias = journal?.children?.find(item => item.isAlias === true);
     expect(alias).toMatchObject({
-      aliasPath: 'Tuesday 2 June 2026.md',
+      aliasPath: 'journal/Tuesday 2 June 2026.md',
       targetPath: 'journal/2026-06-02.md',
     });
   });

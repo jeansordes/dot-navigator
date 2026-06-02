@@ -71,6 +71,41 @@ export function normalizeAliasToPath(alias: string): string | null {
   return /\.md$/iu.test(trimmed) ? trimmed : `${trimmed}.md`;
 }
 
+/**
+ * Returns true when the alias string already includes a vault-relative directory.
+ */
+export function aliasSpecifiesDirectory(alias: string): boolean {
+  const trimmed = alias
+    .trim()
+    .replace(/^\[\[/u, '')
+    .replace(/\]\]$/u, '')
+    .replace(/^\/+/u, '');
+
+  return trimmed.includes('/');
+}
+
+/**
+ * Resolves an alias to a vault path, anchored in the target note's folder when the
+ * alias has no directory segment (e.g. prj.ideas.upgrade on notes/foo.md → notes/prj.ideas.upgrade.md).
+ */
+export function resolveAliasPathForTarget(alias: string, targetPath: string): string | null {
+  const normalized = normalizeAliasToPath(alias);
+  if (!normalized) {
+    return null;
+  }
+
+  if (aliasSpecifiesDirectory(alias)) {
+    return normalized;
+  }
+
+  const slashIndex = targetPath.lastIndexOf('/');
+  if (slashIndex < 0) {
+    return normalized;
+  }
+
+  return `${targetPath.slice(0, slashIndex)}/${normalized}`;
+}
+
 export function createAliasId(aliasPath: string, targetPath: string): string {
   return `alias:${encodeURIComponent(aliasPath)}->${encodeURIComponent(targetPath)}`;
 }
@@ -129,7 +164,7 @@ export function applyAliasesToVirtualizedData(
   };
 
   for (const entry of aliases) {
-    const aliasPath = normalizeAliasToPath(entry.alias);
+    const aliasPath = resolveAliasPathForTarget(entry.alias, entry.targetPath);
     if (!aliasPath || aliasPath === entry.targetPath) {
       continue;
     }
