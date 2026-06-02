@@ -75,6 +75,7 @@ export class RowDragController {
         viewBody.addEventListener('pointerup', this.onPointerUp);
         viewBody.addEventListener('pointercancel', this.onPointerCancel);
         virtualizer.addEventListener('click', this.onClickCapture, true);
+        window.addEventListener('keydown', this.onKeyDown, true);
     }
 
     detach(): void {
@@ -84,6 +85,7 @@ export class RowDragController {
         viewBody.removeEventListener('pointerup', this.onPointerUp);
         viewBody.removeEventListener('pointercancel', this.onPointerCancel);
         virtualizer.removeEventListener('click', this.onClickCapture, true);
+        window.removeEventListener('keydown', this.onKeyDown, true);
         this.clearPending();
         this.endDrag(false);
         document.body.classList.remove('dotn_dragging-active');
@@ -92,6 +94,14 @@ export class RowDragController {
     shouldSuppressClick(): boolean {
         return Date.now() < this.suppressClickUntil;
     }
+
+    private readonly onKeyDown = (e: KeyboardEvent): void => {
+        if (e.key !== 'Escape') return;
+        if (!this.active && !this.pending) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.endDrag(false);
+    };
 
     private readonly onClickCapture = (e: MouseEvent): void => {
         if (this.shouldSuppressClick()) {
