@@ -15,30 +15,7 @@ import { t } from '../../i18n';
 import { scrollIntoView } from '../../utils/misc/rowState';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
-
-export function showDoubleClickRipple(direction: 'expand' | 'collapse', anchorEl?: HTMLElement, ev?: MouseEvent): void {
-  let cx: number;
-  let cy: number;
-  if (anchorEl instanceof HTMLElement) {
-    const r = anchorEl.getBoundingClientRect();
-    cx = r.left + r.width / 2;
-    cy = r.top + r.height / 2;
-  } else if (ev instanceof MouseEvent) {
-    cx = ev.clientX;
-    cy = ev.clientY;
-  } else {
-    return;
-  }
-
-  const ripple = document.createElement('div');
-  ripple.className = `dotn_dblclick-ripple dotn_dblclick-ripple--${direction}`;
-  ripple.style.setProperty('--dotn_ripple-x', `${cx}px`);
-  ripple.style.setProperty('--dotn_ripple-y', `${cy}px`);
-  ripple.addEventListener('animationend', () => ripple.remove());
-  document.body.appendChild(ripple);
-  // Safety cleanup in case animationend never fires
-  window.setTimeout(() => ripple.remove(), 1000);
-}
+import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
 
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
   if (item.kind === 'file') {
@@ -62,7 +39,19 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
       const isExpanded = vt.expanded.get(id) ?? false;
       if (isExpanded) vt.expandChildren?.(id);
       else vt.collapseChildren?.(id);
-      showDoubleClickRipple(isExpanded ? 'expand' : 'collapse', anchorEl, ev);
+      const label = isExpanded ? t('menuExpandChildren') : t('menuCollapseChildren');
+      // @ts-expect-error - plugins registry exists at runtime
+      const plugin = app?.plugins?.getPlugin?.('dot-navigator');
+      const hideNotice = plugin?.settings?.hideExpandCollapseDoubleClickNotice === true;
+      showDoubleClickFeedback(isExpanded ? 'expand' : 'collapse', label, anchorEl, {
+        hideNotice,
+        persistHideNotice: plugin
+          ? async () => {
+              plugin.settings.hideExpandCollapseDoubleClickNotice = true;
+              await plugin.saveSettings();
+            }
+          : undefined,
+      });
       return;
     }
     // Use the VirtualTree's toggle so selection/focus and scroll are preserved

@@ -45,6 +45,7 @@ export default {
     noticeRenamedFile: 'Renommé en : {{newPath}}',
     noticeFailedRenameFile: 'Échec du renommage : {{path}}',
     noticeNoParentNote: 'Aucune note parente trouvée',
+    noticeDontShowExpandCollapseAgain: 'Ne plus afficher',
     
     // Ribbon
     ribbonTooltip: 'Ouvrir Dot Navigator',
@@ -109,6 +110,10 @@ export default {
     settingsTipsDescription: 'Astuces et raccourcis utiles pour améliorer votre productivité.',
     settingsTipDoubleClickRenameTitle: 'Double-clic pour renommer',
     settingsTipDoubleClickRenameDescription: 'Double-cliquez sur n\'importe quel élément de l\'arborescence pour le renommer rapidement',
+    settingsTipDoubleClickChevronTitle: 'Double-clic sur le chevron pour développer ou réduire tous les enfants',
+    settingsTipDoubleClickChevronDescription: 'Double-cliquez sur le triangle à côté d\'un dossier pour développer ou réduire toute la branche d\'un coup',
+    settingsHideExpandCollapseNotice: 'Masquer les notices développer/réduire',
+    settingsHideExpandCollapseNoticeDesc: 'Si activé, un double-clic sur le chevron n\'affichera plus de notice de confirmation (l\'animation du chevron reste visible)',
 
     // Rename dialog
     renameDialogTitle: 'Renommer {{type}}',

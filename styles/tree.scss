@@ -320,42 +320,72 @@
     }
 }
 
-/* Double-click ripple feedback (appended to <body>, so kept top-level) */
-.dotn_dblclick-ripple {
-    position: fixed;
-    left: var(--dotn_ripple-x, 0);
-    top: var(--dotn_ripple-y, 0);
-    width: 14px;
-    height: 14px;
-    margin-left: -7px;
-    margin-top: -7px;
-    border-radius: 50%;
-    border: 2px solid rgba(128, 128, 128, 0.6);
-    pointer-events: none;
-    z-index: var(--layer-popover, 9999);
-    opacity: 0.9;
-}
+/* Double-click recursive expand/collapse feedback (chevron spin) */
+@media (prefers-reduced-motion: no-preference) {
+    .dotn_button-icon[data-action="toggle"].dotn_chevron-pulse--expand {
+        animation: dotn_chevron-spin-expand 0.55s ease-out;
+    }
 
-.dotn_dblclick-ripple--expand {
-    transform: scale(0.4);
-    animation: dotn_dblclick-ripple-expand 0.45s ease-out forwards;
-}
-
-.dotn_dblclick-ripple--collapse {
-    transform: scale(3.2);
-    animation: dotn_dblclick-ripple-collapse 0.45s ease-out forwards;
-}
-
-@keyframes dotn_dblclick-ripple-expand {
-    to {
-        transform: scale(3.2);
-        opacity: 0;
+    .dotn_button-icon[data-action="toggle"].dotn_chevron-pulse--collapse {
+        animation: dotn_chevron-spin-collapse 0.55s ease-out;
     }
 }
 
-@keyframes dotn_dblclick-ripple-collapse {
+@keyframes dotn_chevron-spin-expand {
+    from {
+        transform: rotate(0deg);
+    }
+
     to {
-        transform: scale(0.4);
-        opacity: 0;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes dotn_chevron-spin-collapse {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+/* Expand/collapse all notice (Obsidian Notice, rendered at body level) */
+.dotn_expand-collapse-notice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 280px;
+}
+
+.dotn_expand-collapse-notice-text {
+    line-height: 1.35;
+}
+
+.dotn_expand-collapse-notice-dismiss {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 2px 8px;
+    border: none;
+    border-radius: var(--radius-s, 4px);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller, 12px);
+    font-weight: 500;
+    line-height: 1.2;
+    box-shadow: none;
+    cursor: pointer;
+    transition: color 0.12s ease, background-color 0.12s ease;
+
+    &:hover {
+        color: var(--text-normal);
+        background-color: var(--background-modifier-hover);
+    }
+
+    &:active {
+        transform: translateY(1px);
     }
 }
