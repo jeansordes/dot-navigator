@@ -63,6 +63,25 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   return icon;
 }
 
+export function createHiddenIcon(): HTMLElement {
+  const icon = document.createElement('div');
+  icon.className = 'dotn_button-icon dotn_hidden-icon';
+  icon.setAttribute('data-action', 'unhide');
+  icon.title = t('tooltipUnhideNode');
+
+  const closed = document.createElement('span');
+  closed.className = 'dotn_hidden-icon-closed';
+  setIcon(closed, 'eye-off');
+
+  const open = document.createElement('span');
+  open.className = 'dotn_hidden-icon-open';
+  setIcon(open, 'eye');
+
+  icon.appendChild(closed);
+  icon.appendChild(open);
+  return icon;
+}
+
 export function createAliasIcon(item: RowItem): HTMLElement | null {
   if (!item.isAlias) return null;
   const icon = document.createElement('div');

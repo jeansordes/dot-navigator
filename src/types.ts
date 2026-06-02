@@ -27,6 +27,8 @@ export interface PluginSettings {
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
     dendronConfigFilePath?: string; // Path to the rule config file (default: dot-navigator-rules.json)
     aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
+    hiddenNodes?: string[]; // Paths of explicitly hidden files/folders
+    showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -42,6 +44,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Default rule config file path
     aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
+    hiddenNodes: [],
+    showHiddenNodes: false,
 }
 
 export enum TreeNodeType {
@@ -77,6 +81,7 @@ export interface VirtualTreeBaseItem {
     targetName?: string;
     children?: VirtualTreeBaseItem[];
     expanded?: boolean;
+    isHidden?: boolean;
 }
 
 // Flattened item shape used by the renderer
@@ -113,7 +118,7 @@ export interface MoreMenuItemBase {
 
 export interface MoreMenuItemBuiltin extends MoreMenuItemBase {
     type: 'builtin';
-    builtin: 'create-child' | 'delete' | 'open-closest-parent' | 'rename' | 'show-in-explorer' | 'expand-children' | 'collapse-children';
+    builtin: 'create-child' | 'delete' | 'open-closest-parent' | 'rename' | 'show-in-explorer' | 'expand-children' | 'collapse-children' | 'hide';
 }
 
 export interface MoreMenuItemCommand extends MoreMenuItemBase {
@@ -165,6 +170,13 @@ export const DEFAULT_MORE_MENU: MoreMenuItem[] = [
         type: 'builtin',
         builtin: 'show-in-explorer',
         icon: 'folder-open',
+        showFor: ['file', 'folder']
+    },
+    {
+        id: 'builtin-hide',
+        type: 'builtin',
+        builtin: 'hide',
+        icon: 'eye-off',
         showFor: ['file', 'folder']
     },
     {
@@ -249,6 +261,7 @@ export interface VItem {
     targetPath?: string;
     targetKind?: Kind;
     children?: VItem[];
+    isHidden?: boolean;
 }
 
 /** Result of building virtualized data from tree */

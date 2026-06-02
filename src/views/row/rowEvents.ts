@@ -15,7 +15,18 @@ import { t } from '../../i18n';
 import { scrollIntoView } from '../../utils/misc/rowState';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
+import { isEffectivelyHidden, toggleHiddenPath } from '../../core/virtualData';
+import type DotNavigatorPlugin from '../../main';
 import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
+
+async function persistHiddenNodesAndRefresh(app: App, hidden: string[]): Promise<void> {
+  // @ts-expect-error - plugins registry exists at runtime
+  const plugin = app?.plugins?.getPlugin?.('dot-navigator') as DotNavigatorPlugin | undefined;
+  if (!plugin) return;
+  plugin.settings.hiddenNodes = hidden;
+  await plugin.saveSettings();
+  await plugin.getPluginMainPanel()?.refresh();
+}
 
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
   if (item.kind === 'file') {
@@ -62,6 +73,11 @@ export function handleActionButtonClick(
     }
   } else if (action === 'create-note') {
     FileUtils.createAndOpenNote(app, actionPath);
+  } else if (action === 'unhide') {
+    // @ts-expect-error - plugins registry exists at runtime
+    const plugin = app?.plugins?.getPlugin?.('dot-navigator') as DotNavigatorPlugin | undefined;
+    const hidden = plugin?.settings?.hiddenNodes ?? [];
+    void persistHiddenNodesAndRefresh(app, toggleHiddenPath(hidden, actionPath));
   } else if (action === 'open-target') {
     const target = app.vault.getAbstractFileByPath(actionPath);
     if (target instanceof TFile) {
@@ -158,6 +174,21 @@ export function handleActionButtonClick(
               .onClick(() => {
                 const showInFolder = (app as ObsidianInternalApp).showInFolder;
                 if (typeof showInFolder === 'function') showInFolder.call(app, target.path);
+              });
+          });
+        } else if (it.builtin === 'hide') {
+          if (!file && !folder) continue;
+          const hidePath = file?.path ?? folder?.path;
+          if (!hidePath) continue;
+          // @ts-expect-error - plugins registry exists at runtime
+          const plugin = app?.plugins?.getPlugin?.('dot-navigator') as DotNavigatorPlugin | undefined;
+          const hidden = plugin?.settings?.hiddenNodes ?? [];
+          const isHidden = isEffectivelyHidden(hidden, hidePath);
+          menu.addItem((mi) => {
+            mi.setTitle(isHidden ? t('menuUnhideNode') : t('menuHideNode'))
+              .setIcon(isHidden ? 'eye' : (it.icon || 'eye-off'))
+              .onClick(async () => {
+                await persistHiddenNodesAndRefresh(app, toggleHiddenPath(hidden, hidePath));
               });
           });
         } else if (it.builtin === 'expand-children') {

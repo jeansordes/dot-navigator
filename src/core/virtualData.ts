@@ -19,6 +19,47 @@ export interface VItem {
   targetKind?: Kind;
   targetName?: string;
   children?: VItem[];
+  isHidden?: boolean;
+}
+
+export function isPathHidden(path: string, hiddenSet: Set<string>): boolean {
+  if (hiddenSet.size === 0) return false;
+  for (const h of hiddenSet) {
+    if (path === h || path.startsWith(h + '/')) return true;
+  }
+  return false;
+}
+
+export function isEffectivelyHidden(hidden: string[], path: string): boolean {
+  return isPathHidden(path, new Set(hidden));
+}
+
+export function unhidePath(hidden: string[], path: string): string[] {
+  if (hidden.includes(path)) return hidden.filter(h => h !== path);
+  for (const h of hidden) {
+    if (path === h || path.startsWith(h + '/')) return hidden.filter(x => x !== h);
+  }
+  return hidden;
+}
+
+export function toggleHiddenPath(hidden: string[], path: string): string[] {
+  if (isEffectivelyHidden(hidden, path)) return unhidePath(hidden, path);
+  if (hidden.includes(path)) return hidden;
+  return [...hidden, path];
+}
+
+export function markHiddenItems(data: VItem[], hidden: string[]): void {
+  if (!hidden.length) return;
+  const hiddenSet = new Set(hidden);
+  const walk = (items: VItem[]): void => {
+    for (const item of items) {
+      item.isHidden =
+        isPathHidden(item.id, hiddenSet) ||
+        (item.targetPath ? isPathHidden(item.targetPath, hiddenSet) : false);
+      if (item.children?.length) walk(item.children);
+    }
+  };
+  walk(data);
 }
 
 export interface VirtualizedData {
@@ -136,6 +177,8 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     transformName,
     getSortKey: (item) => item.title ?? item.name,
   });
+
+  markHiddenItems(data, settings?.hiddenNodes ?? []);
 
   return { data, parentMap };
 }

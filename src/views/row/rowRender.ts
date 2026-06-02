@@ -1,7 +1,21 @@
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
-import { createActionButtons, createFolderIcon, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon } from './rowDom';
+import { createActionButtons, createFolderIcon, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon, createHiddenIcon } from './rowDom';
 import { setRowIndentation } from '../../utils/misc/rowState';
+
+function syncHiddenIcon(row: HTMLElement, isHidden: boolean): void {
+  const existing = row.querySelector('.dotn_hidden-icon');
+  if (isHidden) {
+    if (!existing) {
+      const icon = createHiddenIcon();
+      const titleEl = row.querySelector('.dotn_tree-item-title');
+      if (titleEl) row.insertBefore(icon, titleEl);
+      else row.appendChild(icon);
+    }
+  } else if (existing instanceof HTMLElement) {
+    existing.remove();
+  }
+}
 
 export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, itemIndex: number, app: App, startPx?: number): void {
   const isFocused = itemIndex === vt.focusedIndex;
@@ -48,6 +62,8 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     row.dataset.index = String(itemIndex);
     if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
     if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
+    row.classList.toggle('dotn_hidden', !!item.isHidden);
+    syncHiddenIcon(row, !!item.isHidden);
     row.setAttribute('tabindex', isFocused ? '0' : '-1');
     row.setAttribute('aria-selected', String(isSelected));
     // aria-expanded handled above together with toggle button sync
@@ -58,6 +74,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   row.classList.remove('row');
   row.classList.add('tree-row');
   if (item.isAlias) row.classList.add('dotn_alias-row'); else row.classList.remove('dotn_alias-row');
+  row.classList.toggle('dotn_hidden', !!item.isHidden);
   setRowIndentation(row, item.level);
 
   if (hasChildren && !isExpanded) row.classList.add('collapsed'); else row.classList.remove('collapsed');
@@ -72,6 +89,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   }
   const aliasIcon = createAliasIcon(item);
   if (aliasIcon) row.appendChild(aliasIcon);
+  if (item.isHidden) row.appendChild(createHiddenIcon());
   row.appendChild(createTitleElement(item));
   const extEl = maybeCreateExtension(item);
   if (extEl) row.appendChild(extEl);

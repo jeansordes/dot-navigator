@@ -129,6 +129,7 @@ export class CacheUtils {
     const relevantSettings = {
       enableSchemaSuggestions: settings?.enableSchemaSuggestions,
       dendronConfigFilePath: settings?.dendronConfigFilePath,
+      hiddenNodes: settings?.hiddenNodes,
     };
     return JSON.stringify(relevantSettings);
   }

@@ -1,5 +1,6 @@
-import { App, Setting, Notice, TFile, ButtonComponent } from 'obsidian';
+import { App, Notice, TFile, ButtonComponent, Setting } from 'obsidian';
 import { t } from '../i18n';
+import type { SettingsSection } from './settingsGroup';
 
 interface ObsidianInternalApp extends App {
   setting?: {
@@ -23,166 +24,140 @@ export interface SchemaSettingsData {
 }
 
 export function addSchemaSuggestionsToggle(
-  containerEl: HTMLElement,
+  section: SettingsSection,
   settings: SchemaSettingsData,
   callbacks: SchemaToggleCallbacks
 ): void {
-  new Setting(containerEl)
-    .setName(t('settingsEnableSchemaSuggestions'))
-    .setDesc(t('settingsEnableSchemaSuggestionsDesc'))
-    .addToggle((toggle) => {
-      toggle.setValue(settings.enableSchemaSuggestions ?? true)
-        .onChange(async (value) => {
-          settings.enableSchemaSuggestions = value;
-          await callbacks.saveSettings();
-          void callbacks.updateTreeView();
-        });
-    });
+  section.addSetting((setting) => {
+    setting
+      .setName(t('settingsEnableSchemaSuggestions'))
+      .setDesc(t('settingsEnableSchemaSuggestionsDesc'))
+      .addToggle((toggle) => {
+        toggle.setValue(settings.enableSchemaSuggestions ?? true)
+          .onChange(async (value) => {
+            settings.enableSchemaSuggestions = value;
+            await callbacks.saveSettings();
+            void callbacks.updateTreeView();
+          });
+      });
+  });
+}
+
+function updateConfigPathStatus(setting: Setting, path: string, app: App): boolean {
+  const isValid = app.vault.getAbstractFileByPath(path) instanceof TFile;
+  const baseDesc = t('settingsDendronConfigFilePathDesc');
+
+  setting.settingEl.toggleClass('mod-warning', !isValid);
+
+  if (isValid) {
+    setting.setDesc(baseDesc);
+  } else {
+    setting.setDesc(createFragment((frag) => {
+      frag.createDiv({ text: baseDesc, cls: 'setting-item-description' });
+      frag.createDiv({
+        text: t('settingsDendronConfigPathInvalid'),
+        cls: 'setting-item-description dotnav-config-path-status',
+      });
+    }));
+  }
+
+  return isValid;
 }
 
 export function addSchemaConfigurationSection(
-  containerEl: HTMLElement,
+  section: SettingsSection,
   settings: SchemaSettingsData,
   callbacks: SchemaSettingsCallbacks,
   app: App
 ): void {
-  // Schema configuration section
-  const schemaHeader = containerEl.createEl('h3', { text: t('settingsSchemaConfigurationHeader') });
-  schemaHeader.id = 'dotnav-schema-config';
-  containerEl.createEl('p', { text: t('settingsSchemaConfigurationDescription') });
-
-  // Dendron config file path
-  const pathSetting = new Setting(containerEl)
-    .setName(t('settingsDendronConfigFilePath'))
-    .setDesc(t('settingsDendronConfigFilePathDesc'))
-    .setClass('dotnav-schema-config-path');
-
-  // Validation message container
-  const validationContainer = containerEl.createEl('div', {
-    cls: 'dotnav-path-validation'
-  });
-
-  // Track the last validated path to avoid unnecessary UI updates
   let lastValidatedPath: string | null = null;
-
   let openFileButton: ButtonComponent | null = null;
+  let pathSetting: Setting | null = null;
 
-  const validatePathUI = (path: string): void => {
-    const configFile = app.vault.getAbstractFileByPath(path);
+  const syncPathUI = (path: string): boolean => {
+    if (!pathSetting) return false;
 
-    if (configFile && configFile instanceof TFile) {
-      // Path is valid - file exists
-      validationContainer.empty();
-      const successEl = validationContainer.createEl('div', {
-        cls: 'dotnav-validation-message dotnav-validation-success'
-      });
-      successEl.createEl('span', {
-        cls: 'dotnav-validation-icon',
-        text: '✓'
-      });
-      successEl.createEl('span', {
-        text: t('settingsDendronConfigPathValid')
-      });
+    const isValid = updateConfigPathStatus(pathSetting, path, app);
 
-      // Update button text to "Open file"
-      if (openFileButton) {
+    if (openFileButton) {
+      if (isValid) {
         openFileButton.setButtonText(t('settingsOpenDendronConfigFile'));
         openFileButton.setTooltip(t('settingsOpenDendronConfigFileDesc'));
-      }
-    } else {
-      // Path is invalid - file doesn't exist
-      validationContainer.empty();
-      const errorEl = validationContainer.createEl('div', {
-        cls: 'dotnav-validation-message dotnav-validation-error'
-      });
-      errorEl.createEl('span', {
-        cls: 'dotnav-validation-icon',
-        text: '✗'
-      });
-      errorEl.createEl('span', {
-        text: t('settingsDendronConfigPathInvalid')
-      });
-
-      // Update button text to "Create file"
-      if (openFileButton) {
+      } else {
         openFileButton.setButtonText(t('settingsCreateDendronConfigFile'));
         openFileButton.setTooltip(t('settingsCreateDendronConfigFileDesc'));
       }
     }
+
+    return isValid;
   };
 
   const reloadConfigIfNeeded = async (path: string): Promise<void> => {
-    // Only reload if this is a different path than last time
     if (lastValidatedPath !== path) {
       lastValidatedPath = path;
-      const configFile = app.vault.getAbstractFileByPath(path);
-
-      if (configFile && configFile instanceof TFile) {
-        if (callbacks.reloadConfig) {
-          await callbacks.reloadConfig();
-          // Notice is already shown by the reloadConfig callback
-        }
+      if (syncPathUI(path) && callbacks.reloadConfig) {
+        await callbacks.reloadConfig();
       }
     }
   };
 
-  pathSetting.addText((text) => {
-    text.setValue(settings.dendronConfigFilePath || 'dot-navigator-rules.json')
-      .setPlaceholder('dot-navigator-rules.json')
-      .onChange(async (value) => {
-        const path = value || 'dot-navigator-rules.json';
-        settings.dendronConfigFilePath = path;
-        await callbacks.saveSettings();
-        // Update UI validation immediately
-        validatePathUI(path);
-        // Only reload config if path actually changed
-        await reloadConfigIfNeeded(path);
-      });
-  });
+  section.addSetting((setting) => {
+    pathSetting = setting;
+    setting
+      .setName(t('settingsDendronConfigFilePath'))
+      .setDesc(t('settingsDendronConfigFilePathDesc'))
+      .setClass('dotnav-schema-config-path');
 
-  // Add open/create file button next to the input
-  pathSetting.addButton((button) => {
-    openFileButton = button;
-    button.setButtonText(t('settingsOpenDendronConfigFile'))
-      .setTooltip(t('settingsOpenDendronConfigFileDesc'))
-      .onClick(async () => {
-        const configPath = settings.dendronConfigFilePath || 'dendron.yaml';
-        const configFile = app.vault.getAbstractFileByPath(configPath);
+    setting.addText((text) => {
+      text.setValue(settings.dendronConfigFilePath || 'dot-navigator-rules.json')
+        .setPlaceholder('dot-navigator-rules.json')
+        .onChange(async (value) => {
+          const path = value || 'dot-navigator-rules.json';
+          settings.dendronConfigFilePath = path;
+          await callbacks.saveSettings();
+          syncPathUI(path);
+          await reloadConfigIfNeeded(path);
+        });
+    });
 
-        // Close settings modal first
-        const obsidianApp = app as ObsidianInternalApp;
-        if (obsidianApp.setting) {
-          obsidianApp.setting.close();
-        }
+    setting.addButton((button) => {
+      openFileButton = button;
+      button.setButtonText(t('settingsOpenDendronConfigFile'))
+        .setTooltip(t('settingsOpenDendronConfigFileDesc'))
+        .onClick(async () => {
+          const configPath = settings.dendronConfigFilePath || 'dot-navigator-rules.json';
+          const configFile = app.vault.getAbstractFileByPath(configPath);
 
-        if (configFile && configFile instanceof TFile) {
-          // Open the existing file
-          await app.workspace.getLeaf().openFile(configFile);
-        } else {
-          // Create and open new file
-          try {
-            const defaultConfig = [
-              {
-                pattern: "example.*",
-                children: ["notes", "tasks"]
-              }
-            ];
-
-            const newFile = await app.vault.create(configPath, JSON.stringify(defaultConfig, null, 2));
-            await app.workspace.getLeaf().openFile(newFile);
-            new Notice(`Created and opened "${configPath}"`);
-            // Refresh validation after creating file (though settings is closed, this updates internal state)
-            validatePathUI(configPath);
-            await reloadConfigIfNeeded(configPath);
-          } catch (error: unknown) {
-            console.error('Failed to create/open rule config file:', error);
-            const message = error instanceof Error ? error.message : String(error);
-            new Notice(`Failed to create/open "${configPath}": ${message}`);
+          const obsidianApp = app as ObsidianInternalApp;
+          if (obsidianApp.setting) {
+            obsidianApp.setting.close();
           }
-        }
-      });
-  });
 
-  // Initial validation - only update UI, don't reload config
-  validatePathUI(settings.dendronConfigFilePath || 'dot-navigator-rules.json');
+          if (configFile && configFile instanceof TFile) {
+            await app.workspace.getLeaf().openFile(configFile);
+          } else {
+            try {
+              const defaultConfig = [
+                {
+                  pattern: 'example.*',
+                  children: ['notes', 'tasks']
+                }
+              ];
+
+              const newFile = await app.vault.create(configPath, JSON.stringify(defaultConfig, null, 2));
+              await app.workspace.getLeaf().openFile(newFile);
+              new Notice(`Created and opened "${configPath}"`);
+              syncPathUI(configPath);
+              await reloadConfigIfNeeded(configPath);
+            } catch (error: unknown) {
+              console.error('Failed to create/open rule config file:', error);
+              const message = error instanceof Error ? error.message : String(error);
+              new Notice(`Failed to create/open "${configPath}": ${message}`);
+            }
+          }
+        });
+    });
+
+    syncPathUI(settings.dendronConfigFilePath || 'dot-navigator-rules.json');
+  });
 }

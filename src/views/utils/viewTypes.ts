@@ -20,6 +20,8 @@ export interface VirtualTreeLike {
   poolSize: number;
   _render: () => void;
   _recomputeVisible: () => void;
+  setShowHidden: (value: boolean) => void;
+  getShowHidden: () => boolean;
   _onScroll: () => void;
   scrollToIndex: (index: number) => void;
   // Tree expansion controls

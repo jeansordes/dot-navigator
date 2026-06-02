@@ -78,6 +78,18 @@ export class ViewLayout {
     }
   }
 
+  onToggleHiddenClick(handler: () => void): void {
+    const header = this.headerEl;
+    const btn = header?.querySelector('.dotn_toggle-hidden');
+    if (btn instanceof HTMLElement) {
+      const cloned = btn.cloneNode(true);
+      if (cloned instanceof HTMLElement) {
+        btn.replaceWith(cloned);
+        cloned.addEventListener('click', () => handler());
+      }
+    }
+  }
+
   onRevealClick(handler: () => void): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_reveal-active');
@@ -141,6 +153,26 @@ export class ViewLayout {
     }
   }
 
+  updateHiddenToggleDisplay(showingHidden: boolean): void {
+    const header = this.headerEl;
+    const toggleButton: HTMLElement | null = header?.querySelector('.dotn_toggle-hidden') || null;
+    const iconContainer: HTMLElement | null = toggleButton?.querySelector('.dotn_toggle-hidden-icon') || null;
+    if (!toggleButton || !iconContainer) return;
+
+    try {
+      toggleButton.classList.toggle('dotn_active', showingHidden);
+      if (showingHidden) {
+        setIcon(iconContainer, 'eye');
+        toggleButton.setAttribute('title', t('tooltipHideHiddenNodes'));
+      } else {
+        setIcon(iconContainer, 'eye-off');
+        toggleButton.setAttribute('title', t('tooltipShowHiddenNodes'));
+      }
+    } catch (error) {
+      debugError('Error updating hidden toggle icon:', error);
+    }
+  }
+
   updateToggleDisplay(anyExpanded: boolean): void {
     const header = this.headerEl;
     const toggleButton: HTMLElement | null = header?.querySelector('.dotn_tree-toggle-button') || null;
@@ -197,6 +229,18 @@ export class ViewLayout {
       // initial state
       setIcon(iconContainer, 'chevrons-up-down');
       toggleButton.setAttribute('title', t('tooltipExpandAll'));
+    }
+
+    // Toggle hidden nodes button
+    if (!header.querySelector('.dotn_toggle-hidden')) {
+      const hiddenToggle = document.createElement('div');
+      hiddenToggle.className = 'dotn_toggle-hidden';
+      const hiddenIcon = document.createElement('div');
+      hiddenIcon.className = 'dotn_toggle-hidden-icon dotn_button-icon';
+      hiddenToggle.appendChild(hiddenIcon);
+      header.appendChild(hiddenToggle);
+      setIcon(hiddenIcon, 'eye-off');
+      hiddenToggle.setAttribute('title', t('tooltipShowHiddenNodes'));
     }
 
     // Reveal active button

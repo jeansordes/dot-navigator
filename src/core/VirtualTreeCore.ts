@@ -30,6 +30,7 @@ export class VirtualTree {
   private data: VirtualTreeBaseItem[];
   private visible: VirtualTreeItem[];
   private total: number;
+  private showHidden = true;
   private _onScroll: () => void;
   // Store the exact scroll handler we add so we can remove it later
   private _scrollHandler?: () => void;
@@ -301,8 +302,18 @@ export class VirtualTree {
     }
   }
 
+  setShowHidden(value: boolean): void {
+    this.showHidden = value;
+    this._recomputeVisible();
+    this._render();
+  }
+
+  getShowHidden(): boolean {
+    return this.showHidden;
+  }
+
   private _recomputeVisible(): void {
-    this.visible = flattenTree(this.data, this.expanded);
+    this.visible = flattenTree(this.data, this.expanded, 0, [], this.showHidden);
     this.total = this.visible.length;
     // Set the virtualizer height to create scrollable area
     if (this.virtualizer) {

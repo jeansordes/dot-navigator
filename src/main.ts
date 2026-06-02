@@ -154,6 +154,16 @@ export default class DotNavigatorPlugin extends Plugin {
             }
         });
 
+        this.addCommand({
+            id: 'toggle-hidden-nodes',
+            name: t('commandToggleHiddenNodes'),
+            callback: () => {
+                if (this.pluginMainPanel) {
+                    void this.pluginMainPanel.toggleShowHiddenNodes();
+                }
+            }
+        });
+
         // Add a command to create a child note to the current note
         this.addCommand({
             id: 'create-child-note',

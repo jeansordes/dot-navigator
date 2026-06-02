@@ -165,6 +165,10 @@ export default class PluginMainPanel extends ItemView {
             const file = this.activeFile ?? this.app.workspace.getActiveFile();
             if (file) this.highlightFile(file);
         });
+        this.layout.onToggleHiddenClick(() => {
+            void this.toggleShowHiddenNodes();
+        });
+        this._syncHiddenToggle();
 
         // Create buttons
         this.layout.onCreateFileClick(() => {
@@ -295,6 +299,18 @@ export default class PluginMainPanel extends ItemView {
         this.layout.updateToggleDisplay(expandedCount > 0);
     }
 
+    private _syncHiddenToggle(): void {
+        if (!this.layout) return;
+        this.layout.updateHiddenToggleDisplay(this.settings.showHiddenNodes ?? false);
+    }
+
+    public async toggleShowHiddenNodes(): Promise<void> {
+        this.settings.showHiddenNodes = !(this.settings.showHiddenNodes ?? false);
+        await this.plugin.saveSettings();
+        this.vtManager?.setShowHidden(this.settings.showHiddenNodes);
+        this._syncHiddenToggle();
+    }
+
 
     /**
      * Get expanded nodes for saving in settings
@@ -377,6 +393,7 @@ export default class PluginMainPanel extends ItemView {
         if (this.vtManager) {
             await this.vtManager.updateSettings(newSettings);
         }
+        this._syncHiddenToggle();
         // Update persistence manager with new settings
         this.persistenceManager.updateSettings(newSettings);
     }

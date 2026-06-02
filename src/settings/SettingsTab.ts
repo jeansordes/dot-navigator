@@ -65,7 +65,23 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     );
     addSchemaSuggestionsToggle(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
     addAliasVirtualModeSetting(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
-    addHiddenNodesSettings(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
+
+    const hiddenCount = this.plugin.settings.hiddenNodes?.length ?? 0;
+    addHiddenNodesSettings(
+      addSettingsGroup(
+        containerEl,
+        createGroupHeading(
+          t('settingsHiddenNodesHeader'),
+          t('settingsHiddenNodesDescription'),
+          hiddenCount
+        )
+      ),
+      this.plugin.settings,
+      {
+        ...this.settingsCallbacks,
+        refreshDisplay: this.display.bind(this),
+      }
+    );
 
     addSchemaConfigurationSection(
       addSettingsGroup(

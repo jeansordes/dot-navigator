@@ -46,35 +46,3 @@
 .dotn_cmd-suggest-item.is-selected {
     background-color: var(--background-modifier-hover);
 }
-
-/* Path validation styles */
-.dotnav-path-validation {
-    margin-bottom: 1rem;
-}
-
-.dotnav-validation-message {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: var(--font-ui-smaller);
-    font-weight: 500;
-}
-
-.dotnav-validation-success {
-    background-color: rgba(25, 135, 84, 0.08);
-    border: 1px solid var(--text-success);
-    color: var(--text-success);
-}
-
-.dotnav-validation-error {
-    background-color: rgba(220, 38, 38, 0.08);
-    border: 1px solid var(--text-error);
-    color: var(--text-error);
-}
-
-.dotnav-validation-icon {
-    font-weight: bold;
-    font-size: var(--font-ui-small);
-}

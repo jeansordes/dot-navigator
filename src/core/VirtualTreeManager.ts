@@ -73,6 +73,7 @@ export class VirtualTreeManager {
       this.onExpansionChange,
       expanded
     );
+    this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
   }
 
 
@@ -99,6 +100,7 @@ export class VirtualTreeManager {
       this.onExpansionChange,
       expanded
     );
+    this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
     await CacheUtils.saveTreeToCache(
       this.cacheManager,
       data,
@@ -222,6 +224,10 @@ export class VirtualTreeManager {
   // Expose the current ComplexVirtualTree instance (read-only access)
   getInstance(): ComplexVirtualTree | null { return this.vt; }
 
+  setShowHidden(value: boolean): void {
+    this.vt?.setShowHidden(value);
+  }
+
   /**
    * Update settings and refresh the tree data if needed
    */
@@ -231,6 +237,7 @@ export class VirtualTreeManager {
     this.usingCachedData = false; // Force rebuild to ensure settings are applied
 
     if (this.vt && this.rootContainer) {
+      this.vt.setShowHidden(newSettings.showHiddenNodes ?? false);
       // Rebuild the tree data with new settings
       await this.updateOnVaultChange();
     }
