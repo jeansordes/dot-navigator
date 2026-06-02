@@ -124,6 +124,14 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public setParentMap(map: Map<string, string | undefined>): void { this.parentMap = map; }
 
+  public setShowHidden(value: boolean): void {
+    super.setShowHidden(value);
+  }
+
+  public getShowHidden(): boolean {
+    return super.getShowHidden();
+  }
+
   public getSelectedId(): string | undefined {
     return this._selectedId;
   }
