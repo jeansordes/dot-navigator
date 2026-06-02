@@ -1,6 +1,52 @@
 /* Settings Page Styles */
 
-/* Settings: cards for More Menu items */
+.dotn_settings-section {
+    margin: var(--size-4-4) 0;
+}
+
+.dotn_settings-more-menu > h3 {
+    margin-top: 0;
+}
+
+.dotn_settings-section-desc {
+    margin-bottom: var(--size-4-3);
+    color: var(--text-muted);
+    line-height: var(--line-height-normal);
+}
+
+.dotn_settings-subsection > h4 {
+    margin: var(--size-4-4) 0 var(--size-4-2);
+}
+
+.dotn_settings-subsection:first-of-type > h4 {
+    margin-top: 0;
+}
+
+/* Grouped list: one frame instead of stacked gray boxes per row */
+.dotn_settings-card-list {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    background-color: var(--background-secondary);
+    overflow: hidden;
+
+    &:empty {
+        display: none;
+    }
+
+    > .dotn_settings-card {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        padding: 0 var(--size-4-3);
+
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--background-modifier-border);
+        }
+    }
+}
+
+/* Settings: cards for More Menu items (standalone or inside a list) */
 .dotn_settings-card {
     border: 1px solid var(--background-modifier-border);
     background-color: var(--background-secondary);
@@ -12,6 +58,9 @@
 .dotn_settings-card .setting-item {
     margin: 0;
     padding: 0;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 .dotnav-schema-config-path {
@@ -50,4 +99,33 @@
     border-top: 1px solid var(--background-modifier-border);
     margin-top: 8px;
     padding-top: 8px;
+}
+
+.is-mobile .dotn_settings-actions .setting-item-control {
+    flex-wrap: wrap;
+
+    button {
+        flex: 1 1 100%;
+        white-space: normal;
+    }
+}
+
+.is-mobile .dotn_settings-more-menu .dotn_settings-card-list .setting-item {
+    background-color: transparent !important;
+    border-radius: 0;
+    min-height: unset;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.is-mobile .dotn_settings-more-menu .dotn_settings-actions.setting-item {
+    background-color: transparent !important;
+    border: none;
+    box-shadow: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
 }

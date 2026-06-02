@@ -63,12 +63,13 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     }, this.app);
 
     // More menu section
-    const moreMenuHeader = containerEl.createEl('h3', { text: t('settingsMoreMenuHeader') });
+    const moreMenuSection = containerEl.createEl('div', { cls: 'dotn_settings-section dotn_settings-more-menu' });
+    const moreMenuHeader = moreMenuSection.createEl('h3', { text: t('settingsMoreMenuHeader') });
     moreMenuHeader.id = 'dotnav-more-menu';
-    containerEl.createEl('p', { text: t('settingsMoreMenuDescription') });
+    moreMenuSection.createEl('p', { cls: 'dotn_settings-section-desc', text: t('settingsMoreMenuDescription') });
 
     // Built-in items ordering
-    addBuiltinItemsSection(containerEl, {
+    addBuiltinItemsSection(moreMenuSection, {
       getBuiltinItems: this.getBuiltinItems.bind(this),
       getBuiltinOrder: this.getBuiltinOrder.bind(this),
       updateBuiltinOrder: this.updateBuiltinOrder.bind(this),
@@ -77,7 +78,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
 
     // Custom commands
-    addCustomCommandsSection(containerEl, this.app, {
+    addCustomCommandsSection(moreMenuSection, this.app, {
       getUserItems: this.getUserItems.bind(this),
       updateUserItems: this.updateUserItems.bind(this),
       describeItem: (item: MoreMenuItemCommand) => `Command: ${item.label || item.commandId || '(unnamed)'}`,
@@ -85,7 +86,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
 
     // Actions row
-    const actions = new Setting(containerEl);
+    const actions = new Setting(moreMenuSection);
+    actions.settingEl.addClass('dotn_settings-actions');
     actions.addButton((btn: ButtonComponent) => {
       btn.setButtonText(t('settingsAddCustomCommand'))
         .setCta()

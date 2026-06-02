@@ -14,10 +14,11 @@ export function addBuiltinItemsSection(
   containerEl: HTMLElement,
   callbacks: BuiltinItemsSettingsCallbacks
 ): void {
-  containerEl.createEl('h4', { text: t('settingsBuiltinItems') });
+  const subsection = containerEl.createEl('div', { cls: 'dotn_settings-subsection' });
+  subsection.createEl('h4', { text: t('settingsBuiltinItems') });
   const builtinList = callbacks.getBuiltinItems();
   const builtinOrder = callbacks.getBuiltinOrder();
-  const builtinWrap = containerEl.createEl('div');
+  const builtinWrap = subsection.createEl('div', { cls: 'dotn_settings-card-list' });
 
   builtinOrder.forEach((id, index) => {
     const item = builtinList.find((x) => x.id === id) || builtinList[index];

@@ -15,9 +15,10 @@ export function addCustomCommandsSection(
   app: App,
   callbacks: CustomCommandsSettingsCallbacks
 ): void {
-  containerEl.createEl('h4', { text: t('settingsCustomCommands') });
+  const subsection = containerEl.createEl('div', { cls: 'dotn_settings-subsection' });
+  subsection.createEl('h4', { text: t('settingsCustomCommands') });
   const customItems = callbacks.getUserItems();
-  const customWrap = containerEl.createEl('div');
+  const customWrap = subsection.createEl('div', { cls: 'dotn_settings-card-list' });
 
   customItems.forEach((item, index) => {
     const card = customWrap.createEl('div', { cls: 'dotn_settings-card' });
