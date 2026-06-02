@@ -68,16 +68,34 @@ export function createAliasIcon(item: RowItem): HTMLElement | null {
   const icon = document.createElement('div');
   icon.className = 'dotn_icon dotn_alias-icon';
   icon.title = item.targetPath ? `Shortcut to ${item.targetPath}` : 'Shortcut';
-  setIcon(icon, 'corner-down-right');
+  setIcon(icon, 'file-symlink');
   return icon;
+}
+
+function appendTwoPartTitle(container: HTMLElement, primaryText: string, secondaryText: string | null): void {
+  const primary = document.createElement('span');
+  primary.textContent = primaryText;
+  primary.className = 'yaml-custom-title';
+  container.appendChild(primary);
+
+  if (!secondaryText) return;
+
+  const separator = document.createElement('span');
+  separator.textContent = '·';
+  separator.className = 'yaml-filename';
+
+  const secondary = document.createElement('span');
+  secondary.textContent = secondaryText;
+  secondary.className = 'yaml-filename';
+
+  container.appendChild(separator);
+  container.appendChild(secondary);
 }
 
 export function createTitleElement(item: RowItem): HTMLElement {
   const titleClass = item.kind === 'virtual' || item.kind === 'suggestion'
     ? 'dotn_tree-item-title mod-create-new'
-    : item.kind === 'file'
-      ? 'dotn_tree-item-title is-clickable'
-      : 'dotn_tree-item-title';
+    : 'dotn_tree-item-title';
   const title = document.createElement('div');
   title.className = titleClass;
   title.title = item.targetPath ? `${item.aliasPath ?? item.id} -> ${item.targetPath}` : item.id;
@@ -86,24 +104,14 @@ export function createTitleElement(item: RowItem): HTMLElement {
   if (item.isAlias) title.setAttribute('data-alias', 'true');
   if (item.targetPath) title.setAttribute('data-target-path', item.targetPath);
 
-  const yamlTitle = item.title;
-
-  if (yamlTitle) {
-    const customTitle = document.createElement('span');
-    customTitle.textContent = yamlTitle;
-    customTitle.className = 'yaml-custom-title';
-
-    const separator = document.createElement('span');
-    separator.textContent = '·';
-    separator.className = 'yaml-filename';
-
-    const filename = document.createElement('span');
-    filename.textContent = item.originalName ?? item.name;
-    filename.className = 'yaml-filename';
-
-    title.appendChild(customTitle);
-    title.appendChild(separator);
-    title.appendChild(filename);
+  if (item.isAlias) {
+    // Shortcut node: use the alias's own name as the primary label and only
+    // surface the target's title as a secondary hint when it adds information,
+    // so we don't repeat the target title that already shows on the real note.
+    const targetTitle = item.title && item.title !== item.name ? item.title : null;
+    appendTwoPartTitle(title, item.name, targetTitle);
+  } else if (item.title) {
+    appendTwoPartTitle(title, item.title, item.originalName ?? item.name);
   } else {
     title.textContent = item.name;
   }

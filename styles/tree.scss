@@ -303,12 +303,11 @@
         margin-right: var(--dotn_gap);
     }
 
-    .is-clickable {
-        cursor: pointer;
+    .dotn_tree-item-title {
+        cursor: default;
     }
 
-    .dotn_button-icon:hover,
-    .is-clickable:hover {
+    .dotn_button-icon:hover {
         color: var(--dotn_color-text-hover);
     }
 

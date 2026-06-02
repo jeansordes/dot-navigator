@@ -222,8 +222,8 @@ export default class PluginMainPanel extends ItemView {
 
         // Prefer going through the manager (stable API)
         try {
-            if (this.vtManager) { this.vtManager.revealPath(file.path); return; }
-            if (this.virtualTree) { this.virtualTree.revealPath(file.path); return; }
+            if (this.vtManager) { this.vtManager.revealPathForActiveFile(file.path); return; }
+            if (this.virtualTree) { this.virtualTree.revealPathForActiveFile(file.path); return; }
         } catch (e) {
             // Never let highlight errors break the app; just log
             debugError('highlightActiveFile failed:', e);
@@ -238,7 +238,7 @@ export default class PluginMainPanel extends ItemView {
             await this.vtManager.updateOnVaultChange();
             // After data updates, ensure the current active file is highlighted
             if (this.activeFile) {
-                this.vtManager.revealPath(this.activeFile.path);
+                this.vtManager.revealPathForActiveFile(this.activeFile.path);
             }
         }
     }

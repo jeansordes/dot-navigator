@@ -2,6 +2,7 @@ import {
   aliasSpecifiesDirectory,
   isDottedAlias,
   resolveAliasPathForTarget,
+  resolveRevealPathForActiveFile,
 } from '../src/core/aliasVirtualData';
 
 describe('isDottedAlias', () => {
@@ -50,5 +51,36 @@ describe('resolveAliasPathForTarget', () => {
       'other/prj.ideas.foo',
       'notes/prj.ideas.edursenal.md'
     )).toBe('other/prj.ideas.foo.md');
+  });
+});
+
+describe('resolveRevealPathForActiveFile', () => {
+  const aliasId = 'alias:notes%2Fprj.ideas.upgrade.md->notes%2Fprj.ideas.edursenal.md';
+  const filePath = 'notes/prj.ideas.edursenal.md';
+  const projectedId = `${aliasId}::${encodeURIComponent('notes/prj.ideas.child.md')}`;
+  const items = new Map([
+    [filePath, { id: filePath }],
+    [aliasId, { id: aliasId, targetPath: filePath }],
+    [projectedId, { id: projectedId, targetPath: 'notes/prj.ideas.child.md' }],
+  ]);
+
+  it('keeps shortcut selection when active file matches target', () => {
+    expect(resolveRevealPathForActiveFile(aliasId, filePath, (id) => items.get(id))).toBe(aliasId);
+  });
+
+  it('keeps projected child selection when active file matches target', () => {
+    expect(resolveRevealPathForActiveFile(
+      projectedId,
+      'notes/prj.ideas.child.md',
+      (id) => items.get(id)
+    )).toBe(projectedId);
+  });
+
+  it('reveals canonical path when selection is the file itself', () => {
+    expect(resolveRevealPathForActiveFile(filePath, filePath, (id) => items.get(id))).toBe(filePath);
+  });
+
+  it('reveals canonical path when selection targets a different file', () => {
+    expect(resolveRevealPathForActiveFile(aliasId, 'other.md', (id) => items.get(id))).toBe('other.md');
   });
 });

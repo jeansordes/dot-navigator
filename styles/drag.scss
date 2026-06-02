@@ -26,11 +26,6 @@
     }
 }
 
-.dotn_view .dotn_tree-item-title[data-node-kind="file"],
-.dotn_view .dotn_tree-item-title[data-node-kind="folder"] {
-    cursor: grab;
-}
-
 body.dotn_dragging-active,
 body.dotn_dragging-active * {
     cursor: grabbing !important;

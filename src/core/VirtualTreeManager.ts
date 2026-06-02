@@ -202,6 +202,10 @@ export class VirtualTreeManager {
   }
 
   revealPath(path: string): void { this.vt?.revealPath(path); }
+
+  revealPathForActiveFile(filePath: string): void {
+    this.vt?.revealPathForActiveFile(filePath);
+  }
   selectPath(path: string): void { this.vt?.selectPath(path, { reveal: false }); }
   expandAll(): void { this.vt?.expandAll(); this.onExpansionChange?.(); }
   collapseAll(): void { this.vt?.collapseAll(); this.onExpansionChange?.(); }

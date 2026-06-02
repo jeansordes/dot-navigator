@@ -118,6 +118,27 @@ export function resolveTargetPath(item: { id: string; targetPath?: string }): st
   return isShortcutItem(item) ? item.targetPath! : item.id;
 }
 
+/**
+ * When the active editor file matches a shortcut row's target, keep revealing that row
+ * instead of jumping to the canonical file path in the tree.
+ */
+export function resolveRevealPathForActiveFile(
+  selectedId: string | undefined,
+  activeFilePath: string,
+  findItemById: (id: string) => { id: string; targetPath?: string } | undefined
+): string {
+  if (!selectedId) {
+    return activeFilePath;
+  }
+
+  const selected = findItemById(selectedId);
+  if (!selected || resolveTargetPath(selected) !== activeFilePath) {
+    return activeFilePath;
+  }
+
+  return isShortcutItem(selected) ? selectedId : activeFilePath;
+}
+
 export function applyAliasesToVirtualizedData(
   data: AliasableVItem[],
   parentMap: Map<string, string | undefined>,

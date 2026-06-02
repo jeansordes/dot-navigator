@@ -239,13 +239,13 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
   const item = vt.visible[idx];
   const targetPath = item ? resolveTargetPath(item) : id;
   if (kind === 'file') {
+    vt.selectedIndex = idx;
+    setSelectedId(id);
     const file = app.vault.getAbstractFileByPath(targetPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey; // CMD on Mac, CTRL on Windows/Linux
       FileUtils.openFile(app, file, openInNewTab);
     }
-    vt.selectedIndex = idx;
-    setSelectedId(id);
   } else {
     vt.focusedIndex = idx;
   }

@@ -16,6 +16,7 @@ import { bindRowHandlers, onRowClick as handleRowClick, onRowContextMenu as hand
 import type { RowDragController } from '../row/rowDragDrop';
 import { attachTreeDragController, detachTreeDragController } from './treeDragAttach';
 import { RenameManager } from '../../utils/rename/RenameManager';
+import { resolveRevealPathForActiveFile } from '../../core/aliasVirtualData';
 
 export class ComplexVirtualTree extends VirtualTree {
   private app: App;
@@ -123,6 +124,10 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public setParentMap(map: Map<string, string | undefined>): void { this.parentMap = map; }
 
+  public getSelectedId(): string | undefined {
+    return this._selectedId;
+  }
+
   public revealAfterUpdate(path: string): void {
     if (!path) {
       this._pendingRevealPath = undefined;
@@ -178,6 +183,15 @@ export class ComplexVirtualTree extends VirtualTree {
     const idx = await revealAction(this.virtualTree, this.parentMap, path);
     if (idx != null) this._selectedId = path;
     this._onExpansionChange?.();
+  }
+
+  public revealPathForActiveFile(filePath: string): void {
+    const revealId = resolveRevealPathForActiveFile(
+      this._selectedId,
+      filePath,
+      (id) => this.virtualTree.visible.find(item => item.id === id)
+    );
+    void this.revealPath(revealId);
   }
 
   // Ensure correct container gets scrolled when jumping to an index
