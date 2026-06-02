@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting, ButtonComponent, Notice } from 'obsidia
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, FILE_TREE_VIEW_TYPE } from '../types';
 import { addFileCreationSection } from './FileCreationSettings';
+import { addAliasVirtualModeSetting } from './AliasSettings';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
 import { addBuiltinItemsSection } from './BuiltinItemsSettings';
 import { addCustomCommandsSection } from './CustomCommandsSettings';
@@ -44,6 +45,11 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
     // Schema suggestions toggle
     addSchemaSuggestionsToggle(containerEl, this.plugin.settings, {
+      updateTreeView: this.updateTreeView.bind(this),
+      saveSettings: this.plugin.saveSettings.bind(this.plugin)
+    });
+
+    addAliasVirtualModeSetting(containerEl, this.plugin.settings, {
       updateTreeView: this.updateTreeView.bind(this),
       saveSettings: this.plugin.saveSettings.bind(this.plugin)
     });

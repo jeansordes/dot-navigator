@@ -10,6 +10,8 @@ export enum DashTransformation {
     SENTENCE_CASE = 'sentence-case' // Transform dashes to spaces and capitalize first letter of the string
 }
 
+export type AliasVirtualMode = 'off' | 'dotted' | 'all';
+
 export interface PluginSettings {
     mySetting: string;
     expandedNodes?: string[]; // Array of node paths that are expanded
@@ -24,6 +26,7 @@ export interface PluginSettings {
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
     dendronConfigFilePath?: string; // Path to the rule config file (default: dot-navigator-rules.json)
+    aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -37,7 +40,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
     transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
-    dendronConfigFilePath: 'dot-navigator-rules.json' // Default rule config file path
+    dendronConfigFilePath: 'dot-navigator-rules.json', // Default rule config file path
+    aliasVirtualMode: 'dotted' // Only dotted aliases become virtual nodes by default
 }
 
 export enum TreeNodeType {

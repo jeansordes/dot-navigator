@@ -39,6 +39,24 @@ export function normalizeAliases(value: unknown): string[] {
     .filter(alias => alias.length > 0);
 }
 
+/**
+ * True when the alias looks like a Dendron-style dotted path (not a plain label).
+ */
+export function isDottedAlias(alias: string): boolean {
+  const trimmed = alias
+    .trim()
+    .replace(/^\[\[/u, '')
+    .replace(/\]\]$/u, '')
+    .replace(/^\/+|\/+$/gu, '');
+
+  if (!trimmed) {
+    return false;
+  }
+
+  const withoutMd = trimmed.replace(/\.md$/iu, '');
+  return withoutMd.includes('.');
+}
+
 export function normalizeAliasToPath(alias: string): string | null {
   const trimmed = alias
     .trim()

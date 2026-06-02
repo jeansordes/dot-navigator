@@ -1,8 +1,8 @@
 import { App } from 'obsidian';
 import { FileUtils } from '../utils/file/FileUtils';
-import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
+import { TreeNode, TreeNodeType, PluginSettings, DashTransformation, type AliasVirtualMode } from '../types';
 import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
-import { applyAliasesToVirtualizedData, normalizeAliases, type AliasEntry } from './aliasVirtualData';
+import { applyAliasesToVirtualizedData, isDottedAlias, normalizeAliases, type AliasEntry } from './aliasVirtualData';
 
 export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
@@ -130,7 +130,8 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     .sort(([_aKey, aNode], [_bKey, bNode]) => sortKey(aNode).localeCompare(sortKey(bNode)))
     .forEach(([, child]) => data.push(build(child, root.path)));
 
-  applyAliasesToVirtualizedData(data, parentMap, collectAliasEntries(app), {
+  const aliasMode = settings?.aliasVirtualMode ?? 'dotted';
+  applyAliasesToVirtualizedData(data, parentMap, collectAliasEntries(app, aliasMode), {
     transformName,
     getSortKey: (item) => item.title ?? item.name,
   });
@@ -138,12 +139,19 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
   return { data, parentMap };
 }
 
-function collectAliasEntries(app: App): AliasEntry[] {
+function collectAliasEntries(app: App, mode: AliasVirtualMode): AliasEntry[] {
+  if (mode === 'off') {
+    return [];
+  }
+
   try {
     return app.vault.getFiles().flatMap(file => {
       const cache = app.metadataCache.getFileCache(file);
       const aliases = normalizeAliases(cache?.frontmatter?.aliases);
-      return aliases.map(alias => ({ alias, targetPath: file.path }));
+      const filtered = mode === 'dotted'
+        ? aliases.filter(isDottedAlias)
+        : aliases;
+      return filtered.map(alias => ({ alias, targetPath: file.path }));
     });
   } catch {
     return [];
