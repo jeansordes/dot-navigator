@@ -66,13 +66,14 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
 export function createAliasIcon(item: RowItem): HTMLElement | null {
   if (!item.isAlias) return null;
   const icon = document.createElement('div');
-  icon.className = 'dotn_icon dotn_alias-icon';
-  icon.title = item.targetPath ? `Shortcut to ${item.targetPath}` : 'Shortcut';
+  icon.className = 'dotn_button-icon dotn_alias-icon';
+  icon.setAttribute('data-action', 'open-target');
+  icon.title = item.targetPath ? `Open original: ${item.targetPath}` : 'Open original';
   setIcon(icon, 'file-symlink');
   return icon;
 }
 
-function appendTwoPartTitle(container: HTMLElement, primaryText: string, secondaryText: string | null): void {
+function appendTwoPartTitle(container: HTMLElement, primaryText: string, secondaryText: string | null, separatorText = '·'): void {
   const primary = document.createElement('span');
   primary.textContent = primaryText;
   primary.className = 'yaml-custom-title';
@@ -81,7 +82,7 @@ function appendTwoPartTitle(container: HTMLElement, primaryText: string, seconda
   if (!secondaryText) return;
 
   const separator = document.createElement('span');
-  separator.textContent = '·';
+  separator.textContent = separatorText;
   separator.className = 'yaml-filename';
 
   const secondary = document.createElement('span');
@@ -107,11 +108,10 @@ export function createTitleElement(item: RowItem): HTMLElement {
   if (item.targetPath) title.setAttribute('data-target-path', item.targetPath);
 
   if (item.isAlias) {
-    // Shortcut node: use the alias's own name as the primary label and only
-    // surface the target's title as a secondary hint when it adds information,
-    // so we don't repeat the target title that already shows on the real note.
-    const targetTitle = item.title && item.title !== item.name ? item.title : null;
-    appendTwoPartTitle(title, item.name, targetTitle);
+    // Shortcut node: show the alias's own name as the primary label and always
+    // point to the destination's actual node name (not its title), even when the
+    // alias's leaf name happens to match the destination.
+    appendTwoPartTitle(title, item.name, item.targetName ?? null, '→');
   } else if (item.title) {
     appendTwoPartTitle(title, item.title, item.originalName ?? item.name);
   } else {

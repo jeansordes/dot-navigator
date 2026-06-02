@@ -134,7 +134,8 @@ export function onRowClick(
   row: HTMLElement,
   setSelectedId: (id: string) => void,
   renameManager?: RenameManager,
-  shouldSuppressClick?: () => boolean
+  shouldSuppressClick?: () => boolean,
+  revealCanonicalPath?: (path: string) => void
 ): void {
   if (shouldSuppressClick?.()) {
     e.preventDefault();
@@ -158,7 +159,9 @@ export function onRowClick(
   const buttonEl = target.closest('.dotn_button-icon');
   if (buttonEl) {
     const action = buttonEl.getAttribute('data-action');
-    if (action && buttonEl instanceof HTMLElement) handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager);
+    if (action && buttonEl instanceof HTMLElement) {
+      handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager, revealCanonicalPath);
+    }
     return;
   }
 

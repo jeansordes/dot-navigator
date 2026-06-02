@@ -17,6 +17,7 @@ export interface VItem {
   aliasPath?: string;
   targetPath?: string;
   targetKind?: Kind;
+  targetName?: string;
   children?: VItem[];
 }
 

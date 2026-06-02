@@ -12,6 +12,7 @@ export interface AliasableVItem {
   aliasPath?: string;
   targetPath?: string;
   targetKind?: AliasItemKind;
+  targetName?: string;
 }
 
 export interface AliasEntry {
@@ -210,6 +211,7 @@ export function applyAliasesToVirtualizedData(
       aliasPath,
       targetPath: entry.targetPath,
       targetKind: targetItem?.kind ?? 'file',
+      targetName: targetItem?.originalName ?? targetItem?.name ?? getDisplayBaseName(entry.targetPath),
     };
 
     if (targetItem?.children && targetItem.children.length > 0) {

@@ -128,6 +128,29 @@ export class FileUtils {
         }
     }
 
+    /** Open a shortcut's target note and jump to its canonical row in the tree. */
+    public static async openShortcutTarget(
+        app: App,
+        file: TFile,
+        newTab: boolean,
+        revealCanonicalPath?: (path: string) => void
+    ): Promise<void> {
+        await this.openFile(app, file, newTab);
+        this.focusLeafForFile(app, file);
+        revealCanonicalPath?.(file.path);
+    }
+
+    private static focusLeafForFile(app: App, file: TFile): void {
+        const leaves = app.workspace.getLeavesOfType('markdown');
+        for (const leaf of leaves) {
+            const view = leaf.view;
+            if (view && 'file' in view && view.file === file) {
+                app.workspace.setActiveLeaf(leaf, { focus: true });
+                return;
+            }
+        }
+    }
+
     /**
      * Best-effort: reveal and select a file in the core File Explorer so native commands act on it.
      */

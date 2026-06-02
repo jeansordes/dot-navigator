@@ -227,7 +227,8 @@ export class ComplexVirtualTree extends VirtualTree {
       row,
       (sid) => { this._selectedId = sid; },
       this._renameManager,
-      () => this._dragController?.shouldSuppressClick() ?? false
+      () => this._dragController?.shouldSuppressClick() ?? false,
+      (path) => { void this.revealPath(path); }
     );
   }
 

@@ -25,7 +25,17 @@ export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: n
   vt._render();
 }
 
-export function handleActionButtonClick(app: App, action: string | null, id: string, kind: MenuItemKind, vt: VirtualTreeLike, anchorEl?: HTMLElement, ev?: MouseEvent, renameManager?: RenameManager): void {
+export function handleActionButtonClick(
+  app: App,
+  action: string | null,
+  id: string,
+  kind: MenuItemKind,
+  vt: VirtualTreeLike,
+  anchorEl?: HTMLElement,
+  ev?: MouseEvent,
+  renameManager?: RenameManager,
+  revealCanonicalPath?: (path: string) => void
+): void {
   if (!action) return;
   const treeItem = vt.visible.find(item => item.id === id);
   const actionPath = treeItem ? resolveTargetPath(treeItem) : id;
@@ -64,6 +74,12 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
     }
   } else if (action === 'create-note') {
     FileUtils.createAndOpenNote(app, actionPath);
+  } else if (action === 'open-target') {
+    const target = app.vault.getAbstractFileByPath(actionPath);
+    if (target instanceof TFile) {
+      const openInNewTab = !!(ev?.metaKey || ev?.ctrlKey);
+      void FileUtils.openShortcutTarget(app, target, openInNewTab, revealCanonicalPath);
+    }
   } else if (action === 'create-child') {
     if (isShortcut) return;
     // @ts-expect-error - plugins registry exists at runtime

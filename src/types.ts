@@ -76,6 +76,7 @@ export interface VirtualTreeBaseItem {
     aliasPath?: string;
     targetPath?: string;
     targetKind?: 'file' | 'folder' | 'virtual' | 'suggestion';
+    targetName?: string;
     children?: VirtualTreeBaseItem[];
     expanded?: boolean;
 }
