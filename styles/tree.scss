@@ -339,34 +339,51 @@
     }
 }
 
-/* Double-click recursive expand/collapse feedback (chevron spin) */
+/* Double-click recursive expand/collapse feedback (icon layer over chevron) */
+.dotn_button-icon[data-action="toggle"] .dotn_chevron-action-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    background-color: var(--dotn_accent-color);
+    color: var(--dotn_text-on-accent);
+    pointer-events: none;
+    z-index: 2;
+
+    svg {
+        width: 18px;
+        height: 18px;
+        color: var(--dotn_text-on-accent);
+    }
+}
+
 @media (prefers-reduced-motion: no-preference) {
-    .dotn_button-icon[data-action="toggle"].dotn_chevron-pulse--expand {
-        animation: dotn_chevron-spin-expand 0.55s ease-out;
-    }
-
-    .dotn_button-icon[data-action="toggle"].dotn_chevron-pulse--collapse {
-        animation: dotn_chevron-spin-collapse 0.55s ease-out;
+    .dotn_button-icon[data-action="toggle"] .dotn_chevron-action-layer {
+        animation: dotn_chevron-action-pop 0.65s ease-out forwards;
     }
 }
 
-@keyframes dotn_chevron-spin-expand {
-    from {
-        transform: rotate(0deg);
+@keyframes dotn_chevron-action-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
     }
 
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes dotn_chevron-spin-collapse {
-    from {
-        transform: rotate(0deg);
+    20% {
+        opacity: 1;
+        transform: scale(1);
     }
 
-    to {
-        transform: rotate(-360deg);
+    70% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
     }
 }
 
