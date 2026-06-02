@@ -1,131 +1,180 @@
 /* Settings Page Styles */
 
-.dotn_settings-section {
-    margin: var(--size-4-4) 0;
+/* Inline config path status — shown below the setting description when the file is missing */
+.dotnav-config-path-status {
+    color: var(--text-error);
 }
 
-.dotn_settings-more-menu > h3 {
-    margin-top: 0;
-}
-
-.dotn_settings-section-desc {
-    margin-bottom: var(--size-4-3);
-    color: var(--text-muted);
-    line-height: var(--line-height-normal);
-}
-
-.dotn_settings-subsection > h4 {
-    margin: var(--size-4-4) 0 var(--size-4-2);
-}
-
-.dotn_settings-subsection:first-of-type > h4 {
-    margin-top: 0;
-}
-
-/* Grouped list: one frame instead of stacked gray boxes per row */
-.dotn_settings-card-list {
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--radius-m);
-    background-color: var(--background-secondary);
-    overflow: hidden;
-
-    &:empty {
-        display: none;
-    }
-
-    > .dotn_settings-card {
-        margin: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        padding: 0 var(--size-4-3);
-
-        &:not(:last-child) {
-            border-bottom: 1px solid var(--background-modifier-border);
-        }
-    }
-}
-
-/* Settings: cards for More Menu items (standalone or inside a list) */
-.dotn_settings-card {
-    border: 1px solid var(--background-modifier-border);
-    background-color: var(--background-secondary);
-    border-radius: var(--radius-m);
-    padding: 12px;
-    margin: 10px 0;
-}
-
-.dotn_settings-card .setting-item {
-    margin: 0;
-    padding: 0;
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-}
-
+/* Rule config path: give the text input room beside the action button */
 .dotnav-schema-config-path {
+    .setting-item-control {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--size-4-2);
+        align-items: center;
+        width: 100%;
+    }
+
+    .setting-item-control input[type='text'] {
+        flex: 1 1 12rem;
+        min-width: 0;
+        width: auto;
+    }
+
+    .setting-item-control button {
+        flex: 0 0 auto;
+    }
+}
+
+/* More menu action buttons — one per row, full width on mobile */
+.dotnav-more-menu-actions {
+    margin-top: var(--size-4-2);
+
+    > .setting-item {
+        background-color: transparent;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    > .setting-item .setting-item-control {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    > .setting-item .setting-item-control button {
+        flex: 1 1 auto;
+    }
+}
+
+.is-mobile .dotnav-more-menu-actions > .setting-item .setting-item-control {
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
 
-    & .setting-item-control input[type="text"] {
-        flex: 1;
+    button {
+        width: 100%;
+        white-space: normal;
     }
 }
 
-@media (max-width: 686px) {
-    .dotnav-schema-config-path .setting-item-control {
-        flex-direction: column;
-    }
+/* Count badge shown next to a group heading (e.g. "Custom commands  3") */
+.dotnav-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4em;
+    height: 1.4em;
+    padding: 0 0.45em;
+    margin-left: var(--size-4-2);
+    border-radius: var(--radius-s);
+    background-color: var(--background-modifier-border);
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller);
+    font-weight: var(--font-medium);
+    line-height: 1;
+    vertical-align: middle;
 }
 
-/* Built-in item icons in settings */
-.dotn-builtin-icon {
+/* A reorderable menu row: [grip] [icon + label] ........ [actions] */
+.dotnav-menu-item {
+    position: relative;
+    transition: background-color 120ms ease;
+}
+
+.dotnav-menu-item-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-4-2);
+}
+
+.dotnav-menu-item-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 16px;
     height: 16px;
-    margin-right: 6px;
     color: var(--text-muted);
-}
 
-.dotn-builtin-icon svg {
-    width: 14px;
-    height: 14px;
-}
-
-.dotn_settings-card .setting-item+.setting-item {
-    border-top: 1px solid var(--background-modifier-border);
-    margin-top: 8px;
-    padding-top: 8px;
-}
-
-.is-mobile .dotn_settings-actions .setting-item-control {
-    flex-wrap: wrap;
-
-    button {
-        flex: 1 1 100%;
-        white-space: normal;
+    svg {
+        width: 16px;
+        height: 16px;
     }
 }
 
-.is-mobile .dotn_settings-more-menu .dotn_settings-card-list .setting-item {
-    background-color: transparent !important;
-    border-radius: 0;
-    min-height: unset;
-    margin-left: 0;
-    margin-right: 0;
-    padding-top: 10px;
-    padding-bottom: 10px;
+/* Drag handle */
+.dotnav-grip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 22px;
+    align-self: stretch;
+    margin-right: var(--size-4-2);
+    color: var(--text-faint);
+    cursor: grab;
+    border-radius: var(--radius-s);
+    touch-action: none;
+    transition: color 120ms ease, background-color 120ms ease;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
-.is-mobile .dotn_settings-more-menu .dotn_settings-actions.setting-item {
-    background-color: transparent !important;
-    border: none;
-    box-shadow: none;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
+.dotnav-menu-item:hover .dotnav-grip {
+    color: var(--text-muted);
+}
+
+.dotnav-grip:hover {
+    color: var(--text-normal);
+    background-color: var(--background-modifier-hover);
+}
+
+.dotnav-menu-item.is-dragging {
+    opacity: 0.5;
+    background-color: var(--background-modifier-hover);
+}
+
+/* While dragging, lock the cursor and suppress text selection globally */
+body.dotnav-reordering,
+body.dotnav-reordering * {
+    cursor: grabbing !important;
+    user-select: none !important;
+}
+
+/* Drop indicators */
+.dotnav-menu-item.dotnav-drop-before::before,
+.dotnav-menu-item.dotnav-drop-after::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--interactive-accent);
+    pointer-events: none;
+}
+
+.dotnav-menu-item.dotnav-drop-before::before {
+    top: -1px;
+}
+
+.dotnav-menu-item.dotnav-drop-after::after {
+    bottom: -1px;
+}
+
+/* Friendly empty state for the custom commands list */
+.dotnav-empty-state {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    color: var(--text-muted);
+
+    .setting-item-name {
+        color: var(--text-normal);
+        font-weight: var(--font-medium);
+    }
+
+    .setting-item-control {
+        display: none;
+    }
 }

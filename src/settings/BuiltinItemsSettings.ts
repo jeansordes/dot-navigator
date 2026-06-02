@@ -1,6 +1,7 @@
-import { Setting, setIcon } from 'obsidian';
+import { setIcon } from 'obsidian';
 import { MoreMenuItem, MoreMenuItemBuiltin } from '../types';
-import { t } from '../i18n';
+import type { SettingsSection } from './settingsGroup';
+import { addMoveButtons, attachReorderHandle, createGripHandle, moveByOffset, moveInArray } from './dragReorder';
 
 export interface BuiltinItemsSettingsCallbacks {
   getBuiltinItems: () => MoreMenuItem[];
@@ -11,62 +12,39 @@ export interface BuiltinItemsSettingsCallbacks {
 }
 
 export function addBuiltinItemsSection(
-  containerEl: HTMLElement,
+  section: SettingsSection,
   callbacks: BuiltinItemsSettingsCallbacks
 ): void {
-  const subsection = containerEl.createEl('div', { cls: 'dotn_settings-subsection' });
-  subsection.createEl('h4', { text: t('settingsBuiltinItems') });
   const builtinList = callbacks.getBuiltinItems();
   const builtinOrder = callbacks.getBuiltinOrder();
-  const builtinWrap = subsection.createEl('div', { cls: 'dotn_settings-card-list' });
 
   builtinOrder.forEach((id, index) => {
     const item = builtinList.find((x) => x.id === id) || builtinList[index];
-    const card = builtinWrap.createEl('div', { cls: 'dotn_settings-card' });
-    const header = new Setting(card);
 
-    // Manually create the name element with icon
-    const nameEl = header.nameEl;
-    nameEl.empty();
+    section.addSetting((row) => {
+      row.settingEl.addClass('dotnav-menu-item');
 
-    if (item.type === 'builtin') {
-      const iconSpan = nameEl.createSpan({ cls: 'dotn-builtin-icon' });
-      setIcon(iconSpan, item.icon || 'copy-plus');
-      nameEl.createSpan({ text: ` ${callbacks.getBuiltinDisplayName(item)}` });
-    } else {
-      nameEl.createSpan({ text: callbacks.describeItem(item) });
-    }
+      const handle = createGripHandle(row.settingEl);
 
-    addMoveUpButton(header, index, builtinOrder, callbacks.updateBuiltinOrder);
-    addMoveDownButton(header, index, builtinOrder, callbacks.updateBuiltinOrder);
-    // No delete button for builtins
-  });
-}
+      const nameEl = row.nameEl;
+      nameEl.empty();
+      nameEl.addClass('dotnav-menu-item-label');
 
-function addMoveUpButton(header: Setting, index: number, order: string[], updateCallback: (order: string[]) => Promise<void>): void {
-  header.addExtraButton((btn) => {
-    btn.setIcon('arrow-up')
-      .setTooltip(t('settingsMoveUp'))
-      .setDisabled(index === 0)
-      .onClick(async () => {
-        if (index === 0) return;
-        const newOrder = [...order];
-        [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-        await updateCallback(newOrder);
+      if (item.type === 'builtin') {
+        const iconSpan = nameEl.createSpan({ cls: 'dotnav-menu-item-icon' });
+        setIcon(iconSpan, item.icon || 'copy-plus');
+        nameEl.createSpan({ text: callbacks.getBuiltinDisplayName(item) });
+      } else {
+        nameEl.createSpan({ text: callbacks.describeItem(item) });
+      }
+
+      addMoveButtons(row, index, builtinOrder.length, async (offset) => {
+        await callbacks.updateBuiltinOrder(moveByOffset(builtinOrder, index, offset));
       });
-  });
-}
 
-function addMoveDownButton(header: Setting, index: number, order: string[], updateCallback: (order: string[]) => Promise<void>): void {
-  header.addExtraButton((btn) => {
-    btn.setIcon('arrow-down')
-      .setTooltip(t('settingsMoveDown'))
-      .setDisabled(index === order.length - 1)
-      .onClick(async () => {
-        if (index >= order.length - 1) return;
-        const newOrder = [...order];
-        [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-        await updateCallback(newOrder);
+      attachReorderHandle(handle, row.settingEl, 'builtin', index, async (from, to) => {
+        await callbacks.updateBuiltinOrder(moveInArray(builtinOrder, from, to));
       });
+    });
   });
 }

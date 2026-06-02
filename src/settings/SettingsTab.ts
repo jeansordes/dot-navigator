@@ -1,12 +1,14 @@
-import { App, PluginSettingTab, Setting, ButtonComponent, Notice } from 'obsidian';
+import { App, PluginSettingTab, Notice } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, FILE_TREE_VIEW_TYPE } from '../types';
 import { addFileCreationSection } from './FileCreationSettings';
 import { addAliasVirtualModeSetting } from './AliasSettings';
+import { addHiddenNodesSettings } from './HiddenNodesSettings';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
 import { addBuiltinItemsSection } from './BuiltinItemsSettings';
-import { addCustomCommandsSection } from './CustomCommandsSettings';
+import { addCustomCommandsSection, addCustomCommandActions } from './CustomCommandsSettings';
 import { addTipsSection } from './TipsSettings';
+import { addSettingsGroup, createGroupHeading, addActionSettingsRows } from './settingsGroup';
 import PluginMainPanel from '../views/components/PluginMainPanel';
 import { t } from '../i18n';
 
@@ -18,9 +20,6 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  /**
-   * Update the tree view when settings change
-   */
   private async updateTreeView(): Promise<void> {
     const leaves = this.app.workspace.getLeavesOfType(FILE_TREE_VIEW_TYPE);
     if (leaves.length > 0) {
@@ -31,45 +30,68 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     }
   }
 
+  private get settingsCallbacks() {
+    return {
+      updateTreeView: this.updateTreeView.bind(this),
+      saveSettings: this.plugin.saveSettings.bind(this.plugin)
+    };
+  }
+
+  private get customCommandsCallbacks() {
+    return {
+      getUserItems: this.getUserItems.bind(this),
+      updateUserItems: this.updateUserItems.bind(this),
+      describeItem: (item: MoreMenuItemCommand) => item.label || item.commandId || t('settingsUnnamedCommand'),
+      newCommandItem: this.newCommandItem.bind(this)
+    };
+  }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: t('settingsHeader') });
+    addFileCreationSection(
+      addSettingsGroup(
+        containerEl,
+        createGroupHeading(t('settingsFileCreationHeader'), t('settingsFileCreationDescription'))
+      ),
+      this.plugin.settings,
+      this.settingsCallbacks
+    );
 
-    // File creation section
-    addFileCreationSection(containerEl, this.plugin.settings, {
-      updateTreeView: this.updateTreeView.bind(this),
-      saveSettings: this.plugin.saveSettings.bind(this.plugin)
-    });
+    const treeDisplayGroup = addSettingsGroup(
+      containerEl,
+      createGroupHeading(t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription'))
+    );
+    addSchemaSuggestionsToggle(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
+    addAliasVirtualModeSetting(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
+    addHiddenNodesSettings(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
 
-    // Schema suggestions toggle
-    addSchemaSuggestionsToggle(containerEl, this.plugin.settings, {
-      updateTreeView: this.updateTreeView.bind(this),
-      saveSettings: this.plugin.saveSettings.bind(this.plugin)
-    });
+    addSchemaConfigurationSection(
+      addSettingsGroup(
+        containerEl,
+        createGroupHeading(t('settingsSchemaConfigurationHeader'), t('settingsSchemaConfigurationDescription'))
+      ),
+      this.plugin.settings,
+      {
+        ...this.settingsCallbacks,
+        refreshDisplay: this.display.bind(this),
+        reloadConfig: this.reloadConfig.bind(this)
+      },
+      this.app
+    );
 
-    addAliasVirtualModeSetting(containerEl, this.plugin.settings, {
-      updateTreeView: this.updateTreeView.bind(this),
-      saveSettings: this.plugin.saveSettings.bind(this.plugin)
-    });
+    const moreMenuGroup = addSettingsGroup(
+      containerEl,
+      createGroupHeading(
+        t('settingsMoreMenuHeader'),
+        t('settingsMoreMenuDescription'),
+        this.getBuiltinOrder().length
+      )
+    );
+    moreMenuGroup.groupEl.id = 'dotnav-more-menu';
 
-    // Schema configuration section
-    addSchemaConfigurationSection(containerEl, this.plugin.settings, {
-      updateTreeView: this.updateTreeView.bind(this),
-      saveSettings: this.plugin.saveSettings.bind(this.plugin),
-      refreshDisplay: this.display.bind(this),
-      reloadConfig: this.reloadConfig.bind(this)
-    }, this.app);
-
-    // More menu section
-    const moreMenuSection = containerEl.createEl('div', { cls: 'dotn_settings-section dotn_settings-more-menu' });
-    const moreMenuHeader = moreMenuSection.createEl('h3', { text: t('settingsMoreMenuHeader') });
-    moreMenuHeader.id = 'dotnav-more-menu';
-    moreMenuSection.createEl('p', { cls: 'dotn_settings-section-desc', text: t('settingsMoreMenuDescription') });
-
-    // Built-in items ordering
-    addBuiltinItemsSection(moreMenuSection, {
+    addBuiltinItemsSection(moreMenuGroup, {
       getBuiltinItems: this.getBuiltinItems.bind(this),
       getBuiltinOrder: this.getBuiltinOrder.bind(this),
       updateBuiltinOrder: this.updateBuiltinOrder.bind(this),
@@ -77,44 +99,42 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       describeItem: this.describeItem.bind(this)
     });
 
-    // Custom commands
-    addCustomCommandsSection(moreMenuSection, this.app, {
-      getUserItems: this.getUserItems.bind(this),
-      updateUserItems: this.updateUserItems.bind(this),
-      describeItem: (item: MoreMenuItemCommand) => `Command: ${item.label || item.commandId || '(unnamed)'}`,
-      newCommandItem: this.newCommandItem.bind(this)
-    });
+    const customCommandsGroup = addSettingsGroup(
+      containerEl,
+      createGroupHeading(
+        t('settingsCustomCommands'),
+        t('settingsCustomCommandsDescription'),
+        this.getUserItems().length
+      )
+    );
+    customCommandsGroup.groupEl.addClass('dotnav-custom-commands');
 
-    // Actions row
-    const actions = new Setting(moreMenuSection);
-    actions.settingEl.addClass('dotn_settings-actions');
-    actions.addButton((btn: ButtonComponent) => {
-      btn.setButtonText(t('settingsAddCustomCommand'))
-        .setCta()
-        .onClick(async () => {
-          const list = this.getUserItems();
-          list.push(this.newCommandItem());
-          await this.updateUserItems(list);
-        });
-    });
-    actions.addButton((btn) => {
-      btn.setButtonText(t('settingsRestoreDefaults'))
-        .onClick(async () => {
-          await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
-          await this.updateUserItems([]);
-          this.display();
-        });
-    });
+    addCustomCommandsSection(customCommandsGroup, this.app, this.customCommandsCallbacks);
 
-    // Tips section
-    addTipsSection(containerEl);
+    addCustomCommandActions(
+      addActionSettingsRows(customCommandsGroup, 'dotnav-more-menu-actions'),
+      this.app,
+      this.customCommandsCallbacks,
+      async () => {
+        await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
+        await this.updateUserItems([]);
+        this.display();
+      }
+    );
+
+    addTipsSection(
+      addSettingsGroup(
+        containerEl,
+        createGroupHeading(t('settingsTipsHeader'), t('settingsTipsDescription'))
+      )
+    );
   }
 
   private describeItem(item: MoreMenuItem): string {
     if (item.type === 'builtin') {
       return this.getBuiltinDisplayName(item);
     }
-    return `Command: ${item.label || item.commandId || '(unnamed)'}`;
+    return item.label || item.commandId || t('settingsUnnamedCommand');
   }
 
   private getBuiltinDisplayName(item: MoreMenuItemBuiltin): string {
@@ -125,11 +145,11 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     if (item.builtin === 'show-in-explorer') return t('settingsBuiltinShowInExplorer');
     if (item.builtin === 'expand-children') return t('settingsBuiltinExpandChildren');
     if (item.builtin === 'collapse-children') return t('settingsBuiltinCollapseChildren');
+    if (item.builtin === 'hide') return t('settingsBuiltinHide');
     return t('settingsBuiltinUnknown');
   }
 
   private getBuiltinItems(): MoreMenuItem[] {
-    // Always current builtins from code
     return DEFAULT_MORE_MENU.filter(i => i.type === 'builtin');
   }
 
@@ -138,7 +158,6 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     const order = this.plugin?.settings?.builtinMenuOrder;
     if (Array.isArray(order) && order.length > 0) {
       const known = order.filter(id => allIds.includes(id));
-      // Append any built-ins added in newer versions that aren't in the saved order yet
       const missing = allIds.filter(id => !known.includes(id));
       return [...known, ...missing];
     }
@@ -154,7 +173,6 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   private getUserItems(): MoreMenuItemCommand[] {
     const list = this.plugin?.settings?.userMenuItems;
     if (Array.isArray(list)) return list.slice();
-    // Migration fallback if older combined list exists
     const legacy = this.plugin?.settings?.moreMenuItems;
     if (Array.isArray(legacy) && legacy.length > 0) {
       return legacy.filter((x): x is MoreMenuItemCommand => x.type === 'command');
@@ -182,23 +200,17 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
 
   private async reloadConfig(): Promise<void> {
     try {
-      // Get the config file path from settings
       const configPath = this.plugin.settings.dendronConfigFilePath || 'dot-navigator-rules.json';
 
-      // Update the rule manager and event handler to use the new config path
       await this.plugin.updateRuleConfigPath();
 
-      // Refresh the rule manager to reload the config file
       const ruleManager = this.plugin.getRuleManager();
       if (ruleManager) {
-        await ruleManager.refresh(true); // Force refresh from disk
+        await ruleManager.refresh(true);
         new Notice(`Reloaded Dendron config: ${configPath}`);
       }
 
-      // Update the tree view to reflect schema changes
       await this.updateTreeView();
-
-      // Refresh the settings display to update any schema-dependent UI
       this.display();
     } catch (error: unknown) {
       console.error('Failed to reload config:', error);

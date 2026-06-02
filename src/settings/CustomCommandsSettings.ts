@@ -1,6 +1,9 @@
-import { Setting, App } from 'obsidian';
+import { Setting, App, setIcon } from 'obsidian';
 import { MoreMenuItemCommand } from '../types';
-import { CommandSuggestModal } from './CommandSuggest';
+import { CustomCommandEditModal } from './CustomCommandEditModal';
+import { addEmptyState } from './settingsGroup';
+import type { SettingsSection } from './settingsGroup';
+import { addMoveButtons, attachReorderHandle, createGripHandle, moveByOffset, moveInArray } from './dragReorder';
 import { t } from '../i18n';
 
 export interface CustomCommandsSettingsCallbacks {
@@ -11,77 +14,116 @@ export interface CustomCommandsSettingsCallbacks {
 }
 
 export function addCustomCommandsSection(
-  containerEl: HTMLElement,
+  section: SettingsSection,
   app: App,
   callbacks: CustomCommandsSettingsCallbacks
 ): void {
-  const subsection = containerEl.createEl('div', { cls: 'dotn_settings-subsection' });
-  subsection.createEl('h4', { text: t('settingsCustomCommands') });
   const customItems = callbacks.getUserItems();
-  const customWrap = subsection.createEl('div', { cls: 'dotn_settings-card-list' });
+
+  if (customItems.length === 0) {
+    addEmptyState(section, t('settingsNoCustomCommands'), t('settingsNoCustomCommandsDesc'));
+    return;
+  }
 
   customItems.forEach((item, index) => {
-    const card = customWrap.createEl('div', { cls: 'dotn_settings-card' });
-    const header = new Setting(card)
-      .setName(`${index + 1}. ${callbacks.describeItem(item)}`);
+    section.addSetting((row) => {
+      row.settingEl.addClass('dotnav-menu-item');
 
-    addMoveUpButtonForItems(header, index, customItems, callbacks.updateUserItems);
-    addMoveDownButtonForItems(header, index, customItems, callbacks.updateUserItems);
-    addDeleteButton(header, index, customItems, callbacks.updateUserItems);
+      const handle = createGripHandle(row.settingEl);
 
-    // Fields for command item
-    addCommandLabelField(card, item, index, customItems, callbacks.updateUserItems);
-    addCommandSelectionField(card, app, item, index, customItems, callbacks.updateUserItems);
-    addOpenBeforeExecuteField(card, item, index, customItems, callbacks.updateUserItems);
+      const nameEl = row.nameEl;
+      nameEl.empty();
+      nameEl.addClass('dotnav-menu-item-label');
+      const iconSpan = nameEl.createSpan({ cls: 'dotnav-menu-item-icon' });
+      setIcon(iconSpan, item.icon || 'dot');
+      nameEl.createSpan({ text: callbacks.describeItem(item) });
+
+      if (item.commandId) {
+        row.setDesc(item.commandId);
+      }
+
+      row.addExtraButton((btn) => {
+        btn
+          .setIcon('pencil')
+          .setTooltip(t('settingsEdit'))
+          .onClick(() => {
+            openEditModal(app, item, index, customItems, callbacks.updateUserItems);
+          });
+      });
+
+      addMoveButtons(row, index, customItems.length, async (offset) => {
+        await callbacks.updateUserItems(moveByOffset(customItems, index, offset));
+      });
+
+      addDeleteButton(row, index, customItems, callbacks.updateUserItems);
+
+      attachReorderHandle(handle, row.settingEl, 'custom', index, async (from, to) => {
+        await callbacks.updateUserItems(moveInArray(customItems, from, to));
+      });
+    });
   });
 }
 
-function addMoveUpButtonForItems(
-  header: Setting,
+function openEditModal(
+  app: App,
+  item: MoreMenuItemCommand,
   index: number,
   items: MoreMenuItemCommand[],
-  updateCallback: (list: MoreMenuItemCommand[]) => Promise<void>
+  updateCallback: (list: MoreMenuItemCommand[], refreshView?: boolean) => Promise<void>
 ): void {
-  header.addExtraButton((btn) => {
-    btn.setIcon('arrow-up')
-      .setTooltip(t('settingsMoveUp'))
-      .setDisabled(index === 0)
-      .onClick(async () => {
-        if (index === 0) return;
-        const list = [...items];
-        [list[index - 1], list[index]] = [list[index], list[index - 1]];
-        await updateCallback(list);
-      });
-  });
+  new CustomCommandEditModal(app, item, async (saved) => {
+    const list = [...items];
+    list[index] = saved;
+    await updateCallback(list);
+  }).open();
 }
 
-function addMoveDownButtonForItems(
-  header: Setting,
-  index: number,
-  items: MoreMenuItemCommand[],
-  updateCallback: (list: MoreMenuItemCommand[]) => Promise<void>
+export function openNewCustomCommandModal(
+  app: App,
+  callbacks: CustomCommandsSettingsCallbacks
 ): void {
-  header.addExtraButton((btn) => {
-    btn.setIcon('arrow-down')
-      .setTooltip(t('settingsMoveDown'))
-      .setDisabled(index === items.length - 1)
-      .onClick(async () => {
-        if (index >= items.length - 1) return;
-        const list = [...items];
-        [list[index], list[index + 1]] = [list[index + 1], list[index]];
-        await updateCallback(list);
-      });
+  new CustomCommandEditModal(app, callbacks.newCommandItem(), async (saved) => {
+    const list = callbacks.getUserItems();
+    list.push(saved);
+    await callbacks.updateUserItems(list);
+  }, { isNew: true }).open();
+}
+
+export function addCustomCommandActions(
+  section: SettingsSection,
+  app: App,
+  callbacks: CustomCommandsSettingsCallbacks,
+  onRestoreDefaults: () => Promise<void>
+): void {
+  section.addSetting((setting) => {
+    setting.addButton((btn) => {
+      btn.setButtonText(t('settingsAddCustomCommand'))
+        .setCta()
+        .onClick(() => {
+          openNewCustomCommandModal(app, callbacks);
+        });
+    });
+  });
+
+  section.addSetting((setting) => {
+    setting.addButton((btn) => {
+      btn.setButtonText(t('settingsRestoreDefaults'))
+        .onClick(async () => {
+          await onRestoreDefaults();
+        });
+    });
   });
 }
 
 function addDeleteButton(
-  header: Setting,
+  row: Setting,
   index: number,
   items: MoreMenuItemCommand[],
   updateCallback: (list: MoreMenuItemCommand[]) => Promise<void>
 ): void {
-  header.addExtraButton((btn) => {
-    btn.setIcon('trash')
+  row.addExtraButton((btn) => {
+    btn
+      .setIcon('trash')
       .setTooltip(t('settingsRemove'))
       .onClick(async () => {
         const list = [...items];
@@ -89,100 +131,4 @@ function addDeleteButton(
         await updateCallback(list);
       });
   });
-}
-
-function addCommandLabelField(
-  card: HTMLElement,
-  item: MoreMenuItemCommand,
-  index: number,
-  items: MoreMenuItemCommand[],
-  updateCallback: (list: MoreMenuItemCommand[], refreshView?: boolean) => Promise<void>
-): void {
-  new Setting(card)
-    .setName(t('settingsLabel'))
-    .setDesc(t('settingsLabelDesc'))
-    .addText((text) => {
-      text.setValue(item.label || '')
-        .onChange(async (v) => {
-          const list = [...items];
-          const cur = list[index];
-          if (cur) {
-            cur.label = v;
-            await updateCallback(list, false);
-          }
-        });
-    });
-}
-
-function addCommandSelectionField(
-  card: HTMLElement,
-  app: App,
-  item: MoreMenuItemCommand,
-  index: number,
-  items: MoreMenuItemCommand[],
-  updateCallback: (list: MoreMenuItemCommand[], refreshView?: boolean) => Promise<void>
-): void {
-  const cmdSetting = new Setting(card)
-    .setName(t('settingsCommand'))
-    .setDesc(t('settingsCommandDesc'));
-
-  cmdSetting.addText((text) => {
-    const updateDisplay = () => {
-      const value = item.commandId ? `${item.label || ''} (${item.commandId})` : '';
-      text.setValue(value);
-    };
-    updateDisplay();
-
-    const inputEl = text.inputEl;
-    if (inputEl instanceof HTMLInputElement) {
-      inputEl.readOnly = true;
-      inputEl.placeholder = t('settingsSelectCommand');
-      inputEl.classList.add('dotn_cursor-pointer');
-    }
-
-    const openPicker = () => {
-      const modal = new CommandSuggestModal(app, async (opt) => {
-        const list = [...items];
-        const current = list[index];
-        if (current) {
-          current.commandId = opt.id;
-          if (!current.label) current.label = opt.name;
-          await updateCallback(list, false);
-          updateDisplay();
-        }
-      });
-      modal.open();
-    };
-
-    const el = text.inputEl;
-    el.addEventListener('click', openPicker);
-    el.addEventListener('focus', (e) => {
-      const tgt = e.target;
-      if (tgt instanceof HTMLInputElement) tgt.blur();
-      openPicker();
-    });
-  });
-}
-
-function addOpenBeforeExecuteField(
-  card: HTMLElement,
-  item: MoreMenuItemCommand,
-  index: number,
-  items: MoreMenuItemCommand[],
-  updateCallback: (list: MoreMenuItemCommand[], refreshView?: boolean) => Promise<void>
-): void {
-  new Setting(card)
-    .setName(t('settingsOpenFileBeforeExecuting'))
-    .setDesc(t('settingsOpenFileBeforeExecutingDesc'))
-    .addToggle((tg) => {
-      tg.setValue(item.openBeforeExecute !== false)
-        .onChange(async (v) => {
-          const list = [...items];
-          const cur = list[index];
-          if (cur) {
-            cur.openBeforeExecute = v;
-            await updateCallback(list, false);
-          }
-        });
-    });
 }
