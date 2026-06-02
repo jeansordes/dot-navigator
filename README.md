@@ -30,10 +30,26 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
 - **Drag-and-drop to move files and folders** directly in the tree (children are moved/renamed along with their parent). Press **Escape** while dragging to cancel.
+
+<img width="430" alt="Dragging a node to a new position in the tree" src="docs/images/drag-and-drop.png" />
+
 - **Expand or collapse all descendants at once** by double-clicking a node's chevron, or via the context menu
+
+<img width="480" alt="Expand all descendants of a node" src="docs/images/expand-all.png" />
+<img width="480" alt="Collapse all descendants of a node" src="docs/images/collapse-all.png" />
+
 - **CMD/Ctrl+click to open a file in a new tab**
-- **Hide files and folders from the tree** - hide any node from the context menu to declutter your tree. A header toggle lets you reveal hidden nodes (shown dimmed with an eye icon), and they can be managed or cleared from the settings.
+- **Hide files and folders from the tree** - hide any node from the context menu to declutter your tree. A header toggle lets you reveal hidden nodes (shown dimmed, with a crossed-eye icon that turns into an open eye on hover to reveal them again), and they can be managed or cleared from the settings.
+
+<img width="430" alt="A hidden node shown dimmed with a crossed-eye icon" src="docs/images/hidden-node-row.png" />
+<img width="460" alt="Header toggle to show or hide hidden nodes" src="docs/images/hidden-nodes-toggle.png" />
+<img width="440" alt="Hidden nodes management section in settings" src="docs/images/hidden-nodes-settings.png" />
+
 - **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings.
+
+<img width="520" alt="Aliases defined in a note's frontmatter" src="docs/images/alias-frontmatter.png" />
+<img width="480" alt="Alias shortcut nodes shown in the tree, pointing to their target" src="docs/images/alias-shortcut-nodes.png" />
+
 - **UI for renaming a note and its children** with a nice UI
 
 <img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
