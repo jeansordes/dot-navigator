@@ -95,7 +95,9 @@ function appendTwoPartTitle(container: HTMLElement, primaryText: string, seconda
 export function createTitleElement(item: RowItem): HTMLElement {
   const titleClass = item.kind === 'virtual' || item.kind === 'suggestion'
     ? 'dotn_tree-item-title mod-create-new'
-    : 'dotn_tree-item-title';
+    : item.kind === 'file'
+      ? 'dotn_tree-item-title is-clickable'
+      : 'dotn_tree-item-title';
   const title = document.createElement('div');
   title.className = titleClass;
   title.title = item.targetPath ? `${item.aliasPath ?? item.id} -> ${item.targetPath}` : item.id;
