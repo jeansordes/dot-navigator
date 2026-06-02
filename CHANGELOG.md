@@ -1,3 +1,18 @@
+# [1.26.0](https://github.com/jeansordes/dot-navigator/compare/1.25.1...1.26.0) (2026-06-02)
+
+### Bug Fixes
+
+* **tree:** anchor alias virtual nodes in target note folder ([45d7399](https://github.com/jeansordes/dot-navigator/commit/45d73998032f2d95ef7824a8bf0ddf56c612286c))
+* **tree:** keep highlight on clicked alias rows and drop hand cursor ([7412e1a](https://github.com/jeansordes/dot-navigator/commit/7412e1aa4db85d5a06b70fc54ca7c08c9f9ac578))
+* **tree:** prevent infinite recursion in setShowHidden ([ad6fe90](https://github.com/jeansordes/dot-navigator/commit/ad6fe90ff5239a9803e7f559bc4711d007818b94))
+* **tree:** restore is-clickable on file rows without grab cursor ([04d040f](https://github.com/jeansordes/dot-navigator/commit/04d040f688ab0775cc86db662e9c7d503aea94a2))
+
+### Features
+
+* cancel node drag with Escape key ([9e8d2e8](https://github.com/jeansordes/dot-navigator/commit/9e8d2e8fa9cdd3f7d1d0dfb794ca178abf9510fd))
+* **tree:** expand/collapse all children via double-click and menu ([711fefb](https://github.com/jeansordes/dot-navigator/commit/711fefbc365b497c4c85b5c4faf77ed505ab2012))
+* **tree:** hide nodes with dedicated settings section ([931a17b](https://github.com/jeansordes/dot-navigator/commit/931a17ba742b6af6bf1195da55cae446b6a1bc75))
+
 ## [1.25.1](https://github.com/jeansordes/dot-navigator/compare/1.25.0...1.25.1) (2026-06-02)
 
 ### Bug Fixes
