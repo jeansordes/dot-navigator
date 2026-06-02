@@ -319,3 +319,41 @@
         background-color: var(--dotn_accent-color);
     }
 }
+
+/* Double-click ripple feedback (appended to <body>, so kept top-level) */
+.dotn_dblclick-ripple {
+    position: fixed;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    border: 2px solid rgba(128, 128, 128, 0.6);
+    pointer-events: none;
+    z-index: var(--layer-popover, 9999);
+    opacity: 0.9;
+}
+
+.dotn_dblclick-ripple--expand {
+    transform: scale(0.4);
+    animation: dotn_dblclick-ripple-expand 0.45s ease-out forwards;
+}
+
+.dotn_dblclick-ripple--collapse {
+    transform: scale(3.2);
+    animation: dotn_dblclick-ripple-collapse 0.45s ease-out forwards;
+}
+
+@keyframes dotn_dblclick-ripple-expand {
+    to {
+        transform: scale(3.2);
+        opacity: 0;
+    }
+}
+
+@keyframes dotn_dblclick-ripple-collapse {
+    to {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+}

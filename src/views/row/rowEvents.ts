@@ -5,6 +5,7 @@ interface ObsidianInternalApp extends App {
     open(): Promise<void>;
     openTabById(id: string): void;
   };
+  showInFolder?: (path: string) => void;
 }
 import { FileUtils } from '../../utils/file/FileUtils';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
@@ -14,6 +15,30 @@ import { t } from '../../i18n';
 import { scrollIntoView } from '../../utils/misc/rowState';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
+
+export function showDoubleClickRipple(direction: 'expand' | 'collapse', anchorEl?: HTMLElement, ev?: MouseEvent): void {
+  let cx: number;
+  let cy: number;
+  if (anchorEl instanceof HTMLElement) {
+    const r = anchorEl.getBoundingClientRect();
+    cx = r.left + r.width / 2;
+    cy = r.top + r.height / 2;
+  } else if (ev instanceof MouseEvent) {
+    cx = ev.clientX;
+    cy = ev.clientY;
+  } else {
+    return;
+  }
+
+  const ripple = document.createElement('div');
+  ripple.className = `dotn_dblclick-ripple dotn_dblclick-ripple--${direction}`;
+  ripple.style.left = `${cx}px`;
+  ripple.style.top = `${cy}px`;
+  ripple.addEventListener('animationend', () => ripple.remove());
+  document.body.appendChild(ripple);
+  // Safety cleanup in case animationend never fires
+  window.setTimeout(() => ripple.remove(), 1000);
+}
 
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
   if (item.kind === 'file') {
@@ -30,6 +55,16 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
   const isShortcut = treeItem ? isShortcutItem(treeItem) : false;
 
   if (action === 'toggle') {
+    if (ev instanceof MouseEvent && ev.detail >= 2) {
+      // The first click of the double already toggled this node, so the current
+      // expanded state reflects the user's intent: if it ended up open they were
+      // opening (expand all children), otherwise they were closing (collapse all).
+      const isExpanded = vt.expanded.get(id) ?? false;
+      if (isExpanded) vt.expandChildren?.(id);
+      else vt.collapseChildren?.(id);
+      showDoubleClickRipple(isExpanded ? 'expand' : 'collapse', anchorEl, ev);
+      return;
+    }
     // Use the VirtualTree's toggle so selection/focus and scroll are preserved
     try { vt.toggle(id); }
     catch {
@@ -118,6 +153,33 @@ export function handleActionButtonClick(app: App, action: string | null, id: str
               .onClick(async () => {
                 await FileUtils.openClosestParentNote(app, file);
               });
+          });
+        } else if (it.builtin === 'show-in-explorer') {
+          // Reveal in the OS file manager (Finder/Explorer); desktop only, files and folders
+          if (!Platform.isDesktopApp) continue;
+          const target = file || folder;
+          if (!target) continue;
+          menu.addItem((mi) => {
+            mi.setTitle(t('menuShowInExplorer'))
+              .setIcon(it.icon || 'folder-open')
+              .onClick(() => {
+                const showInFolder = (app as ObsidianInternalApp).showInFolder;
+                if (typeof showInFolder === 'function') showInFolder.call(app, target.path);
+              });
+          });
+        } else if (it.builtin === 'expand-children') {
+          if (!treeItem?.hasChildren) continue;
+          menu.addItem((mi) => {
+            mi.setTitle(t('menuExpandChildren'))
+              .setIcon(it.icon || 'chevrons-up-down')
+              .onClick(() => { vt.expandChildren?.(id); });
+          });
+        } else if (it.builtin === 'collapse-children') {
+          if (!treeItem?.hasChildren) continue;
+          menu.addItem((mi) => {
+            mi.setTitle(t('menuCollapseChildren'))
+              .setIcon(it.icon || 'chevrons-down-up')
+              .onClick(() => { vt.collapseChildren?.(id); });
           });
         }
       } else if (it.type === 'command') {

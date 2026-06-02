@@ -120,6 +120,9 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     if (item.builtin === 'rename') return t('settingsBuiltinRename');
     if (item.builtin === 'delete') return t('settingsBuiltinDelete');
     if (item.builtin === 'open-closest-parent') return t('settingsBuiltinOpenClosestParent');
+    if (item.builtin === 'show-in-explorer') return t('settingsBuiltinShowInExplorer');
+    if (item.builtin === 'expand-children') return t('settingsBuiltinExpandChildren');
+    if (item.builtin === 'collapse-children') return t('settingsBuiltinCollapseChildren');
     return t('settingsBuiltinUnknown');
   }
 
@@ -129,9 +132,15 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   }
 
   private getBuiltinOrder(): string[] {
+    const allIds = this.getBuiltinItems().map(i => i.id);
     const order = this.plugin?.settings?.builtinMenuOrder;
-    if (Array.isArray(order) && order.length > 0) return order.slice();
-    return this.getBuiltinItems().map(i => i.id);
+    if (Array.isArray(order) && order.length > 0) {
+      const known = order.filter(id => allIds.includes(id));
+      // Append any built-ins added in newer versions that aren't in the saved order yet
+      const missing = allIds.filter(id => !known.includes(id));
+      return [...known, ...missing];
+    }
+    return allIds;
   }
 
   private async updateBuiltinOrder(order: string[]): Promise<void> {

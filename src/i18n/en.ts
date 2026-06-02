@@ -29,6 +29,9 @@ export default {
     menuRenameFile: 'Rename file',
     menuDeleteFile: 'Delete file',
     menuDeleteFolder: 'Delete folder',
+    menuShowInExplorer: 'Show in system explorer',
+    menuExpandChildren: 'Expand all children',
+    menuCollapseChildren: 'Collapse all children',
     confirmDeleteFile: 'Delete this file?\n{{path}}',
     
     // Notices
@@ -97,6 +100,9 @@ export default {
     settingsBuiltinRename: 'Rename',
     settingsBuiltinDelete: 'Delete',
     settingsBuiltinOpenClosestParent: 'Open closest parent note',
+    settingsBuiltinShowInExplorer: 'Show in system explorer',
+    settingsBuiltinExpandChildren: 'Expand all children',
+    settingsBuiltinCollapseChildren: 'Collapse all children',
     settingsBuiltinUnknown: 'Unknown',
     settingsAddCustomCommandLink: 'Customize menu…',
     settingsTipsHeader: 'Tips & Shortcuts',

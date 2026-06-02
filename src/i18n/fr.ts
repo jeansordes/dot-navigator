@@ -29,6 +29,9 @@ export default {
     menuRenameFile: 'Renommer le fichier',
     menuDeleteFile: 'Supprimer le fichier',
     menuDeleteFolder: 'Supprimer le dossier',
+    menuShowInExplorer: 'Afficher dans l\'explorateur système',
+    menuExpandChildren: 'Développer tous les enfants',
+    menuCollapseChildren: 'Réduire tous les enfants',
     confirmDeleteFile: 'Supprimer ce fichier ?\n{{path}}',
     
     // Notices
@@ -97,6 +100,9 @@ export default {
     settingsBuiltinRename: 'Renommer',
     settingsBuiltinDelete: 'Supprimer',
     settingsBuiltinOpenClosestParent: 'Ouvrir la note parente la plus proche',
+    settingsBuiltinShowInExplorer: 'Afficher dans l\'explorateur système',
+    settingsBuiltinExpandChildren: 'Développer tous les enfants',
+    settingsBuiltinCollapseChildren: 'Réduire tous les enfants',
     settingsBuiltinUnknown: 'Inconnu',
     settingsAddCustomCommandLink: 'Personnaliser le menu…',
     settingsTipsHeader: 'Astuces et raccourcis',

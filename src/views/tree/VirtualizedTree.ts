@@ -9,7 +9,7 @@ import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { renderRow } from '../row/rowRender';
 import { applyTreeDataUpdate } from './treeDataUpdate';
 import { growRowPool, maybeScheduleRowWidthAdjust, renderVisibleRows } from './treeRenderPass';
-import { expandAllInData } from './treeOps';
+import { expandAllInData, expandChildrenInData, collapseChildrenInData } from './treeOps';
 import { setupAttachment, attachToViewBodyImpl } from '../utils/attachUtils'; 
 import { collapseAll as collapseAllAction, revealPath as revealAction, selectPath as selectPathAction } from './treeActions';
 import { bindRowHandlers, onRowClick as handleRowClick, onRowContextMenu as handleRowContextMenu } from '../row/rowHandlers';
@@ -156,6 +156,22 @@ export class ComplexVirtualTree extends VirtualTree {
     // Expand every folder/virtual item present in visible data by id.
     // We iterate over flattened visible source (not just current visible window)
     expandAllInData(this.virtualTree.data, this.virtualTree.expanded);
+    this.virtualTree._recomputeVisible();
+    this._reapplySelection();
+    this.virtualTree._render();
+    this._onExpansionChange?.();
+  }
+
+  public expandChildren(id: string): void {
+    expandChildrenInData(this.virtualTree.data, id, this.virtualTree.expanded);
+    this.virtualTree._recomputeVisible();
+    this._reapplySelection();
+    this.virtualTree._render();
+    this._onExpansionChange?.();
+  }
+
+  public collapseChildren(id: string): void {
+    collapseChildrenInData(this.virtualTree.data, id, this.virtualTree.expanded);
     this.virtualTree._recomputeVisible();
     this._reapplySelection();
     this.virtualTree._render();
