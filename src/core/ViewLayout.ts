@@ -1,4 +1,4 @@
-import { Menu, Platform, setIcon } from 'obsidian';
+import { Platform, setIcon } from 'obsidian';
 import { t } from '../i18n';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:view-layout');
@@ -57,11 +57,12 @@ export class ViewLayout {
       bodyEl.appendChild(treeEl);
     }
 
-    // Ensure header controls exist
-    this.ensureHeaderControls(headerEl);
-
     this.headerEl = headerEl;
     this.treeContainer = treeEl;
+
+    // Ensure header controls exist (must run after headerEl is assigned, as
+    // the attach helpers resolve buttons via this.headerEl).
+    this.ensureHeaderControls(headerEl);
     return { header: headerEl, tree: treeEl };
   }
 
@@ -140,49 +141,6 @@ export class ViewLayout {
     }
   }
 
-  private _attachMoreButtonHandler(): void {
-    const header = this.headerEl;
-    const btn = header?.querySelector('.dotn_more-button');
-    if (btn instanceof HTMLElement) {
-      const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
-        btn.replaceWith(cloned);
-        cloned.addEventListener('click', (e) => {
-          e.preventDefault();
-          const menu = this.buildMoreMenu();
-          const rect = cloned.getBoundingClientRect();
-          menu.showAtPosition({ x: rect.left, y: rect.bottom });
-          // The toolbar lives at the bottom of the view, so a menu opening
-          // downward is clipped off-screen. Flip it above the button when the
-          // estimated menu height would overflow the viewport bottom.
-          const dom = Reflect.get(menu, 'dom');
-          if (dom instanceof HTMLElement) {
-            const menuHeight = dom.offsetHeight;
-            if (rect.bottom + menuHeight > window.innerHeight) {
-              const targetTop = Math.max(8, rect.top - menuHeight - 4);
-              dom.style.transform = `translateY(${targetTop - rect.bottom}px)`;
-            }
-          }
-        });
-      }
-    }
-  }
-
-  private buildMoreMenu(): Menu {
-    const menu = new Menu();
-    menu.addItem((mi) => {
-      mi.setTitle(t('tooltipCreateNewFolder'))
-        .setIcon('folder-plus')
-        .onClick(() => this.createHandlers.onCreateFolder?.());
-    });
-    menu.addItem((mi) => {
-      mi.setTitle(t('tooltipOpenSettings'))
-        .setIcon('settings')
-        .onClick(() => this.createHandlers.onSettingsClick?.());
-    });
-    return menu;
-  }
-
   updateToggleDisplay(anyExpanded: boolean): void {
     const header = this.headerEl;
     const toggleButton: HTMLElement | null = header?.querySelector('.dotn_tree-toggle-button') || null;
@@ -223,13 +181,9 @@ export class ViewLayout {
     if (!header.querySelector('.dotn_create-folder')) {
       const createFolderBtn = document.createElement('div');
       createFolderBtn.className = 'dotn_button-icon dotn_create-folder';
-      if (Platform.isMobile) createFolderBtn.classList.add('dotn_mobile-hidden');
       setIcon(createFolderBtn, 'folder-plus');
       createFolderBtn.setAttribute('title', t('tooltipCreateNewFolder'));
       header.appendChild(createFolderBtn);
-    } else if (Platform.isMobile) {
-      const existing = header.querySelector('.dotn_create-folder');
-      if (existing instanceof HTMLElement) existing.classList.add('dotn_mobile-hidden');
     }
 
     // Toggle button
@@ -264,27 +218,14 @@ export class ViewLayout {
     if (!header.querySelector('.dotn_settings-button')) {
       const settingsBtn = document.createElement('div');
       settingsBtn.className = 'dotn_button-icon dotn_settings-button';
-      if (Platform.isMobile) settingsBtn.classList.add('dotn_mobile-hidden');
       setIcon(settingsBtn, 'settings');
       settingsBtn.setAttribute('title', t('tooltipOpenSettings'));
       header.appendChild(settingsBtn);
-    } else if (Platform.isMobile) {
-      const existing = header.querySelector('.dotn_settings-button');
-      if (existing instanceof HTMLElement) existing.classList.add('dotn_mobile-hidden');
-    }
-
-    if (Platform.isMobile && !header.querySelector('.dotn_more-button')) {
-      const moreBtn = document.createElement('div');
-      moreBtn.className = 'dotn_button-icon dotn_more-button';
-      setIcon(moreBtn, 'more-horizontal');
-      moreBtn.setAttribute('title', t('tooltipMoreActions'));
-      header.appendChild(moreBtn);
     }
 
     // Attach handlers if they exist
     this._attachCreateFileHandler();
     this._attachCreateFolderHandler();
     this._attachSettingsHandler();
-    if (Platform.isMobile) this._attachMoreButtonHandler();
   }
 }
