@@ -1,3 +1,9 @@
+## [1.25.1](https://github.com/jeansordes/dot-navigator/compare/1.25.0...1.25.1) (2026-06-02)
+
+### Bug Fixes
+
+* **tree:** refresh panel when frontmatter aliases change ([6b351bd](https://github.com/jeansordes/dot-navigator/commit/6b351bd41c84ce2716e3f5af83ad96a62c9bc3a7))
+
 # [1.25.0](https://github.com/jeansordes/dot-navigator/compare/1.24.0...1.25.0) (2026-06-02)
 
 ### Features
