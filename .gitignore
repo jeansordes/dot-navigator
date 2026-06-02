@@ -31,3 +31,4 @@ styles.css
 .dolt/
 *.db
 .beads-credential-key
+.cursor/*.log
