@@ -400,6 +400,28 @@
     background-color: var(--background-modifier-hover);
 }
 
+.dotn_toggle-hidden {
+    .dotn_toggle-hidden-state,
+    .dotn_toggle-hidden-action {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .dotn_toggle-hidden-action {
+        display: none;
+    }
+
+    &:hover {
+        .dotn_toggle-hidden-state {
+            display: none;
+        }
+
+        .dotn_toggle-hidden-action {
+            display: inline-flex;
+        }
+    }
+}
+
 @keyframes dotn_chevron-action-pop {
     0% {
         opacity: 0;

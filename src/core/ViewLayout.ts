@@ -161,13 +161,25 @@ export class ViewLayout {
 
     try {
       toggleButton.classList.toggle('dotn_active', showingHidden);
-      if (showingHidden) {
-        setIcon(iconContainer, 'eye');
-        toggleButton.setAttribute('title', t('tooltipHideHiddenNodes'));
+
+      const existingState = iconContainer.querySelector('.dotn_toggle-hidden-state');
+      const existingAction = iconContainer.querySelector('.dotn_toggle-hidden-action');
+      let stateEl: HTMLElement;
+      let actionEl: HTMLElement;
+      if (existingState instanceof HTMLElement && existingAction instanceof HTMLElement) {
+        stateEl = existingState;
+        actionEl = existingAction;
       } else {
-        setIcon(iconContainer, 'eye-off');
-        toggleButton.setAttribute('title', t('tooltipShowHiddenNodes'));
+        iconContainer.empty();
+        stateEl = iconContainer.createSpan({ cls: 'dotn_toggle-hidden-state' });
+        actionEl = iconContainer.createSpan({ cls: 'dotn_toggle-hidden-action' });
       }
+
+      // State icon reflects the current view; the action icon (shown on hover)
+      // reflects what clicking will do.
+      setIcon(stateEl, showingHidden ? 'eye' : 'eye-closed');
+      setIcon(actionEl, showingHidden ? 'eye-closed' : 'eye');
+      toggleButton.setAttribute('title', showingHidden ? t('tooltipHideHiddenNodes') : t('tooltipShowHiddenNodes'));
     } catch (error) {
       debugError('Error updating hidden toggle icon:', error);
     }
@@ -239,7 +251,7 @@ export class ViewLayout {
       hiddenIcon.className = 'dotn_toggle-hidden-icon dotn_button-icon';
       hiddenToggle.appendChild(hiddenIcon);
       header.appendChild(hiddenToggle);
-      setIcon(hiddenIcon, 'eye-off');
+      setIcon(hiddenIcon, 'eye-closed');
       hiddenToggle.setAttribute('title', t('tooltipShowHiddenNodes'));
     }
 
