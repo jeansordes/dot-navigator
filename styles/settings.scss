@@ -56,6 +56,10 @@
     }
 }
 
+.is-mobile .dotnav-grip {
+    display: none;
+}
+
 /* Count badge shown next to a group heading (e.g. "Custom commands  3") */
 .dotnav-count-badge {
     display: inline-flex;

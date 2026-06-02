@@ -46,6 +46,32 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     };
   }
 
+  private findSettingsScrollContainer(): HTMLElement {
+    let el: HTMLElement | null = this.containerEl;
+    while (el) {
+      const { overflow, overflowY } = getComputedStyle(el);
+      if (
+        overflowY === 'auto' ||
+        overflowY === 'scroll' ||
+        overflow === 'auto' ||
+        overflow === 'scroll'
+      ) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return this.containerEl;
+  }
+
+  private redisplayPreservingScroll(): void {
+    const scrollContainer = this.findSettingsScrollContainer();
+    const scrollTop = scrollContainer.scrollTop;
+    this.display();
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = scrollTop;
+    });
+  }
+
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
@@ -134,7 +160,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       async () => {
         await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
         await this.updateUserItems([]);
-        this.display();
+        this.redisplayPreservingScroll();
       }
     );
 
@@ -183,7 +209,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   private async updateBuiltinOrder(order: string[]): Promise<void> {
     this.plugin.settings.builtinMenuOrder = order;
     await this.plugin.saveSettings();
-    this.display();
+    this.redisplayPreservingScroll();
   }
 
   private getUserItems(): MoreMenuItemCommand[] {
@@ -199,7 +225,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   private async updateUserItems(list: MoreMenuItemCommand[], refreshView: boolean = true): Promise<void> {
     this.plugin.settings.userMenuItems = list;
     await this.plugin.saveSettings();
-    if (refreshView) this.display();
+    if (refreshView) this.redisplayPreservingScroll();
   }
 
   private newCommandItem(): MoreMenuItemCommand {
