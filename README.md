@@ -29,6 +29,11 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
+- **Drag-and-drop to move files and folders** directly in the tree (children are moved/renamed along with their parent). Press **Escape** while dragging to cancel.
+- **Expand or collapse all descendants at once** by double-clicking a node's chevron, or via the context menu
+- **CMD/Ctrl+click to open a file in a new tab**
+- **Hide files and folders from the tree** - hide any node from the context menu to declutter your tree. A header toggle lets you reveal hidden nodes (shown dimmed with an eye icon), and they can be managed or cleared from the settings.
+- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings.
 - **UI for renaming a note and its children** with a nice UI
 
 <img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
@@ -37,7 +42,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="722" height="470" alt="CleanShot 2025-09-26 at 23 13 38@2x" src="https://github.com/user-attachments/assets/3d0ceb40-2910-48fa-8eea-8c4500d91e87" />
 
-- **Customizable context menus** (click the "…" button or do a right click on a file or folder)
+- **Customizable context menus** (click the "…" button or do a right click on a file or folder) - add your own commands and **drag to reorder** menu items
 
 <img width="2411" height="1464" alt="image" src="https://github.com/user-attachments/assets/90575bc4-7665-4767-9e0e-baf19bbf35a8" />
 
@@ -155,6 +160,7 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 - **Show File in Tree View**: Highlights and reveals the current file in the tree view
 - **Collapse All Nodes in Tree**: Collapses all nodes in the tree view
 - **Expand All Nodes in Tree**: Expands all nodes in the tree view
+- **Toggle show hidden nodes**: Shows or hides nodes that have been hidden from the tree
 - **Open Closest Parent Note**: Opens the nearest existing parent note of the current file (checks dotted parents like `a.b.c` → `a.b` → `a`)
 
 ### Note creation
