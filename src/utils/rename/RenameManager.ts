@@ -1,4 +1,4 @@
-import { App, Notice } from 'obsidian';
+import { App, Notice, setIcon } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
 import { computeMoveDestination, getDragLeaf, type DraggableKind, type DropTargetKind } from './DragMoveUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
@@ -290,8 +290,10 @@ export class RenameManager {
 
         const notice = new Notice(message, 8000);
         if (successCount > 0) {
-            const undoBtn = notice.messageEl.createEl('button', { text: t('renameNotificationUndo') });
-            undoBtn.className = 'mod-muted';
+            notice.messageEl.addClass('dotn_move-notice');
+            const undoBtn = notice.messageEl.createEl('button', { cls: 'dotn_move-notice-undo' });
+            setIcon(undoBtn.createSpan({ cls: 'dotn_move-notice-undo-icon' }), 'undo-2');
+            undoBtn.createSpan({ text: t('renameNotificationUndo') });
             undoBtn.addEventListener('click', () => {
                 notice.hide();
                 void this.undoLastRename();

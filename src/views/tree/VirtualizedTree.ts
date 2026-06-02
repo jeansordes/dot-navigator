@@ -35,6 +35,7 @@ export class ComplexVirtualTree extends VirtualTree {
   // Rename manager
   private _renameManager?: RenameManager;
   private _dragController?: RowDragController;
+  private _pendingRevealPath?: string;
 
   // Cast this to access VirtualTree properties with proper typing
   private get virtualTree(): VirtualTreeLike {
@@ -88,6 +89,7 @@ export class ComplexVirtualTree extends VirtualTree {
       virtualTree: this.virtualTree,
       viewBody,
       renameManager: this._renameManager,
+      onMoveComplete: (path) => this.revealAfterUpdate(path),
     });
   }
 
@@ -121,6 +123,14 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public setParentMap(map: Map<string, string | undefined>): void { this.parentMap = map; }
 
+  public revealAfterUpdate(path: string): void {
+    if (!path) {
+      this._pendingRevealPath = undefined;
+      return;
+    }
+    this._pendingRevealPath = path;
+  }
+
   public updateData(data: VItem[], parentMap: Map<string, string | undefined>): void {
     applyTreeDataUpdate(
       this.virtualTree,
@@ -130,6 +140,11 @@ export class ComplexVirtualTree extends VirtualTree {
       () => this._reapplySelection(),
       () => this._onExpansionChange?.()
     );
+    if (this._pendingRevealPath) {
+      const path = this._pendingRevealPath;
+      this._pendingRevealPath = undefined;
+      void this.revealPath(path);
+    }
   }
 
   public expandAll(): void {

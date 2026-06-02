@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/jeansordes/dot-navigator/compare/1.24.0...1.25.0) (2026-06-02)
+
+### Features
+
+* **tree:** add drag-and-drop to move files and rename children ([ee1dc7b](https://github.com/jeansordes/dot-navigator/commit/ee1dc7b149bbc908d5e2054446ddb6b82d811ec8)), closes [#25](https://github.com/jeansordes/dot-navigator/issues/25)
+* **tree:** support alias shortcut nodes ([ad24f7c](https://github.com/jeansordes/dot-navigator/commit/ad24f7c8811cf5ed2ce0c9ee25e9a2bd6f049159))
+
 # [1.24.0](https://github.com/jeansordes/dot-navigator/compare/1.23.0...1.24.0) (2025-10-01)
 
 ### Bug Fixes

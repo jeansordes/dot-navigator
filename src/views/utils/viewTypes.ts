@@ -28,4 +28,7 @@ export interface VirtualTreeLike {
   collapse: (id: string) => void;
   // Optional set of ids to force full row rebuild on next render
   dirtyIds?: Set<string>;
+  // When set, rows at this visible index and below are shifted down by one
+  // rowHeight to open a gap for the drag-and-drop insertion preview.
+  dragInsertIndex?: number | null;
 }

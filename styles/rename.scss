@@ -75,6 +75,50 @@
     font-weight: 600;
 }
 
+/* Undo button inside the move toast (Obsidian Notice, rendered at body level) */
+.dotn_move-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--size-4-3, 12px);
+}
+
+.dotn_move-notice-undo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-4-1, 4px);
+    margin: 0;
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-s, 4px);
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    font-size: var(--font-ui-small);
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color 0.12s ease, transform 0.05s ease;
+
+    &:hover {
+        background-color: var(--interactive-accent-hover);
+        color: var(--text-on-accent);
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+}
+
+.dotn_move-notice-undo-icon {
+    display: inline-flex;
+    align-items: center;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
 /* Rename dialog styles */
 /* Hide modal header and close button when rename dialog is active */
 .modal:has(.rename-dialog-content) {

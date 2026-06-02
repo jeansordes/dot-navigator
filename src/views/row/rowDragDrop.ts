@@ -1,12 +1,19 @@
 import { Platform } from 'obsidian';
 import type { RenameManager } from '../../utils/rename/RenameManager';
-import { computeMoveDestination, isValidDrop, type DraggableKind } from '../../utils/rename/DragMoveUtils';
+import {
+    computeMoveDestination,
+    isValidDrop,
+    type DraggableKind,
+} from '../../utils/rename/DragMoveUtils';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 import {
+    computeInsertionPreview,
     createDragGhost,
+    createDropPlaceholder,
     findTargetRow,
     isDropAllowed,
     positionDragGhost,
+    positionDropPlaceholder,
     resolveDropTarget,
 } from './rowDragDropUi';
 import createDebug from 'debug';
@@ -33,6 +40,8 @@ interface PendingDrag {
 interface ActiveDrag extends PendingDrag {
     ghost: HTMLElement;
     lastTargetRow: HTMLElement | null;
+    dropPlaceholder: HTMLElement | null;
+    insertIndex: number | null;
     rootHighlighted: boolean;
     clientX: number;
     clientY: number;
@@ -44,6 +53,7 @@ export interface RowDragControllerOptions {
     virtualizer: HTMLElement;
     viewBody: HTMLElement;
     renameManager?: RenameManager;
+    onMoveComplete?: (newPath: string) => void;
 }
 
 export class RowDragController {
@@ -76,6 +86,7 @@ export class RowDragController {
         virtualizer.removeEventListener('click', this.onClickCapture, true);
         this.clearPending();
         this.endDrag(false);
+        document.body.classList.remove('dotn_dragging-active');
     }
 
     shouldSuppressClick(): boolean {
@@ -157,14 +168,16 @@ export class RowDragController {
 
     private beginDrag(): void {
         if (!this.pending) return;
-        const title = this.pending.row.querySelector('.dotn_tree-item-title');
-        const ghost = createDragGhost(title?.textContent?.trim() || this.pending.path);
+        const ghost = createDragGhost(this.pending.row);
         this.pending.row.classList.add('dotn_dragging');
+        document.body.classList.add('dotn_dragging-active');
 
         this.active = {
             ...this.pending,
             ghost,
             lastTargetRow: null,
+            dropPlaceholder: null,
+            insertIndex: null,
             rootHighlighted: false,
             clientX: this.pending.startX,
             clientY: this.pending.startY,
@@ -196,17 +209,23 @@ export class RowDragController {
             targetPath: drop.targetPath,
             targetKind: drop.targetKind,
         };
-        if (!isValidDrop(params) || !computeMoveDestination(params)) return;
+        const newPath = computeMoveDestination(params);
+        if (!isValidDrop(params) || !newPath) return;
 
         debug('Executing drag move', params);
-        await this.opts.renameManager.moveByDragAndDrop(
+        this.opts.onMoveComplete?.(newPath);
+        const success = await this.opts.renameManager.moveByDragAndDrop(
             drag.path, drag.kind, drop.targetPath, drop.targetKind
         );
+        if (!success) {
+            this.opts.onMoveComplete?.('');
+        }
     }
 
     private endDrag(suppressClick: boolean): void {
         this.stopAutoScroll();
         this.removeTouchMovePrevent();
+        document.body.classList.remove('dotn_dragging-active');
         if (this.active) {
             this.active.row.classList.remove('dotn_dragging');
             this.active.ghost.remove();
@@ -254,11 +273,50 @@ export class RowDragController {
 
         this.opts.viewBody.classList.toggle('dotn_drop-root', drop?.targetKind === 'root' && valid);
         this.active.rootHighlighted = drop?.targetKind === 'root' && valid;
+        this.updateInsertionPreview(drop, valid);
+    }
+
+    private updateInsertionPreview(
+        drop: { targetPath: string } | null,
+        valid: boolean,
+    ): void {
+        if (!this.active) return;
+        const vt = this.opts.virtualTree;
+        const p = computeInsertionPreview(vt, drop, valid, this.active.path, this.active.kind);
+
+        // Re-render to open/close the gap only when the insertion point changes.
+        if (p.insertIndex !== this.active.insertIndex) {
+            this.active.insertIndex = p.insertIndex;
+            vt.dragInsertIndex = p.insertIndex;
+            vt._render();
+        }
+
+        if (p.insertIndex === null) {
+            this.removeDropPlaceholder();
+        } else if (this.active.dropPlaceholder) {
+            positionDropPlaceholder(this.active.dropPlaceholder, p.leaf, p.level, p.topPx);
+        } else {
+            this.active.dropPlaceholder = createDropPlaceholder(this.opts.virtualizer, p.leaf, p.level, p.topPx);
+        }
+    }
+
+    private removeDropPlaceholder(): void {
+        if (!this.active?.dropPlaceholder) return;
+        this.active.dropPlaceholder.remove();
+        this.active.dropPlaceholder = null;
     }
 
     private clearDropHighlight(): void {
         this.active?.lastTargetRow?.classList.remove('dotn_drop-target');
         this.opts.viewBody.classList.remove('dotn_drop-root');
+        this.removeDropPlaceholder();
+        if (this.active && this.active.insertIndex !== null) {
+            this.active.insertIndex = null;
+        }
+        if (this.opts.virtualTree.dragInsertIndex != null) {
+            this.opts.virtualTree.dragInsertIndex = null;
+            this.opts.virtualTree._render();
+        }
     }
 
     private startAutoScroll(): void {

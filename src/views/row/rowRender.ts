@@ -10,7 +10,11 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   const hasChildren = !!item.hasChildren;
 
   // Only set transform in JS; all other styling comes from CSS classes
-  const y = typeof startPx === 'number' ? startPx : (itemIndex * vt.rowHeight);
+  let y = typeof startPx === 'number' ? startPx : (itemIndex * vt.rowHeight);
+  // Open a gap for the drag insertion preview by pushing rows at/after the
+  // insertion index down by one row height.
+  const insertIndex = vt.dragInsertIndex;
+  if (insertIndex != null && itemIndex >= insertIndex) y += vt.rowHeight;
   row.style.transform = `translateY(${y}px)`;
 
   // Fast path: if same item id and not marked dirty, avoid rebuilding children; just update state

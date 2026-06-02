@@ -2,27 +2,74 @@
     position: fixed;
     z-index: 1000;
     pointer-events: none;
-    padding: 4px 10px;
-    border-radius: var(--radius-s);
-    background: var(--background-modifier-hover);
-    border: 1px solid var(--background-modifier-border);
-    box-shadow: var(--shadow-s);
-    font-size: var(--font-ui-small);
-    color: var(--text-normal);
-    max-width: 280px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: var(--dotn_gap);
+    padding: 2px 6px;
+    border-radius: var(--dotn_border-radius);
+    background: var(--dotn_bg);
+    border: 1px solid var(--dotn_border-color);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    font-size: var(--dotn_font-size);
+    color: var(--dotn_color-text-hover);
+    max-width: 320px;
+    opacity: 0.9;
+    transform-origin: top left;
+
+    .dotn_tree-item-title {
+        min-width: 0;
+        margin-right: 0;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.dotn_view .dotn_tree-item-title[data-node-kind="file"],
+.dotn_view .dotn_tree-item-title[data-node-kind="folder"] {
+    cursor: grab;
+}
+
+body.dotn_dragging-active,
+body.dotn_dragging-active * {
+    cursor: grabbing !important;
 }
 
 .tree-row.dotn_dragging {
     opacity: 0.45;
 }
 
-.tree-row.dotn_drop-target {
+/* Highlight only the targeted element (its title), not the whole row */
+.tree-row.dotn_drop-target .dotn_tree-item-title {
     outline: 2px solid var(--interactive-accent);
-    outline-offset: -2px;
-    border-radius: var(--radius-s);
+    outline-offset: -1px;
+    border-radius: var(--dotn_border-radius);
+}
+
+/* Phantom child row shown in the gap opened below the drop target */
+.dotn_drop-placeholder {
+    pointer-events: none;
+    z-index: 2;
+
+    .dotn_drop-placeholder-title {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        height: var(--dotn_button-size);
+        line-height: var(--dotn_button-size);
+        padding: 0 0.4rem;
+        margin-right: 8px;
+        border-radius: var(--dotn_border-radius);
+        border: 1px dashed var(--interactive-accent);
+        background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+        color: var(--dotn_color-text-hover);
+        font-style: italic;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
 }
 
 .dotn_view-body.dotn_drop-root {

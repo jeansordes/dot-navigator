@@ -6,6 +6,7 @@ export function attachTreeDragController(opts: {
     virtualTree: VirtualTreeLike;
     viewBody: HTMLElement;
     renameManager?: RenameManager;
+    onMoveComplete?: (newPath: string) => void;
 }): RowDragController | undefined {
     const scrollContainer = opts.virtualTree.scrollContainer;
     const virtualizer = opts.virtualTree.virtualizer;
@@ -19,6 +20,7 @@ export function attachTreeDragController(opts: {
         virtualizer,
         viewBody: opts.viewBody,
         renameManager: opts.renameManager,
+        onMoveComplete: opts.onMoveComplete,
     });
     controller.attach();
     return controller;
