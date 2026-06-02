@@ -323,6 +323,8 @@
 /* Double-click ripple feedback (appended to <body>, so kept top-level) */
 .dotn_dblclick-ripple {
     position: fixed;
+    left: var(--dotn_ripple-x, 0);
+    top: var(--dotn_ripple-y, 0);
     width: 14px;
     height: 14px;
     margin-left: -7px;

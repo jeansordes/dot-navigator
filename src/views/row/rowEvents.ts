@@ -32,8 +32,8 @@ export function showDoubleClickRipple(direction: 'expand' | 'collapse', anchorEl
 
   const ripple = document.createElement('div');
   ripple.className = `dotn_dblclick-ripple dotn_dblclick-ripple--${direction}`;
-  ripple.style.left = `${cx}px`;
-  ripple.style.top = `${cy}px`;
+  ripple.style.setProperty('--dotn_ripple-x', `${cx}px`);
+  ripple.style.setProperty('--dotn_ripple-y', `${cy}px`);
   ripple.addEventListener('animationend', () => ripple.remove());
   document.body.appendChild(ripple);
   // Safety cleanup in case animationend never fires
