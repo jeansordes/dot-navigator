@@ -1,6 +1,6 @@
 import { App, TFile, TAbstractFile } from 'obsidian';
 import { TreeNode } from '../../types';
-import { getYamlTitle } from './YamlTitleUtils';
+import { getYamlAliasSignature, getYamlTitle } from './YamlTitleUtils';
 
 export class DendronEventHandler {
     private app: App;
@@ -12,8 +12,9 @@ export class DendronEventHandler {
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
-    // Cache YAML titles to detect changes on modify or metadata events
+    // Cache YAML titles and aliases to detect changes on modify or metadata events
     private yamlTitleCache: Map<string, string | null> = new Map();
+    private yamlAliasCache: Map<string, string> = new Map();
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
     private readonly graceMs = 300; // keep very small to reduce perceived lag
@@ -67,6 +68,7 @@ export class DendronEventHandler {
         // Full rebuild safest for structural add; allow small debounce
         if (file instanceof TFile) {
             this.yamlTitleCache.set(file.path, getYamlTitle(this.app, file.path));
+            this.yamlAliasCache.set(file.path, getYamlAliasSignature(this.app, file.path));
         }
         this.queueRefresh(file?.path, true, false);
     };
@@ -74,6 +76,7 @@ export class DendronEventHandler {
     private handleFileDelete = (file: TAbstractFile) => {
         // Full rebuild safest for structural delete; allow small debounce
         this.yamlTitleCache.delete(file.path);
+        this.yamlAliasCache.delete(file.path);
         this.queueRefresh(file?.path, true, false);
     };
 
@@ -92,9 +95,12 @@ export class DendronEventHandler {
 
         // Defer to unified rebuild path; debounce lightly for stability
         if (file instanceof TFile) {
-            const cached = this.yamlTitleCache.get(oldPath) ?? getYamlTitle(this.app, file.path);
+            const cachedTitle = this.yamlTitleCache.get(oldPath) ?? getYamlTitle(this.app, file.path);
+            const cachedAliases = this.yamlAliasCache.get(oldPath) ?? getYamlAliasSignature(this.app, file.path);
             this.yamlTitleCache.delete(oldPath);
-            this.yamlTitleCache.set(file.path, cached);
+            this.yamlAliasCache.delete(oldPath);
+            this.yamlTitleCache.set(file.path, cachedTitle);
+            this.yamlAliasCache.set(file.path, cachedAliases);
         }
         this.queueRefresh(file?.path, false, true);
     };
@@ -112,13 +118,7 @@ export class DendronEventHandler {
             this.queueRefresh(path, true, true);
             return;
         }
-        const newTitle = getYamlTitle(this.app, path);
-        const oldTitle = this.yamlTitleCache.get(path) ?? null;
-        if (oldTitle !== newTitle) {
-            this.yamlTitleCache.set(path, newTitle);
-            // Refresh this file to update potential title changes
-            this.queueRefresh(path, false, true);
-        }
+        this.handleFrontmatterChange(path);
     };
 
     private handleMetadataChange = (file: TFile) => {
@@ -129,13 +129,25 @@ export class DendronEventHandler {
             this.queueRefresh(path, true, true);
             return;
         }
+        this.handleFrontmatterChange(path);
+    };
+
+    private handleFrontmatterChange(path: string): void {
         const newTitle = getYamlTitle(this.app, path);
         const oldTitle = this.yamlTitleCache.get(path) ?? null;
-        if (oldTitle !== newTitle) {
-            this.yamlTitleCache.set(path, newTitle);
-            this.queueRefresh(path, false, true);
+        const newAliases = getYamlAliasSignature(this.app, path);
+        const oldAliases = this.yamlAliasCache.get(path) ?? '';
+        const titleChanged = oldTitle !== newTitle;
+        const aliasesChanged = oldAliases !== newAliases;
+
+        if (!titleChanged && !aliasesChanged) {
+            return;
         }
-    };
+
+        this.yamlTitleCache.set(path, newTitle);
+        this.yamlAliasCache.set(path, newAliases);
+        this.queueRefresh(path, aliasesChanged, true);
+    }
     
     /**
      * Queue a refresh with debouncing, tracking all affected paths

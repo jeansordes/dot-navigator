@@ -1,4 +1,5 @@
 import { App, TFile } from "obsidian";
+import { normalizeAliases } from "../../core/aliasVirtualData";
 
 /**
  * Reads the YAML title from a file's frontmatter
@@ -30,4 +31,27 @@ export function getYamlTitle(app: App, filePath: string): string | null {
 export function hasYamlTitle(app: App, filePath: string): boolean {
   const title = getYamlTitle(app, filePath);
   return title !== null && title.trim() !== '';
+}
+
+/**
+ * Builds a stable signature from frontmatter aliases for change detection.
+ */
+export function aliasesToSignature(aliases: unknown): string {
+  return normalizeAliases(aliases).join("\n");
+}
+
+/**
+ * Reads normalized frontmatter aliases from a file's metadata cache.
+ */
+export function getYamlAliasSignature(app: App, filePath: string): string {
+  try {
+    const file = app.vault.getAbstractFileByPath(filePath);
+    if (!(file instanceof TFile)) return "";
+
+    const cache = app.metadataCache.getFileCache(file);
+    return aliasesToSignature(cache?.frontmatter?.aliases);
+  } catch (error) {
+    console.error("Error reading YAML aliases:", error);
+    return "";
+  }
 }
