@@ -19,6 +19,7 @@ type TouchInteraction = { time: number; x: number; y: number };
 const touchStartById = new Map<string, TouchInteraction>();
 const recentTouchInteractions = new Map<string, TouchInteraction>();
 const lastTouchTap = new Map<string, TouchInteraction>();
+const lastToggleTouchTap = new Map<string, TouchInteraction>();
 
 function trackRowTouchStart(row: HTMLElement, event: TouchEvent): void {
   const id = row.dataset.id;
@@ -86,18 +87,27 @@ function isFallbackTouchEvent(e: MouseEvent): boolean {
   return Platform.isMobile;
 }
 
-function isTouchDoubleTap(id: string, interaction: TouchInteraction): boolean {
-  const previous = lastTouchTap.get(id);
+function isTouchDoubleTapFor(map: Map<string, TouchInteraction>, id: string, interaction: TouchInteraction): boolean {
+  const previous = map.get(id);
   if (previous) {
     const withinTime = interaction.time - previous.time <= TOUCH_DOUBLE_TAP_DELAY;
     const withinDistance = Math.abs(previous.x - interaction.x) <= TOUCH_DOUBLE_TAP_DISTANCE && Math.abs(previous.y - interaction.y) <= TOUCH_DOUBLE_TAP_DISTANCE;
     if (withinTime && withinDistance) {
-      lastTouchTap.delete(id);
+      map.delete(id);
       return true;
     }
   }
-  lastTouchTap.set(id, interaction);
+  map.set(id, interaction);
   return false;
+}
+
+function isTouchDoubleTap(id: string, interaction: TouchInteraction): boolean {
+  return isTouchDoubleTapFor(lastTouchTap, id, interaction);
+}
+
+function resolveTouchInteraction(id: string, e: MouseEvent): TouchInteraction | undefined {
+  return consumeRecentTouchInteraction(id)
+    ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 } as TouchInteraction) : undefined);
 }
 
 export function bindRowHandlers(
@@ -160,6 +170,16 @@ export function onRowClick(
   if (buttonEl) {
     const action = buttonEl.getAttribute('data-action');
     if (action && buttonEl instanceof HTMLElement) {
+      // Touch devices don't reliably increment MouseEvent.detail on a double tap,
+      // so detect the chevron double tap ourselves and synthesize a double-click.
+      if (action === 'toggle' && e.detail < 2) {
+        const interaction = resolveTouchInteraction(id, e);
+        if (interaction && isTouchDoubleTapFor(lastToggleTouchTap, id, interaction)) {
+          const syntheticDouble = new MouseEvent('click', { detail: 2 });
+          handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, syntheticDouble, renameManager, revealCanonicalPath);
+          return;
+        }
+      }
       handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager, revealCanonicalPath);
     }
     return;
@@ -195,8 +215,7 @@ export function onRowClick(
   };
 
   const tryTouchDoubleTapRename = (): boolean => {
-    const interaction = consumeRecentTouchInteraction(id)
-      ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 } as TouchInteraction) : undefined);
+    const interaction = resolveTouchInteraction(id, e);
     if (!interaction) return false;
     if (!isTouchDoubleTap(id, interaction)) return false;
     clearPending();
