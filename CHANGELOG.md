@@ -1,3 +1,9 @@
+## [1.26.2](https://github.com/jeansordes/dot-navigator/compare/1.26.1...1.26.2) (2026-06-03)
+
+### Bug Fixes
+
+* **mobile:** support double tap on chevron toggle button ([f6cc476](https://github.com/jeansordes/dot-navigator/commit/f6cc4761f06fadfacd64bbc9f477a29dd947e364))
+
 ## [1.26.1](https://github.com/jeansordes/dot-navigator/compare/1.26.0...1.26.1) (2026-06-02)
 
 # [1.26.0](https://github.com/jeansordes/dot-navigator/compare/1.25.1...1.26.0) (2026-06-02)

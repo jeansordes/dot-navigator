@@ -30,7 +30,11 @@ export function createDragGhost(row: HTMLElement): HTMLElement {
 }
 
 export function positionDragGhost(ghost: HTMLElement, x: number, y: number): void {
+    // Anchor at the viewport origin so the translate is absolute, not relative
+    // to the element's in-flow static position (which would offset it wildly).
     ghost.style.position = 'fixed';
+    ghost.style.left = '0';
+    ghost.style.top = '0';
     ghost.style.transform = `translate(${x + 12}px, ${y + 12}px) scale(1.02)`;
 }
 
