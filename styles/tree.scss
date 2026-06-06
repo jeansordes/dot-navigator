@@ -382,8 +382,10 @@
     .dotn_hidden-icon-open {
         display: none;
     }
+}
 
-    &:hover {
+@media (hover: hover) {
+    .dotn_hidden-icon:hover {
         .dotn_hidden-icon-closed {
             display: none;
         }
@@ -410,8 +412,10 @@
     .dotn_toggle-hidden-action {
         display: none;
     }
+}
 
-    &:hover {
+@media (hover: hover) {
+    .dotn_toggle-hidden:hover {
         .dotn_toggle-hidden-state {
             display: none;
         }
