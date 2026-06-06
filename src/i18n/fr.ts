@@ -33,6 +33,7 @@ export default {
     menuRenameFile: 'Renommer le fichier',
     menuDeleteFile: 'Supprimer le fichier',
     menuDeleteFolder: 'Supprimer le dossier',
+    menuDeleteShortcut: 'Supprimer le raccourci',
     menuShowInExplorer: 'Afficher dans l\'explorateur système',
     menuExpandChildren: 'Développer tous les enfants',
     menuCollapseChildren: 'Réduire tous les enfants',
@@ -172,8 +173,11 @@ export default {
     noticeMoveFailed: 'Échec du déplacement de {{count}} fichier(s)',
     noticeMovePartial: '{{success}} fichier(s) déplacé(s), {{failed}} échoué(s)',
     noticeShortcutCreated: 'Raccourci créé : {{alias}}',
+    noticeShortcutMoved: 'Raccourci déplacé : {{alias}}',
     noticeShortcutAlreadyExists: 'Le raccourci existe déjà : {{alias}}',
     noticeShortcutFailed: 'Impossible de créer le raccourci',
+    noticeShortcutDeleted: 'Raccourci supprimé : {{alias}}',
+    noticeShortcutDeleteFailed: 'Impossible de supprimer le raccourci',
 
     // Rename notification
     renameNotificationSuccess: '{{count}} fichier(s) renommé(s) avec succès',

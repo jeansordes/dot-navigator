@@ -33,6 +33,7 @@ export default {
     menuRenameFile: 'Rename file',
     menuDeleteFile: 'Delete file',
     menuDeleteFolder: 'Delete folder',
+    menuDeleteShortcut: 'Delete shortcut',
     menuShowInExplorer: 'Show in system explorer',
     menuExpandChildren: 'Expand all children',
     menuCollapseChildren: 'Collapse all children',
@@ -174,8 +175,11 @@ export default {
     noticeMoveFailed: 'Failed to move {{count}} file(s)',
     noticeMovePartial: 'Moved {{success}} file(s), {{failed}} failed',
     noticeShortcutCreated: 'Shortcut created: {{alias}}',
+    noticeShortcutMoved: 'Shortcut moved: {{alias}}',
     noticeShortcutAlreadyExists: 'Shortcut already exists: {{alias}}',
     noticeShortcutFailed: 'Could not create shortcut',
+    noticeShortcutDeleted: 'Shortcut deleted: {{alias}}',
+    noticeShortcutDeleteFailed: 'Could not delete shortcut',
 
     // Rename notification
     renameNotificationSuccess: 'Successfully renamed {{count}} file(s)',

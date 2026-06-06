@@ -35,7 +35,7 @@ export function updateDragDropHighlight(
 ): void {
     const drop = resolveDropTarget(clientX, clientY, deps.viewBody);
     const targetRow = drop && drop.targetKind !== 'root'
-        ? findTargetRow(deps.virtualizer, drop.targetPath)
+        ? findTargetRow(deps.virtualizer, drop.rowId)
         : null;
 
     if (active.lastTargetRow && active.lastTargetRow !== targetRow) {
@@ -66,7 +66,7 @@ export function updateDragDropHighlight(
 function updateDragInsertionPreview(
     deps: DragHighlightDeps,
     active: DragHighlightState,
-    drop: { targetPath: string } | null,
+    drop: { rowId: string } | null,
     valid: boolean,
     shortcutMode: boolean,
 ): void {

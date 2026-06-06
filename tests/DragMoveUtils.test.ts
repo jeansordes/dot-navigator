@@ -1,6 +1,8 @@
 import {
     computeMoveDestination,
+    computeMovedShortcutAlias,
     computeShortcutAlias,
+    findAliasStringForPath,
     getDragLeaf,
     isMarkdownShortcutEligible,
     isStrictDescendant,
@@ -150,6 +152,82 @@ describe('computeShortcutAlias', () => {
             targetPath: 'archive',
             targetKind: 'folder',
         })).toBeNull();
+    });
+});
+
+describe('computeMovedShortcutAlias', () => {
+    it('returns dotted alias for shortcut-on-file drop', () => {
+        const aliasPath = 'notes/x.y.md';
+        const noteTargetPath = 'notes/target.md';
+        const alias = computeMovedShortcutAlias({
+            aliasPath,
+            noteTargetPath,
+            dropTargetPath: 'notes/parent.md',
+            dropTargetKind: 'file',
+        });
+        expect(alias).toBe('notes/parent.y');
+        expect(resolveAliasPathForTarget(alias!, noteTargetPath)).toBe('notes/parent.y.md');
+    });
+
+    it('returns directory-qualified alias for shortcut-on-folder drop', () => {
+        const aliasPath = 'notes/x.y.md';
+        const noteTargetPath = 'notes/target.md';
+        const alias = computeMovedShortcutAlias({
+            aliasPath,
+            noteTargetPath,
+            dropTargetPath: 'archive',
+            dropTargetKind: 'folder',
+        });
+        expect(alias).toBe('archive/y');
+        expect(resolveAliasPathForTarget(alias!, noteTargetPath)).toBe('archive/y.md');
+    });
+
+    it('returns alias for root drop when note is at root', () => {
+        const aliasPath = 'notes/x.y.md';
+        const noteTargetPath = 'target.md';
+        const alias = computeMovedShortcutAlias({
+            aliasPath,
+            noteTargetPath,
+            dropTargetPath: '',
+            dropTargetKind: 'root',
+        });
+        expect(alias).toBe('y');
+        expect(resolveAliasPathForTarget(alias!, noteTargetPath)).toBe('y.md');
+    });
+
+    it('returns null for no-op drop', () => {
+        expect(computeMovedShortcutAlias({
+            aliasPath: 'notes/x.y.md',
+            noteTargetPath: 'notes/target.md',
+            dropTargetPath: 'notes/x.md',
+            dropTargetKind: 'file',
+        })).toBeNull();
+    });
+});
+
+describe('findAliasStringForPath', () => {
+    it('finds relative alias string', () => {
+        expect(findAliasStringForPath(
+            ['prj.ideas.upgrade', 'other.alias'],
+            'notes/foo.md',
+            'notes/prj.ideas.upgrade.md',
+        )).toBe('prj.ideas.upgrade');
+    });
+
+    it('finds directory-qualified alias string', () => {
+        expect(findAliasStringForPath(
+            ['archive/c', 'other.alias'],
+            'notes/foo.md',
+            'archive/c.md',
+        )).toBe('archive/c');
+    });
+
+    it('returns undefined when no match', () => {
+        expect(findAliasStringForPath(
+            ['a.b.c'],
+            'notes/foo.md',
+            'notes/missing.md',
+        )).toBeUndefined();
     });
 });
 

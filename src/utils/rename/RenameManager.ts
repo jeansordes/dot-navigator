@@ -1,18 +1,20 @@
-import { App, Notice, setIcon, TFile } from 'obsidian';
-import { normalizeAliases } from '../../core/aliasVirtualData';
+import { App, Notice, Plugin, setIcon } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
 import {
     computeMoveDestination,
-    computeShortcutAlias,
     getDragLeaf,
-    isMarkdownShortcutEligible,
     type DraggableKind,
     type DropTargetKind,
 } from './DragMoveUtils';
+import {
+    createShortcutByDragAndDrop as createShortcutByDrag,
+    moveShortcutByDragAndDrop as moveShortcutByDrag,
+} from './ShortcutDragUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
 import { RenameDialog } from '../../views/rename/RenameDialog';
 import { ViewLayout } from '../../core/ViewLayout';
 import { t } from '../../i18n';
+import { shouldHandleModZUndo } from '../keyboard/undoShortcut';
 import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:rename-manager');
@@ -27,10 +29,29 @@ export class RenameManager {
     private undoStack: Array<{ operations: RenameOperation[]; options: RenameOptions }> = [];
     private maxUndoStackSize = 10;
     private layout?: ViewLayout;
+    private moveNoticeUndoActive = false;
+    private moveNoticeUndoNotice?: Notice;
+    private moveNoticeUndoTimeout?: number;
 
     constructor(app: App, layout?: ViewLayout) {
         this.app = app;
         this.layout = layout;
+    }
+
+    /**
+     * Register a document-level Mod+Z handler for move notices with undo UI.
+     */
+    registerMoveNoticeUndoShortcut(host: Plugin): void {
+        host.registerDomEvent(document, 'keydown', (event: KeyboardEvent) => {
+            if (!this.moveNoticeUndoActive || !shouldHandleModZUndo(event)) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            this.clearMoveNoticeUndoShortcut();
+            this.moveNoticeUndoNotice?.hide();
+            void this.undoLastRename();
+        }, true);
     }
 
     /**
@@ -237,48 +258,16 @@ export class RenameManager {
         targetPath: string,
         targetKind: DropTargetKind
     ): Promise<boolean> {
-        if (!isMarkdownShortcutEligible(draggedPath, draggedKind)) {
-            return false;
-        }
+        return createShortcutByDrag(this.app, draggedPath, draggedKind, targetPath, targetKind);
+    }
 
-        const alias = computeShortcutAlias({
-            draggedPath,
-            draggedKind,
-            targetPath,
-            targetKind,
-        });
-
-        if (!alias) {
-            new Notice(t('noticeShortcutFailed'));
-            return false;
-        }
-
-        const file = this.app.vault.getAbstractFileByPath(draggedPath);
-        if (!(file instanceof TFile)) {
-            new Notice(t('noticeShortcutFailed'));
-            return false;
-        }
-
-        const cache = this.app.metadataCache.getFileCache(file);
-        const existing = normalizeAliases(cache?.frontmatter?.aliases);
-        if (existing.includes(alias)) {
-            new Notice(t('noticeShortcutAlreadyExists', { alias }));
-            return true;
-        }
-
-        try {
-            await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-                const aliases = normalizeAliases(frontmatter.aliases);
-                frontmatter.aliases = [...aliases, alias];
-            });
-            new Notice(t('noticeShortcutCreated', { alias }));
-            return true;
-        } catch (error) {
-            debug('Shortcut creation failed:', error);
-            const message = error instanceof Error ? error.message : String(error);
-            new Notice(message || t('noticeShortcutFailed'));
-            return false;
-        }
+    async moveShortcutByDragAndDrop(
+        aliasPath: string,
+        noteTargetPath: string,
+        dropTargetPath: string,
+        dropTargetKind: DropTargetKind
+    ): Promise<boolean> {
+        return moveShortcutByDrag(this.app, aliasPath, noteTargetPath, dropTargetPath, dropTargetKind);
     }
 
     /**
@@ -349,16 +338,38 @@ export class RenameManager {
             });
         }
 
-        const notice = new Notice(message, 8000);
+        const noticeDurationMs = 8000;
+        const notice = new Notice(message, noticeDurationMs);
         if (successCount > 0) {
             notice.messageEl.addClass('dotn_move-notice');
             const undoBtn = notice.messageEl.createEl('button', { cls: 'dotn_move-notice-undo' });
             setIcon(undoBtn.createSpan({ cls: 'dotn_move-notice-undo-icon' }), 'undo-2');
             undoBtn.createSpan({ text: t('renameNotificationUndo') });
+            this.enableMoveNoticeUndoShortcut(notice, noticeDurationMs);
             undoBtn.addEventListener('click', () => {
+                this.clearMoveNoticeUndoShortcut();
                 notice.hide();
                 void this.undoLastRename();
             });
+        }
+    }
+
+    private enableMoveNoticeUndoShortcut(notice: Notice, durationMs: number): void {
+        this.clearMoveNoticeUndoShortcut();
+        this.moveNoticeUndoActive = true;
+        this.moveNoticeUndoNotice = notice;
+        this.moveNoticeUndoTimeout = window.setTimeout(
+            () => this.clearMoveNoticeUndoShortcut(),
+            durationMs + 100
+        );
+    }
+
+    private clearMoveNoticeUndoShortcut(): void {
+        this.moveNoticeUndoActive = false;
+        this.moveNoticeUndoNotice = undefined;
+        if (this.moveNoticeUndoTimeout !== undefined) {
+            window.clearTimeout(this.moveNoticeUndoTimeout);
+            this.moveNoticeUndoTimeout = undefined;
         }
     }
 }

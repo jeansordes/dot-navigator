@@ -5,8 +5,20 @@ import {
     type DraggableKind,
     type DropTargetKind,
 } from '../../utils/rename/DragMoveUtils';
+import { Platform } from 'obsidian';
 import type { MenuItemKind } from '../../types';
 import type { VirtualTreeLike } from '../utils/viewTypes';
+
+export function isShortcutModifier(e: {
+    altKey: boolean;
+    metaKey: boolean;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+}): boolean {
+    return Platform.isMacOS
+        ? (e.altKey && e.metaKey)
+        : (e.ctrlKey && e.shiftKey);
+}
 
 function getDragGhostHost(row: HTMLElement): HTMLElement {
     const existing = document.querySelector('.dotn_drag-ghost-host');
@@ -121,26 +133,38 @@ export function isDropTargetKind(value: string | null): value is MenuItemKind {
     return value === 'file' || value === 'folder' || value === 'virtual';
 }
 
+export interface ResolvedDropTarget {
+    rowId: string;
+    targetPath: string;
+    targetKind: DropTargetKind;
+}
+
 export function resolveDropTarget(
     clientX: number,
     clientY: number,
     viewBody: HTMLElement
-): { targetPath: string; targetKind: DropTargetKind } | null {
+): ResolvedDropTarget | null {
     const el = document.elementFromPoint(clientX, clientY);
     if (!el) return null;
 
     const row = el.closest('.tree-row');
     if (row instanceof HTMLElement && row.dataset.id) {
-        if (row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id) return null;
+        const isShortcut = Boolean(
+            row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id
+        );
         const title = row.querySelector('.dotn_tree-item-title');
         const kindAttr = title?.getAttribute('data-node-kind') ?? null;
         if (isDropTargetKind(kindAttr)) {
-            return { targetPath: row.dataset.id, targetKind: kindAttr };
+            return {
+                rowId: row.dataset.id,
+                targetPath: isShortcut ? row.dataset.targetPath! : row.dataset.id,
+                targetKind: kindAttr,
+            };
         }
     }
 
     if (viewBody.contains(el) && !el.closest('.dotn_view-header') && isBelowLastRow(viewBody, clientY)) {
-        return { targetPath: '', targetKind: 'root' };
+        return { rowId: '', targetPath: '', targetKind: 'root' };
     }
 
     return null;
@@ -164,8 +188,8 @@ function isBelowLastRow(viewBody: HTMLElement, clientY: number): boolean {
     return clientY > lastBottom;
 }
 
-export function findTargetRow(virtualizer: HTMLElement, targetPath: string): HTMLElement | null {
-    const row = virtualizer.querySelector(`.tree-row[data-id="${CSS.escape(targetPath)}"]`);
+export function findTargetRow(virtualizer: HTMLElement, rowId: string): HTMLElement | null {
+    const row = virtualizer.querySelector(`.tree-row[data-id="${CSS.escape(rowId)}"]`);
     return row instanceof HTMLElement ? row : null;
 }
 
@@ -188,13 +212,13 @@ export interface InsertionPreview {
 
 export function computeInsertionPreview(
     virtualTree: VirtualTreeLike,
-    drop: { targetPath: string } | null,
+    drop: { rowId: string } | null,
     valid: boolean,
     draggedPath: string,
     draggedKind: DraggableKind,
 ): InsertionPreview {
     const targetIndex = drop && valid
-        ? virtualTree.visible.findIndex(it => it.id === drop.targetPath)
+        ? virtualTree.visible.findIndex(it => it.id === drop.rowId)
         : -1;
     if (targetIndex < 0) return { insertIndex: null, level: 0, topPx: 0, leaf: '' };
 

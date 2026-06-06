@@ -1,22 +1,22 @@
 import { Platform } from 'obsidian';
 import type { RenameManager } from '../../utils/rename/RenameManager';
-import {
-    computeMoveDestination,
-    isMarkdownShortcutEligible,
-    isValidDrop,
-    type DraggableKind,
-} from '../../utils/rename/DragMoveUtils';
+import { isMarkdownShortcutEligible, type DraggableKind } from '../../utils/rename/DragMoveUtils';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 import { clearDragDropHighlight, updateDragDropHighlight } from './rowDragDropHighlight';
 import { startDragAutoScroll, stopDragAutoScroll } from './rowDragDropScroll';
-import { createDragGhost, computeGhostGrabOffset, positionDragGhost, resolveDropTarget } from './rowDragDropUi';
-import createDebug from 'debug';
-
-const debug = createDebug('dot-navigator:views:row-drag-drop');
+import {
+    createDragGhost,
+    computeGhostGrabOffset,
+    isShortcutModifier,
+    positionDragGhost,
+    resolveDropTarget,
+} from './rowDragDropUi';
+import { executeDragDropComplete } from './rowDragDropComplete';
 
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 400;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
+
 interface PendingDrag {
     pointerId: number;
     path: string;
@@ -25,6 +25,8 @@ interface PendingDrag {
     startY: number;
     row: HTMLElement;
     isTouch: boolean;
+    isShortcut: boolean;
+    noteTargetPath?: string;
     longPressTimer?: number;
 }
 
@@ -36,7 +38,7 @@ interface ActiveDrag extends PendingDrag {
     insertIndex: number | null;
     clientX: number;
     clientY: number;
-    shiftActive: boolean;
+    shortcutModifierActive: boolean;
     shortcutEligible: boolean;
 }
 
@@ -98,24 +100,24 @@ export class RowDragController {
             return;
         }
 
-        if (e.key === 'Shift' && this.active) {
-            this.setShiftActive(true);
+        if (this.active && ['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+            this.setShortcutModifierActive(isShortcutModifier(e));
         }
     };
 
     private readonly onKeyUp = (e: KeyboardEvent): void => {
-        if (e.key === 'Shift' && this.active) {
-            this.setShiftActive(false);
+        if (this.active && ['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+            this.setShortcutModifierActive(isShortcutModifier(e));
         }
     };
 
     private isShortcutMode(): boolean {
-        return Boolean(this.active?.shiftActive && this.active.shortcutEligible);
+        return Boolean(this.active?.shortcutModifierActive && this.active.shortcutEligible);
     }
 
-    private setShiftActive(active: boolean): void {
-        if (!this.active || this.active.shiftActive === active) return;
-        this.active.shiftActive = active;
+    private setShortcutModifierActive(active: boolean): void {
+        if (!this.active || this.active.shortcutModifierActive === active) return;
+        this.active.shortcutModifierActive = active;
         this.updateDropHighlight(this.active.clientX, this.active.clientY);
     }
 
@@ -139,17 +141,24 @@ export class RowDragController {
 
         const row = title.closest('.tree-row');
         if (!(row instanceof HTMLElement) || !row.dataset.id) return;
-        if (row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id) return;
+
+        const isShortcut = Boolean(
+            row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id
+        );
+        const aliasPath = row.dataset.aliasPath;
+        if (isShortcut && !aliasPath) return;
 
         const isTouch = e.pointerType === 'touch' || (Platform.isMobile && e.pointerType !== 'mouse');
         this.pending = {
             pointerId: e.pointerId,
-            path: row.dataset.id,
+            path: isShortcut ? aliasPath! : row.dataset.id,
             kind: kindAttr,
             startX: e.clientX,
             startY: e.clientY,
             row,
             isTouch,
+            isShortcut,
+            noteTargetPath: isShortcut ? row.dataset.targetPath : undefined,
         };
 
         if (isTouch) {
@@ -164,8 +173,9 @@ export class RowDragController {
     private readonly onPointerMove = (e: PointerEvent): void => {
         if (this.active) {
             if (e.pointerId === this.active.pointerId) {
-                if (this.active.shiftActive !== e.shiftKey) {
-                    this.active.shiftActive = e.shiftKey;
+                const modifierActive = isShortcutModifier(e);
+                if (this.active.shortcutModifierActive !== modifierActive) {
+                    this.active.shortcutModifierActive = modifierActive;
                 }
                 this.updateDrag(e.clientX, e.clientY);
             }
@@ -179,7 +189,7 @@ export class RowDragController {
             return;
         }
         if (distance >= DRAG_THRESHOLD_PX) {
-            this.beginDrag(e.shiftKey);
+            this.beginDrag(isShortcutModifier(e));
             this.updateDrag(e.clientX, e.clientY);
         }
     };
@@ -197,11 +207,14 @@ export class RowDragController {
         else if (this.pending?.pointerId === e.pointerId) this.clearPending();
     };
 
-    private beginDrag(shiftKey = false): void {
+    private beginDrag(shortcutModifierActive = false): void {
         if (!this.pending) return;
         const ghost = createDragGhost(this.pending.row);
         this.pending.row.classList.add('dotn_dragging');
         document.body.classList.add('dotn_dragging-active');
+
+        const shortcutEligible = !this.pending.isShortcut
+            && isMarkdownShortcutEligible(this.pending.path, this.pending.kind);
 
         this.active = {
             ...this.pending,
@@ -212,8 +225,8 @@ export class RowDragController {
             insertIndex: null,
             clientX: this.pending.startX,
             clientY: this.pending.startY,
-            shiftActive: shiftKey,
-            shortcutEligible: isMarkdownShortcutEligible(this.pending.path, this.pending.kind),
+            shortcutModifierActive,
+            shortcutEligible,
         };
         this.pending = null;
         if (this.active.longPressTimer) window.clearTimeout(this.active.longPressTimer);
@@ -237,33 +250,20 @@ export class RowDragController {
         this.endDrag(true);
         if (!drop || !this.opts.renameManager) return;
 
-        const params = {
-            draggedPath: drag.path,
-            draggedKind: drag.kind,
-            targetPath: drop.targetPath,
-            targetKind: drop.targetKind,
-        };
-        const newPath = computeMoveDestination(params);
-        if (!isValidDrop(params) || !newPath) return;
-
-        const shortcutMode = drag.shiftActive && drag.shortcutEligible;
-
-        if (shortcutMode) {
-            debug('Executing drag shortcut', params);
-            await this.opts.renameManager.createShortcutByDragAndDrop(
-                drag.path, drag.kind, drop.targetPath, drop.targetKind
-            );
-            return;
-        }
-
-        debug('Executing drag move', params);
-        this.opts.onMoveComplete?.(newPath);
-        const success = await this.opts.renameManager.moveByDragAndDrop(
-            drag.path, drag.kind, drop.targetPath, drop.targetKind
+        await executeDragDropComplete(
+            {
+                path: drag.path,
+                kind: drag.kind,
+                isShortcut: drag.isShortcut,
+                noteTargetPath: drag.noteTargetPath,
+                rowId: drag.row.dataset.id ?? '',
+                shortcutModifierActive: drag.shortcutModifierActive,
+                shortcutEligible: drag.shortcutEligible,
+            },
+            drop,
+            this.opts.renameManager,
+            this.opts.onMoveComplete,
         );
-        if (!success) {
-            this.opts.onMoveComplete?.('');
-        }
     }
 
     private endDrag(suppressClick: boolean): void {

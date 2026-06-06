@@ -61,6 +61,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     }
     row.dataset.index = String(itemIndex);
     if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
+    if (item.aliasPath) row.dataset.aliasPath = item.aliasPath; else delete row.dataset.aliasPath;
     if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
     row.classList.toggle('dotn_hidden', !!item.isHidden);
     syncHiddenIcon(row, !!item.isHidden);
@@ -102,6 +103,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
 
   row.dataset.id = item.id;
   if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
+  if (item.aliasPath) row.dataset.aliasPath = item.aliasPath; else delete row.dataset.aliasPath;
   if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
   row.dataset.index = String(itemIndex);
   row.setAttribute('role', 'treeitem');

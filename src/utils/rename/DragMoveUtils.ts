@@ -180,3 +180,57 @@ export function computeShortcutAlias(params: MoveParams): string | null {
     // Root-level destination from a nested source cannot be expressed as a relative alias.
     return null;
 }
+
+export interface MoveShortcutAliasParams {
+    aliasPath: string;
+    noteTargetPath: string;
+    dropTargetPath: string;
+    dropTargetKind: DropTargetKind;
+}
+
+/**
+ * Compute the new frontmatter alias string when repositioning an existing shortcut.
+ */
+export function computeMovedShortcutAlias(params: MoveShortcutAliasParams): string | null {
+    const { aliasPath, noteTargetPath, dropTargetPath, dropTargetKind } = params;
+
+    const destination = computeMoveDestination({
+        draggedPath: aliasPath,
+        draggedKind: 'file',
+        targetPath: dropTargetPath,
+        targetKind: dropTargetKind,
+    });
+
+    if (!destination || destination === aliasPath) {
+        return null;
+    }
+
+    const alias = stripFileExtension(destination);
+    const resolved = resolveAliasPathForTarget(alias, noteTargetPath);
+    if (resolved === destination) {
+        return alias;
+    }
+
+    if (destination.includes('/')) {
+        return alias;
+    }
+
+    return null;
+}
+
+/**
+ * Find the frontmatter alias string that resolves to a given alias path for a note.
+ */
+export function findAliasStringForPath(
+    aliases: string[],
+    noteTargetPath: string,
+    aliasPath: string,
+): string | undefined {
+    for (const alias of aliases) {
+        const resolved = resolveAliasPathForTarget(alias, noteTargetPath);
+        if (resolved === aliasPath) {
+            return alias;
+        }
+    }
+    return undefined;
+}
