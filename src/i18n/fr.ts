@@ -171,6 +171,9 @@ export default {
     noticeMovedFile: '{{count}} fichier(s) déplacé(s)',
     noticeMoveFailed: 'Échec du déplacement de {{count}} fichier(s)',
     noticeMovePartial: '{{success}} fichier(s) déplacé(s), {{failed}} échoué(s)',
+    noticeShortcutCreated: 'Raccourci créé : {{alias}}',
+    noticeShortcutAlreadyExists: 'Le raccourci existe déjà : {{alias}}',
+    noticeShortcutFailed: 'Impossible de créer le raccourci',
 
     // Rename notification
     renameNotificationSuccess: '{{count}} fichier(s) renommé(s) avec succès',

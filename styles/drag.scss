@@ -1,5 +1,20 @@
-.dotn_drag-ghost {
+.dotn_drag-ghost.dotn_drag-shortcut {
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.dotn_drag-ghost-host {
     position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.dotn_drag-ghost {
+    position: absolute;
+    left: 0;
+    top: 0;
     z-index: 1000;
     pointer-events: none;
     display: flex;
@@ -43,6 +58,17 @@ body.dotn_dragging-active * {
 }
 
 /* Phantom child row shown in the gap opened below the drop target */
+.dotn_drop-placeholder.dotn_drag-shortcut .dotn_drop-placeholder-title {
+    border-style: solid;
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    font-style: normal;
+}
+
+.dotn_view-body.dotn_drag-shortcut-mode.dotn_drop-root {
+    outline-color: var(--color-accent);
+}
+
 .dotn_drop-placeholder {
     pointer-events: none;
     z-index: 2;

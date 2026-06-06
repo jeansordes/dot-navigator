@@ -1,9 +1,12 @@
 import {
     computeMoveDestination,
+    computeShortcutAlias,
     getDragLeaf,
+    isMarkdownShortcutEligible,
     isStrictDescendant,
     isValidDrop,
 } from '../src/utils/rename/DragMoveUtils';
+import { resolveAliasPathForTarget } from '../src/core/aliasVirtualData';
 
 describe('getDragLeaf', () => {
     it('extracts leaf and extension from dotted files', () => {
@@ -74,6 +77,79 @@ describe('isStrictDescendant', () => {
 
     it('detects folder descendants', () => {
         expect(isStrictDescendant('notes/foo/bar', 'notes/foo', 'folder')).toBe(true);
+    });
+});
+
+describe('isMarkdownShortcutEligible', () => {
+    it('allows markdown files', () => {
+        expect(isMarkdownShortcutEligible('notes/foo.md', 'file')).toBe(true);
+    });
+
+    it('rejects folders and non-markdown files', () => {
+        expect(isMarkdownShortcutEligible('notes/foo', 'folder')).toBe(false);
+        expect(isMarkdownShortcutEligible('image.png', 'file')).toBe(false);
+    });
+});
+
+describe('computeShortcutAlias', () => {
+    it('returns dotted alias for file-on-file drop', () => {
+        const params = {
+            draggedPath: 'a.b.c.md',
+            draggedKind: 'file' as const,
+            targetPath: 'x.y.md',
+            targetKind: 'file' as const,
+        };
+        const alias = computeShortcutAlias(params);
+        expect(alias).toBe('x.y.c');
+        expect(resolveAliasPathForTarget(alias!, params.draggedPath)).toBe('x.y.c.md');
+    });
+
+    it('returns directory-qualified alias for file-on-folder drop', () => {
+        const params = {
+            draggedPath: 'a.b.c.md',
+            draggedKind: 'file' as const,
+            targetPath: 'archive',
+            targetKind: 'folder' as const,
+        };
+        const alias = computeShortcutAlias(params);
+        expect(alias).toBe('archive/c');
+        expect(resolveAliasPathForTarget(alias!, params.draggedPath)).toBe('archive/c.md');
+    });
+
+    it('returns null for root drop from nested source', () => {
+        expect(computeShortcutAlias({
+            draggedPath: 'notes/a.b.c.md',
+            draggedKind: 'file',
+            targetPath: '',
+            targetKind: 'root',
+        })).toBeNull();
+    });
+
+    it('returns alias for root drop when source is already at root', () => {
+        const params = {
+            draggedPath: 'a.b.c.md',
+            draggedKind: 'file' as const,
+            targetPath: '',
+            targetKind: 'root' as const,
+        };
+        const alias = computeShortcutAlias(params);
+        expect(alias).toBe('c');
+        expect(resolveAliasPathForTarget(alias!, params.draggedPath)).toBe('c.md');
+    });
+
+    it('returns null for folders and no-op drops', () => {
+        expect(computeShortcutAlias({
+            draggedPath: 'notes/foo',
+            draggedKind: 'folder',
+            targetPath: 'dir/x.md',
+            targetKind: 'file',
+        })).toBeNull();
+        expect(computeShortcutAlias({
+            draggedPath: 'archive/c.md',
+            draggedKind: 'file',
+            targetPath: 'archive',
+            targetKind: 'folder',
+        })).toBeNull();
     });
 });
 

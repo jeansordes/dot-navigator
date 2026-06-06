@@ -1,6 +1,14 @@
-import { App, Notice, setIcon } from 'obsidian';
+import { App, Notice, setIcon, TFile } from 'obsidian';
+import { normalizeAliases } from '../../core/aliasVirtualData';
 import { RenameUtils } from './RenameUtils';
-import { computeMoveDestination, getDragLeaf, type DraggableKind, type DropTargetKind } from './DragMoveUtils';
+import {
+    computeMoveDestination,
+    computeShortcutAlias,
+    getDragLeaf,
+    isMarkdownShortcutEligible,
+    type DraggableKind,
+    type DropTargetKind,
+} from './DragMoveUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
 import { RenameDialog } from '../../views/rename/RenameDialog';
 import { ViewLayout } from '../../core/ViewLayout';
@@ -218,6 +226,59 @@ export class RenameManager {
      */
     getUndoStackSize(): number {
         return this.undoStack.length;
+    }
+
+    /**
+     * Create a tree shortcut by appending a YAML alias instead of moving the file.
+     */
+    async createShortcutByDragAndDrop(
+        draggedPath: string,
+        draggedKind: DraggableKind,
+        targetPath: string,
+        targetKind: DropTargetKind
+    ): Promise<boolean> {
+        if (!isMarkdownShortcutEligible(draggedPath, draggedKind)) {
+            return false;
+        }
+
+        const alias = computeShortcutAlias({
+            draggedPath,
+            draggedKind,
+            targetPath,
+            targetKind,
+        });
+
+        if (!alias) {
+            new Notice(t('noticeShortcutFailed'));
+            return false;
+        }
+
+        const file = this.app.vault.getAbstractFileByPath(draggedPath);
+        if (!(file instanceof TFile)) {
+            new Notice(t('noticeShortcutFailed'));
+            return false;
+        }
+
+        const cache = this.app.metadataCache.getFileCache(file);
+        const existing = normalizeAliases(cache?.frontmatter?.aliases);
+        if (existing.includes(alias)) {
+            new Notice(t('noticeShortcutAlreadyExists', { alias }));
+            return true;
+        }
+
+        try {
+            await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+                const aliases = normalizeAliases(frontmatter.aliases);
+                frontmatter.aliases = [...aliases, alias];
+            });
+            new Notice(t('noticeShortcutCreated', { alias }));
+            return true;
+        } catch (error) {
+            debug('Shortcut creation failed:', error);
+            const message = error instanceof Error ? error.message : String(error);
+            new Notice(message || t('noticeShortcutFailed'));
+            return false;
+        }
     }
 
     /**

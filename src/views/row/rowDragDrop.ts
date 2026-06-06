@@ -2,20 +2,14 @@ import { Platform } from 'obsidian';
 import type { RenameManager } from '../../utils/rename/RenameManager';
 import {
     computeMoveDestination,
+    isMarkdownShortcutEligible,
     isValidDrop,
     type DraggableKind,
 } from '../../utils/rename/DragMoveUtils';
 import type { VirtualTreeLike } from '../utils/viewTypes';
-import {
-    computeInsertionPreview,
-    createDragGhost,
-    createDropPlaceholder,
-    findTargetRow,
-    isDropAllowed,
-    positionDragGhost,
-    positionDropPlaceholder,
-    resolveDropTarget,
-} from './rowDragDropUi';
+import { clearDragDropHighlight, updateDragDropHighlight } from './rowDragDropHighlight';
+import { startDragAutoScroll, stopDragAutoScroll } from './rowDragDropScroll';
+import { createDragGhost, computeGhostGrabOffset, positionDragGhost, resolveDropTarget } from './rowDragDropUi';
 import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:views:row-drag-drop');
@@ -23,9 +17,6 @@ const debug = createDebug('dot-navigator:views:row-drag-drop');
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 400;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
-const AUTO_SCROLL_EDGE_PX = 40;
-const AUTO_SCROLL_SPEED_PX = 12;
-
 interface PendingDrag {
     pointerId: number;
     path: string;
@@ -39,12 +30,14 @@ interface PendingDrag {
 
 interface ActiveDrag extends PendingDrag {
     ghost: HTMLElement;
+    grabOffset: { x: number; y: number };
     lastTargetRow: HTMLElement | null;
     dropPlaceholder: HTMLElement | null;
     insertIndex: number | null;
-    rootHighlighted: boolean;
     clientX: number;
     clientY: number;
+    shiftActive: boolean;
+    shortcutEligible: boolean;
 }
 
 export interface RowDragControllerOptions {
@@ -76,6 +69,7 @@ export class RowDragController {
         viewBody.addEventListener('pointercancel', this.onPointerCancel);
         virtualizer.addEventListener('click', this.onClickCapture, true);
         window.addEventListener('keydown', this.onKeyDown, true);
+        window.addEventListener('keyup', this.onKeyUp, true);
     }
 
     detach(): void {
@@ -86,6 +80,7 @@ export class RowDragController {
         viewBody.removeEventListener('pointercancel', this.onPointerCancel);
         virtualizer.removeEventListener('click', this.onClickCapture, true);
         window.removeEventListener('keydown', this.onKeyDown, true);
+        window.removeEventListener('keyup', this.onKeyUp, true);
         this.clearPending();
         this.endDrag(false);
         document.body.classList.remove('dotn_dragging-active');
@@ -96,12 +91,33 @@ export class RowDragController {
     }
 
     private readonly onKeyDown = (e: KeyboardEvent): void => {
-        if (e.key !== 'Escape') return;
-        if (!this.active && !this.pending) return;
-        e.preventDefault();
-        e.stopPropagation();
-        this.endDrag(false);
+        if (e.key === 'Escape' && (this.active || this.pending)) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.endDrag(false);
+            return;
+        }
+
+        if (e.key === 'Shift' && this.active) {
+            this.setShiftActive(true);
+        }
     };
+
+    private readonly onKeyUp = (e: KeyboardEvent): void => {
+        if (e.key === 'Shift' && this.active) {
+            this.setShiftActive(false);
+        }
+    };
+
+    private isShortcutMode(): boolean {
+        return Boolean(this.active?.shiftActive && this.active.shortcutEligible);
+    }
+
+    private setShiftActive(active: boolean): void {
+        if (!this.active || this.active.shiftActive === active) return;
+        this.active.shiftActive = active;
+        this.updateDropHighlight(this.active.clientX, this.active.clientY);
+    }
 
     private readonly onClickCapture = (e: MouseEvent): void => {
         if (this.shouldSuppressClick()) {
@@ -138,7 +154,7 @@ export class RowDragController {
 
         if (isTouch) {
             this.pending.longPressTimer = window.setTimeout(() => {
-                if (this.pending?.pointerId === e.pointerId) this.beginDrag();
+                if (this.pending?.pointerId === e.pointerId) this.beginDrag(false);
             }, LONG_PRESS_MS);
             this.boundTouchMovePrevent = (ev) => { if (this.active) ev.preventDefault(); };
             document.addEventListener('touchmove', this.boundTouchMovePrevent, { passive: false });
@@ -147,7 +163,12 @@ export class RowDragController {
 
     private readonly onPointerMove = (e: PointerEvent): void => {
         if (this.active) {
-            if (e.pointerId === this.active.pointerId) this.updateDrag(e.clientX, e.clientY);
+            if (e.pointerId === this.active.pointerId) {
+                if (this.active.shiftActive !== e.shiftKey) {
+                    this.active.shiftActive = e.shiftKey;
+                }
+                this.updateDrag(e.clientX, e.clientY);
+            }
             return;
         }
         if (!this.pending || e.pointerId !== this.pending.pointerId) return;
@@ -158,7 +179,7 @@ export class RowDragController {
             return;
         }
         if (distance >= DRAG_THRESHOLD_PX) {
-            this.beginDrag();
+            this.beginDrag(e.shiftKey);
             this.updateDrag(e.clientX, e.clientY);
         }
     };
@@ -176,7 +197,7 @@ export class RowDragController {
         else if (this.pending?.pointerId === e.pointerId) this.clearPending();
     };
 
-    private beginDrag(): void {
+    private beginDrag(shiftKey = false): void {
         if (!this.pending) return;
         const ghost = createDragGhost(this.pending.row);
         this.pending.row.classList.add('dotn_dragging');
@@ -185,16 +206,19 @@ export class RowDragController {
         this.active = {
             ...this.pending,
             ghost,
+            grabOffset: computeGhostGrabOffset(this.pending.row, this.pending.startX, this.pending.startY),
             lastTargetRow: null,
             dropPlaceholder: null,
             insertIndex: null,
-            rootHighlighted: false,
             clientX: this.pending.startX,
             clientY: this.pending.startY,
+            shiftActive: shiftKey,
+            shortcutEligible: isMarkdownShortcutEligible(this.pending.path, this.pending.kind),
         };
         this.pending = null;
         if (this.active.longPressTimer) window.clearTimeout(this.active.longPressTimer);
-        positionDragGhost(ghost, this.active.startX, this.active.startY);
+        positionDragGhost(ghost, this.active.startX, this.active.startY, this.active.grabOffset);
+        this.updateDropHighlight(this.active.startX, this.active.startY);
         this.startAutoScroll();
     }
 
@@ -202,7 +226,7 @@ export class RowDragController {
         if (!this.active) return;
         this.active.clientX = clientX;
         this.active.clientY = clientY;
-        positionDragGhost(this.active.ghost, clientX, clientY);
+        positionDragGhost(this.active.ghost, clientX, clientY, this.active.grabOffset);
         this.updateDropHighlight(clientX, clientY);
     }
 
@@ -222,6 +246,16 @@ export class RowDragController {
         const newPath = computeMoveDestination(params);
         if (!isValidDrop(params) || !newPath) return;
 
+        const shortcutMode = drag.shiftActive && drag.shortcutEligible;
+
+        if (shortcutMode) {
+            debug('Executing drag shortcut', params);
+            await this.opts.renameManager.createShortcutByDragAndDrop(
+                drag.path, drag.kind, drop.targetPath, drop.targetKind
+            );
+            return;
+        }
+
         debug('Executing drag move', params);
         this.opts.onMoveComplete?.(newPath);
         const success = await this.opts.renameManager.moveByDragAndDrop(
@@ -236,10 +270,11 @@ export class RowDragController {
         this.stopAutoScroll();
         this.removeTouchMovePrevent();
         document.body.classList.remove('dotn_dragging-active');
+        this.opts.viewBody.classList.remove('dotn_drag-shortcut-mode');
         if (this.active) {
             this.active.row.classList.remove('dotn_dragging');
             this.active.ghost.remove();
-            this.clearDropHighlight();
+            clearDragDropHighlight(this.highlightDeps(), this.active);
             this.active = null;
         }
         this.clearPending();
@@ -259,92 +294,34 @@ export class RowDragController {
         this.boundTouchMovePrevent = undefined;
     }
 
+    private highlightDeps() {
+        return {
+            virtualTree: this.opts.virtualTree,
+            virtualizer: this.opts.virtualizer,
+            viewBody: this.opts.viewBody,
+        };
+    }
+
     private updateDropHighlight(clientX: number, clientY: number): void {
         if (!this.active) return;
-        const drop = resolveDropTarget(clientX, clientY, this.opts.viewBody);
-        const targetRow = drop && drop.targetKind !== 'root'
-            ? findTargetRow(this.opts.virtualizer, drop.targetPath)
-            : null;
-
-        if (this.active.lastTargetRow && this.active.lastTargetRow !== targetRow) {
-            this.active.lastTargetRow.classList.remove('dotn_drop-target');
-        }
-
-        const valid = drop
-            ? isDropAllowed(this.active.path, this.active.kind, drop.targetPath, drop.targetKind)
-            : false;
-
-        if (targetRow && targetRow !== this.active.row && valid) {
-            targetRow.classList.add('dotn_drop-target');
-            this.active.lastTargetRow = targetRow;
-        } else {
-            this.active.lastTargetRow = null;
-        }
-
-        this.opts.viewBody.classList.toggle('dotn_drop-root', drop?.targetKind === 'root' && valid);
-        this.active.rootHighlighted = drop?.targetKind === 'root' && valid;
-        this.updateInsertionPreview(drop, valid);
-    }
-
-    private updateInsertionPreview(
-        drop: { targetPath: string } | null,
-        valid: boolean,
-    ): void {
-        if (!this.active) return;
-        const vt = this.opts.virtualTree;
-        const p = computeInsertionPreview(vt, drop, valid, this.active.path, this.active.kind);
-
-        // Re-render to open/close the gap only when the insertion point changes.
-        if (p.insertIndex !== this.active.insertIndex) {
-            this.active.insertIndex = p.insertIndex;
-            vt.dragInsertIndex = p.insertIndex;
-            vt._render();
-        }
-
-        if (p.insertIndex === null) {
-            this.removeDropPlaceholder();
-        } else if (this.active.dropPlaceholder) {
-            positionDropPlaceholder(this.active.dropPlaceholder, p.leaf, p.level, p.topPx);
-        } else {
-            this.active.dropPlaceholder = createDropPlaceholder(this.opts.virtualizer, p.leaf, p.level, p.topPx);
-        }
-    }
-
-    private removeDropPlaceholder(): void {
-        if (!this.active?.dropPlaceholder) return;
-        this.active.dropPlaceholder.remove();
-        this.active.dropPlaceholder = null;
-    }
-
-    private clearDropHighlight(): void {
-        this.active?.lastTargetRow?.classList.remove('dotn_drop-target');
-        this.opts.viewBody.classList.remove('dotn_drop-root');
-        this.removeDropPlaceholder();
-        if (this.active && this.active.insertIndex !== null) {
-            this.active.insertIndex = null;
-        }
-        if (this.opts.virtualTree.dragInsertIndex != null) {
-            this.opts.virtualTree.dragInsertIndex = null;
-            this.opts.virtualTree._render();
-        }
+        updateDragDropHighlight(
+            this.highlightDeps(),
+            this.active,
+            clientX,
+            clientY,
+            this.isShortcutMode(),
+        );
     }
 
     private startAutoScroll(): void {
-        const tick = (): void => {
-            if (!this.active) return;
-            const sc = this.opts.scrollContainer;
-            const rect = sc.getBoundingClientRect();
-            const y = this.active.clientY;
-            if (y < rect.top + AUTO_SCROLL_EDGE_PX) sc.scrollTop -= AUTO_SCROLL_SPEED_PX;
-            else if (y > rect.bottom - AUTO_SCROLL_EDGE_PX) sc.scrollTop += AUTO_SCROLL_SPEED_PX;
-            this.autoScrollFrame = requestAnimationFrame(tick);
-        };
-        this.autoScrollFrame = requestAnimationFrame(tick);
+        this.autoScrollFrame = startDragAutoScroll(
+            this.opts.scrollContainer,
+            () => this.active?.clientY,
+        );
     }
 
     private stopAutoScroll(): void {
-        if (this.autoScrollFrame === null) return;
-        cancelAnimationFrame(this.autoScrollFrame);
+        stopDragAutoScroll(this.autoScrollFrame);
         this.autoScrollFrame = null;
     }
 }

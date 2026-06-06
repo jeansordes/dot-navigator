@@ -1,3 +1,4 @@
+import { resolveAliasPathForTarget } from '../../core/aliasVirtualData';
 import type { MenuItemKind } from '../../types';
 
 export type DraggableKind = 'file' | 'folder';
@@ -140,4 +141,42 @@ export function isValidDrop(params: MoveParams): boolean {
 
     const destination = computeMoveDestination(params);
     return destination !== null && destination !== draggedPath;
+}
+
+/**
+ * True when a drag source can store a shortcut via frontmatter aliases.
+ */
+export function isMarkdownShortcutEligible(path: string, kind: DraggableKind): boolean {
+    return kind === 'file' && /\.md$/iu.test(path);
+}
+
+/**
+ * Compute the frontmatter alias string for a shortcut at the drop location, or null when invalid.
+ * The alias must resolve (via resolveAliasPathForTarget) to the same path as a physical move would.
+ */
+export function computeShortcutAlias(params: MoveParams): string | null {
+    const { draggedPath, draggedKind } = params;
+
+    if (!isMarkdownShortcutEligible(draggedPath, draggedKind)) {
+        return null;
+    }
+
+    const destination = computeMoveDestination(params);
+    if (!destination || destination === draggedPath) {
+        return null;
+    }
+
+    const alias = stripFileExtension(destination);
+    const resolved = resolveAliasPathForTarget(alias, draggedPath);
+    if (resolved === destination) {
+        return alias;
+    }
+
+    // Directory-qualified aliases (path contains /) are kept as-is by resolveAliasPathForTarget.
+    if (destination.includes('/')) {
+        return alias;
+    }
+
+    // Root-level destination from a nested source cannot be expressed as a relative alias.
+    return null;
 }

@@ -173,6 +173,9 @@ export default {
     noticeMovedFile: 'Moved {{count}} file(s)',
     noticeMoveFailed: 'Failed to move {{count}} file(s)',
     noticeMovePartial: 'Moved {{success}} file(s), {{failed}} failed',
+    noticeShortcutCreated: 'Shortcut created: {{alias}}',
+    noticeShortcutAlreadyExists: 'Shortcut already exists: {{alias}}',
+    noticeShortcutFailed: 'Could not create shortcut',
 
     // Rename notification
     renameNotificationSuccess: 'Successfully renamed {{count}} file(s)',

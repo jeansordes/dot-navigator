@@ -8,6 +8,22 @@ import {
 import type { MenuItemKind } from '../../types';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 
+function getDragGhostHost(row: HTMLElement): HTMLElement {
+    const existing = document.querySelector('.dotn_drag-ghost-host');
+    if (existing instanceof HTMLElement) {
+        const view = row.closest('.dotn_view');
+        existing.classList.toggle('dotn_view-mobile', view?.classList.contains('dotn_view-mobile') ?? false);
+        return existing;
+    }
+
+    const host = document.createElement('div');
+    host.className = 'dotn_view dotn_drag-ghost-host';
+    document.body.appendChild(host);
+    const view = row.closest('.dotn_view');
+    host.classList.toggle('dotn_view-mobile', view?.classList.contains('dotn_view-mobile') ?? false);
+    return host;
+}
+
 export function createDragGhost(row: HTMLElement): HTMLElement {
     const ghost = document.createElement('div');
     ghost.className = 'dotn_drag-ghost';
@@ -22,20 +38,37 @@ export function createDragGhost(row: HTMLElement): HTMLElement {
         ghost.appendChild(title.cloneNode(true));
     }
 
-    // Append inside the plugin view so all --dotn_* custom properties resolve
-    // (they are scoped to .dotn_view). position: fixed keeps it viewport-relative.
-    const host = row.closest('.dotn_view') ?? document.body;
-    host.appendChild(ghost);
+    // Mount outside the Obsidian leaf (which often has transform and breaks
+    // position:fixed). The host is viewport-sized and carries .dotn_view so
+    // theme CSS variables resolve correctly.
+    getDragGhostHost(row).appendChild(ghost);
     return ghost;
 }
 
-export function positionDragGhost(ghost: HTMLElement, x: number, y: number): void {
-    // Anchor at the viewport origin so the translate is absolute, not relative
-    // to the element's in-flow static position (which would offset it wildly).
-    ghost.style.position = 'fixed';
-    ghost.style.left = '0';
-    ghost.style.top = '0';
-    ghost.style.transform = `translate(${x + 12}px, ${y + 12}px) scale(1.02)`;
+export function computeGhostGrabOffset(
+    row: HTMLElement,
+    clientX: number,
+    clientY: number,
+): { x: number; y: number } {
+    const title = row.querySelector('.dotn_tree-item-title');
+    if (!(title instanceof HTMLElement)) {
+        const rowRect = row.getBoundingClientRect();
+        return { x: clientX - rowRect.left, y: clientY - rowRect.top };
+    }
+    const titleRect = title.getBoundingClientRect();
+    return { x: clientX - titleRect.left, y: clientY - titleRect.top };
+}
+
+export function positionDragGhost(
+    ghost: HTMLElement,
+    clientX: number,
+    clientY: number,
+    grabOffset: { x: number; y: number },
+): void {
+    const ghostTitle = ghost.querySelector('.dotn_tree-item-title');
+    const anchorX = grabOffset.x + (ghostTitle instanceof HTMLElement ? ghostTitle.offsetLeft : 0);
+    const anchorY = grabOffset.y + (ghostTitle instanceof HTMLElement ? ghostTitle.offsetTop : 0);
+    ghost.style.transform = `translate(${clientX - anchorX}px, ${clientY - anchorY}px)`;
 }
 
 export function createDropPlaceholder(
@@ -61,11 +94,27 @@ export function positionDropPlaceholder(
     label: string,
     level: number,
     topPx: number,
+    shortcutMode = false,
 ): void {
     placeholder.style.setProperty('--row-indent', String(level));
     placeholder.style.transform = `translateY(${topPx}px)`;
     const title = placeholder.querySelector('.dotn_drop-placeholder-title');
-    if (title) title.textContent = label;
+    if (title) title.textContent = formatDropPlaceholderLabel(label, shortcutMode);
+}
+
+export function formatDropPlaceholderLabel(leaf: string, shortcutMode: boolean): string {
+    return shortcutMode ? `↗ ${leaf}` : leaf;
+}
+
+export function setDragShortcutMode(
+    ghost: HTMLElement | null,
+    placeholder: HTMLElement | null,
+    viewBody: HTMLElement,
+    shortcutMode: boolean,
+): void {
+    ghost?.classList.toggle('dotn_drag-shortcut', shortcutMode);
+    placeholder?.classList.toggle('dotn_drag-shortcut', shortcutMode);
+    viewBody.classList.toggle('dotn_drag-shortcut-mode', shortcutMode);
 }
 
 export function isDropTargetKind(value: string | null): value is MenuItemKind {
@@ -90,11 +139,29 @@ export function resolveDropTarget(
         }
     }
 
-    if (viewBody.contains(el) && !el.closest('.dotn_view-header')) {
+    if (viewBody.contains(el) && !el.closest('.dotn_view-header') && isBelowLastRow(viewBody, clientY)) {
         return { targetPath: '', targetKind: 'root' };
     }
 
     return null;
+}
+
+/**
+ * Root-drop should only engage in the real trailing empty area below every row,
+ * not in the small gaps/padding between or beside rows (which felt buggy as it
+ * lit up the whole panel). When the vault is empty (no rows), the whole body
+ * counts as the root drop zone.
+ */
+function isBelowLastRow(viewBody: HTMLElement, clientY: number): boolean {
+    const rows = viewBody.querySelectorAll('.tree-row[data-id]');
+    if (rows.length === 0) return true;
+
+    let lastBottom = -Infinity;
+    for (const row of Array.from(rows)) {
+        const bottom = row.getBoundingClientRect().bottom;
+        if (bottom > lastBottom) lastBottom = bottom;
+    }
+    return clientY > lastBottom;
 }
 
 export function findTargetRow(virtualizer: HTMLElement, targetPath: string): HTMLElement | null {
