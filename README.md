@@ -45,7 +45,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 <img width="460" alt="Header toggle to show or hide hidden nodes" src="docs/images/hidden-nodes-toggle.png" />
 <img width="440" alt="Hidden nodes management section in settings" src="docs/images/hidden-nodes-settings.png" />
 
-- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings.
+- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings. Remove a shortcut from the context menu without deleting the underlying note.
 
 <img width="520" alt="Aliases defined in a note's frontmatter" src="docs/images/alias-frontmatter.png" />
 <img width="480" alt="Alias shortcut nodes shown in the tree, pointing to their target" src="docs/images/alias-shortcut-nodes.png" />
@@ -54,7 +54,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
 
-- **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI or with a command dedicated for that)
+- **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI, with **Cmd/Ctrl+Z** when undo is available, or with a command dedicated for that)
 
 <img width="722" height="470" alt="CleanShot 2025-09-26 at 23 13 38@2x" src="https://github.com/user-attachments/assets/3d0ceb40-2910-48fa-8eea-8c4500d91e87" />
 

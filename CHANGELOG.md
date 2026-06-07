@@ -1,3 +1,13 @@
+# [1.27.0](https://github.com/jeansordes/dot-navigator/compare/1.26.2...1.27.0) (2026-06-07)
+
+### Bug Fixes
+
+* **mobile:** prevent sticky hover on hide elements button ([2f900b5](https://github.com/jeansordes/dot-navigator/commit/2f900b5f0705db6cf39bd1181da984aea2ccfe05))
+
+### Features
+
+* **shortcuts:** add delete option to shortcut context menu ([1065aed](https://github.com/jeansordes/dot-navigator/commit/1065aed06e42b8ed9e2205e558c0192a36242913))
+
 ## [1.26.2](https://github.com/jeansordes/dot-navigator/compare/1.26.1...1.26.2) (2026-06-03)
 
 ### Bug Fixes
