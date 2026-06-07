@@ -280,6 +280,14 @@ export class RenameProgress {
     }
 
     /**
+     * Whether the undo action is currently available in the progress UI.
+     */
+    isUndoAvailable(): boolean {
+        return this.undoButtonEl.hasClass('rename-progress-btn-enabled')
+            && !this.undoButtonEl.hasClass('is-hidden');
+    }
+
+    /**
      * Show that a revert (cancel or undo) is in progress by changing successful blocks to pending
      */
     showRevertInProgress(trigger: 'cancel' | 'undo'): void {

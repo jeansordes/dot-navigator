@@ -67,6 +67,7 @@ export default class DotNavigatorPlugin extends Plugin {
 
         // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);
+        this.renameManager.registerMoveNoticeUndoShortcut(this);
 
         // Settings tab
         this.addSettingTab(new DotNavigatorSettingTab(this.app, this));

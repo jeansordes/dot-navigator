@@ -21,6 +21,7 @@ import {
 import { executeRename, performRevert } from './RenameDialogOperations';
 import { refreshDialogState as refreshDialogStateHelper } from './RenameDialogStateUtils';
 import { MobileKeyboardHandler } from './MobileKeyboardHandler.js';
+import { attachModZUndoShortcut } from '../../utils/keyboard/undoShortcut';
 
 
 export class RenameDialog extends Modal {
@@ -43,6 +44,7 @@ export class RenameDialog extends Modal {
     private mobileTouchEndHandler?: (event: TouchEvent) => void;
     private mobileKeyboardHandler?: MobileKeyboardHandler;
     private mobileSubmitButton?: HTMLButtonElement;
+    private detachUndoShortcut?: () => void;
 
     constructor(
         app: App,
@@ -157,6 +159,11 @@ export class RenameDialog extends Modal {
         if (Platform.isMobile) {
             this.mobileKeyboardHandler = new MobileKeyboardHandler(this.contentEl);
         }
+
+        this.detachUndoShortcut = attachModZUndoShortcut(
+            () => this.renameProgress?.isUndoAvailable() ?? false,
+            () => { void this.handleRevert('undo'); }
+        );
     }
 
 
@@ -354,6 +361,9 @@ export class RenameDialog extends Modal {
             this.mobileKeyboardHandler.destroy();
             this.mobileKeyboardHandler = undefined;
         }
+
+        this.detachUndoShortcut?.();
+        this.detachUndoShortcut = undefined;
 
         // Clean up progress component
         if (this.renameProgress) {
