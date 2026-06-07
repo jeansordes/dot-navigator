@@ -44,14 +44,9 @@ export function addDeleteMenuItem(
     mi.setTitle(title)
       .setIcon(icon || 'trash-2')
       .onClick(async () => {
-        if (isFile && file) {
-          await app.fileManager.trashFile(file);
-        } else if (folder) {
-          try {
-            await app.fileManager.trashFile(folder);
-          } catch {
-            try { await app.vault.delete(folder, true); } catch { /* ignore */ }
-          }
+        const target = file ?? folder;
+        if (target) {
+          await app.fileManager.promptForDeletion(target);
         }
       });
     styleDangerMenuItem(mi);
