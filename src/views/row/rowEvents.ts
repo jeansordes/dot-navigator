@@ -15,6 +15,7 @@ import { t } from '../../i18n';
 import { scrollIntoView } from '../../utils/misc/rowState';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
+import { addDeleteMenuItem } from './rowMenuDelete';
 import { isEffectivelyHidden, toggleHiddenPath } from '../../core/virtualData';
 import type DotNavigatorPlugin from '../../main';
 import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
@@ -116,33 +117,7 @@ export function handleActionButtonClick(
               });
           });
         } else if (it.builtin === 'delete') {
-          if (isShortcut) continue;
-          if (!file && !folder) continue; // only for files or folders
-          const isFile = !!file;
-          const title = isFile ? t('menuDeleteFile') : t('menuDeleteFolder');
-          
-          menu.addItem((mi) => {
-            mi.setTitle(title)
-              .setIcon(it.icon || 'trash-2')
-              .onClick(async () => {
-                if (isFile && file) {
-                  await app.fileManager.trashFile(file);
-                } else if (folder) {
-                  try {
-                    await app.fileManager.trashFile(folder);
-                  } catch {
-                    try { await app.vault.delete(folder, true); } catch { /* ignore */ }
-                  }
-                }
-              });
-            try {
-              if (Platform.isMobile) {
-                const maybeDom = Reflect.get(mi, 'dom');
-                const el = maybeDom instanceof HTMLElement ? maybeDom : undefined;
-                if (el) el.classList.add('tappable', 'is-warning');
-              }
-            } catch { /* ignore */ }
-          });
+          if (!addDeleteMenuItem(menu, app, treeItem, isShortcut, file, folder, it.icon)) continue;
         } else if (it.builtin === 'rename') {
           if (isShortcut) continue;
           menu.addItem((mi) => {

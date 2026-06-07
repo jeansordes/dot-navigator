@@ -1,0 +1,60 @@
+import { App, Menu, Platform, TFile, TFolder } from 'obsidian';
+import { t } from '../../i18n';
+import { deleteShortcutAlias } from '../../utils/rename/ShortcutDragUtils';
+import type { RowItem } from '../utils/viewTypes';
+
+function styleDangerMenuItem(mi: object): void {
+  try {
+    if (Platform.isMobile) {
+      const maybeDom = Reflect.get(mi, 'dom');
+      const el = maybeDom instanceof HTMLElement ? maybeDom : undefined;
+      if (el) el.classList.add('tappable', 'is-warning');
+    }
+  } catch { /* ignore */ }
+}
+
+export function addDeleteMenuItem(
+  menu: Menu,
+  app: App,
+  treeItem: RowItem | undefined,
+  isShortcut: boolean,
+  file: TFile | null,
+  folder: TFolder | null,
+  icon?: string,
+): boolean {
+  if (treeItem?.isAlias && treeItem.aliasPath && treeItem.targetPath) {
+    menu.addItem((mi) => {
+      mi.setTitle(t('menuDeleteShortcut'))
+        .setIcon(icon || 'trash-2')
+        .onClick(async () => {
+          await deleteShortcutAlias(app, treeItem.aliasPath!, treeItem.targetPath!);
+        });
+      styleDangerMenuItem(mi);
+    });
+    return true;
+  }
+
+  if (isShortcut || (!file && !folder)) {
+    return false;
+  }
+
+  const isFile = !!file;
+  const title = isFile ? t('menuDeleteFile') : t('menuDeleteFolder');
+  menu.addItem((mi) => {
+    mi.setTitle(title)
+      .setIcon(icon || 'trash-2')
+      .onClick(async () => {
+        if (isFile && file) {
+          await app.fileManager.trashFile(file);
+        } else if (folder) {
+          try {
+            await app.fileManager.trashFile(folder);
+          } catch {
+            try { await app.vault.delete(folder, true); } catch { /* ignore */ }
+          }
+        }
+      });
+    styleDangerMenuItem(mi);
+  });
+  return true;
+}
