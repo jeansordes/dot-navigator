@@ -26,36 +26,6 @@
     }
 }
 
-/* More menu action buttons — one per row, full width on mobile */
-.dotnav-more-menu-actions {
-    margin-top: var(--size-4-2);
-
-    > .setting-item {
-        background-color: transparent;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    > .setting-item .setting-item-control {
-        width: 100%;
-        justify-content: stretch;
-    }
-
-    > .setting-item .setting-item-control button {
-        flex: 1 1 auto;
-    }
-}
-
-.is-mobile .dotnav-more-menu-actions > .setting-item .setting-item-control {
-    flex-direction: column;
-    align-items: stretch;
-
-    button {
-        width: 100%;
-        white-space: normal;
-    }
-}
-
 .is-mobile .dotnav-grip {
     display: none;
 }
@@ -76,32 +46,6 @@
     font-weight: var(--font-medium);
     line-height: 1;
     vertical-align: middle;
-}
-
-/* A reorderable menu row: [grip] [icon + label] ........ [actions] */
-.dotnav-menu-item {
-    position: relative;
-    transition: background-color 120ms ease;
-}
-
-.dotnav-menu-item-label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--size-4-2);
-}
-
-.dotnav-menu-item-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    color: var(--text-muted);
-
-    svg {
-        width: 16px;
-        height: 16px;
-    }
 }
 
 /* Drag handle */
@@ -125,7 +69,7 @@
     }
 }
 
-.dotnav-menu-item:hover .dotnav-grip {
+.dotnav-settings-card:hover .dotnav-grip {
     color: var(--text-muted);
 }
 
@@ -134,9 +78,8 @@
     background-color: var(--background-modifier-hover);
 }
 
-.dotnav-menu-item.is-dragging {
-    opacity: 0.5;
-    background-color: var(--background-modifier-hover);
+.dotnav-settings-card.is-dragging {
+    opacity: 0.55;
 }
 
 /* While dragging, lock the cursor and suppress text selection globally */
@@ -144,26 +87,6 @@ body.dotnav-reordering,
 body.dotnav-reordering * {
     cursor: grabbing !important;
     user-select: none !important;
-}
-
-/* Drop indicators */
-.dotnav-menu-item.dotnav-drop-before::before,
-.dotnav-menu-item.dotnav-drop-after::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: var(--interactive-accent);
-    pointer-events: none;
-}
-
-.dotnav-menu-item.dotnav-drop-before::before {
-    top: -1px;
-}
-
-.dotnav-menu-item.dotnav-drop-after::after {
-    bottom: -1px;
 }
 
 /* Friendly empty state for the custom commands list */
@@ -190,12 +113,14 @@ body.dotnav-reordering * {
     padding-bottom: var(--size-4-2);
 }
 
-/* Suggestion rules editor */
+/* Padded card lists (rules, more menu) */
+.dotnav-settings-card-list,
 .dotnav-rules-list {
     display: flex;
     flex-direction: column;
     gap: var(--size-4-3);
     margin-top: var(--size-4-2);
+    padding: 0 var(--size-4-3);
 }
 
 .dotnav-rules-empty {
@@ -204,7 +129,7 @@ body.dotnav-reordering * {
     align-items: center;
     text-align: center;
     gap: var(--size-4-2);
-    margin-top: var(--size-4-2);
+    margin: var(--size-4-2) var(--size-4-3) 0;
     padding: var(--size-4-6) var(--size-4-4);
     border: 1px dashed var(--background-modifier-border);
     border-radius: var(--radius-m);
@@ -239,6 +164,7 @@ body.dotnav-reordering * {
     line-height: 1.5;
 }
 
+.dotnav-settings-card,
 .dotnav-rule-card {
     position: relative;
     border: 1px solid var(--background-modifier-border);
@@ -251,10 +177,6 @@ body.dotnav-reordering * {
     &:hover {
         border-color: var(--background-modifier-border-hover);
         box-shadow: 0 1px 3px var(--background-modifier-box-shadow);
-    }
-
-    &.is-dragging {
-        opacity: 0.55;
     }
 
     &.dotnav-drop-before::before,
@@ -277,11 +199,11 @@ body.dotnav-reordering * {
     }
 }
 
+.dotnav-settings-card-header,
 .dotnav-rule-card-header {
     display: flex;
     align-items: flex-start;
     gap: var(--size-4-2);
-    margin-bottom: var(--size-4-3);
 
     .dotnav-grip {
         margin-top: 2px;
@@ -289,16 +211,45 @@ body.dotnav-reordering * {
     }
 }
 
+.dotnav-rule-card-header {
+    margin-bottom: var(--size-4-3);
+}
+
+.dotnav-settings-card-title-block,
 .dotnav-rule-card-title-block {
     flex: 1 1 auto;
     min-width: 0;
 }
 
+.dotnav-settings-card-title,
 .dotnav-rule-card-title {
     font-weight: var(--font-medium);
     color: var(--text-normal);
 }
 
+.dotnav-settings-card-title-row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-4-2);
+    min-width: 0;
+}
+
+.dotnav-settings-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.dotnav-settings-card-summary,
 .dotnav-rule-card-summary {
     margin-top: var(--size-2-1);
     font-family: var(--font-monospace);
@@ -309,6 +260,7 @@ body.dotnav-reordering * {
     text-overflow: ellipsis;
 }
 
+.dotnav-settings-card-chip,
 .dotnav-rule-match-chip {
     flex-shrink: 0;
     align-self: center;
@@ -322,6 +274,7 @@ body.dotnav-reordering * {
     white-space: nowrap;
 }
 
+.dotnav-settings-card-actions,
 .dotnav-rule-card-actions {
     display: flex;
     flex-shrink: 0;
@@ -330,6 +283,7 @@ body.dotnav-reordering * {
     margin-left: auto;
 }
 
+.dotnav-settings-card-action,
 .dotnav-rule-card-action {
     display: inline-flex;
     align-items: center;
@@ -460,8 +414,10 @@ body.dotnav-reordering * {
     white-space: pre-wrap;
 }
 
-.dotnav-rules-actions {
+.dotnav-rules-actions,
+.dotnav-more-menu-actions {
     margin-top: var(--size-4-3);
+    padding: 0 var(--size-4-3);
 
     > .setting-item {
         background-color: transparent;
@@ -485,14 +441,17 @@ body.dotnav-reordering * {
     }
 }
 
+.is-mobile .dotnav-settings-card-header,
 .is-mobile .dotnav-rule-card-header {
     flex-wrap: wrap;
 }
 
+.is-mobile .dotnav-settings-card-summary,
 .is-mobile .dotnav-rule-card-summary {
     white-space: normal;
 }
 
+.is-mobile .dotnav-settings-card-chip,
 .is-mobile .dotnav-rule-match-chip {
     align-self: flex-start;
 }
@@ -501,7 +460,8 @@ body.dotnav-reordering * {
     grid-template-columns: 1fr;
 }
 
-.is-mobile .dotnav-rules-actions > .setting-item .setting-item-control {
+.is-mobile .dotnav-rules-actions > .setting-item .setting-item-control,
+.is-mobile .dotnav-more-menu-actions > .setting-item .setting-item-control {
     flex-direction: column;
     align-items: stretch;
 

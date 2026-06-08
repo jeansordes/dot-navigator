@@ -1,6 +1,7 @@
 import { setIcon } from 'obsidian';
 import { t } from '../i18n';
 import type { PluginSettings, SchemaRule } from '../types';
+import { createIconButton } from './cardDom';
 import {
   attachReorderHandle,
   createGripHandle,
@@ -52,27 +53,6 @@ function validateRule(rule: SchemaRule): string[] {
   return errors;
 }
 
-function createIconButton(
-  parent: HTMLElement,
-  icon: string,
-  onClick: () => void,
-  disabled = false
-): HTMLButtonElement {
-  const btn = parent.createEl('button', {
-    cls: 'clickable-icon dotnav-rule-card-action',
-    type: 'button',
-  });
-  setIcon(btn, icon);
-  btn.disabled = disabled;
-  btn.addEventListener('click', (event) => {
-    event.preventDefault();
-    if (!btn.disabled) {
-      onClick();
-    }
-  });
-  return btn;
-}
-
 function renderPreviewBody(
   previewBody: HTMLElement,
   rule: SchemaRule,
@@ -120,7 +100,7 @@ export function renderRuleCard(
     options?: { refreshUI?: boolean }
   ) => Promise<void>
 ): void {
-  const card = container.createDiv({ cls: 'dotnav-rule-card' });
+  const card = container.createDiv({ cls: 'dotnav-settings-card dotnav-rule-card' });
   card.dataset.ruleIndex = String(index);
 
   const header = card.createDiv({ cls: 'dotnav-rule-card-header' });

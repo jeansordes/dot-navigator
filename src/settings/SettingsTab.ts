@@ -6,10 +6,9 @@ import { addAliasVirtualModeSetting } from './AliasSettings';
 import { addHiddenNodesSettings } from './HiddenNodesSettings';
 import { addChildCountSetting } from './ChildCountSettings';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
-import { addBuiltinItemsSection } from './BuiltinItemsSettings';
-import { addCustomCommandsSection, addCustomCommandActions } from './CustomCommandsSettings';
+import { addMoreMenuEditorSection } from './MoreMenuEditor';
 import { addTipsSection } from './TipsSettings';
-import { addSettingsGroup, createGroupHeading, addActionSettingsRows } from './settingsGroup';
+import { addSettingsGroup, createGroupHeading } from './settingsGroup';
 import PluginMainPanel from '../views/components/PluginMainPanel';
 import { t } from '../i18n';
 
@@ -136,42 +135,26 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       containerEl,
       createGroupHeading(
         t('settingsMoreMenuHeader'),
-        t('settingsMoreMenuDescription'),
-        this.getBuiltinOrder().length
+        t('settingsMoreMenuDescription')
       )
     );
     moreMenuGroup.groupEl.id = 'dotnav-more-menu';
 
-    addBuiltinItemsSection(moreMenuGroup, {
-      getBuiltinItems: this.getBuiltinItems.bind(this),
-      getBuiltinOrder: this.getBuiltinOrder.bind(this),
-      updateBuiltinOrder: this.updateBuiltinOrder.bind(this),
-      getBuiltinDisplayName: this.getBuiltinDisplayName.bind(this),
-      describeItem: this.describeItem.bind(this)
-    });
-
-    const customCommandsGroup = addSettingsGroup(
-      containerEl,
-      createGroupHeading(
-        t('settingsCustomCommands'),
-        t('settingsCustomCommandsDescription'),
-        this.getUserItems().length
-      )
-    );
-    customCommandsGroup.groupEl.addClass('dotnav-custom-commands');
-
-    addCustomCommandsSection(customCommandsGroup, this.app, this.customCommandsCallbacks);
-
-    addCustomCommandActions(
-      addActionSettingsRows(customCommandsGroup, 'dotnav-more-menu-actions'),
-      this.app,
-      this.customCommandsCallbacks,
-      async () => {
+    addMoreMenuEditorSection(moreMenuGroup, this.app, {
+      builtin: {
+        getBuiltinItems: this.getBuiltinItems.bind(this),
+        getBuiltinOrder: this.getBuiltinOrder.bind(this),
+        updateBuiltinOrder: this.updateBuiltinOrder.bind(this),
+        getBuiltinDisplayName: this.getBuiltinDisplayName.bind(this),
+        describeItem: this.describeItem.bind(this),
+      },
+      custom: this.customCommandsCallbacks,
+      onRestoreDefaults: async () => {
         await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
         await this.updateUserItems([]);
         this.redisplayPreservingScroll();
-      }
-    );
+      },
+    });
 
     addTipsSection(
       addSettingsGroup(

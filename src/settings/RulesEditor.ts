@@ -73,7 +73,7 @@ export function addRulesEditorSection(
   if (rules.length === 0) {
     renderRulesEmptyState(section);
   } else {
-    const listEl = section.listEl.createDiv({ cls: 'dotnav-rules-list' });
+    const listEl = section.listEl.createDiv({ cls: 'dotnav-settings-card-list' });
     const notePaths = getNotePaths(app);
     rules.forEach((rule, index) => {
       renderRuleCard(
@@ -104,11 +104,21 @@ export function addRulesEditorSection(
 
     setting.addButton((btn) => {
       btn
-        .setIcon('file-json')
-        .setButtonText(t('settingsRulesImportExport'))
+        .setIcon('copy')
+        .setButtonText(t('settingsRulesViewJson'))
         .onClick(() => {
-          new RulesImportExportModal(app, settings.schemaRules ?? [], async (imported) => {
-            await saveRules(imported, { refreshUI: true });
+          new RulesImportExportModal(app, 'export', settings.schemaRules ?? []).open();
+        });
+    });
+
+    setting.addButton((btn) => {
+      btn
+        .setIcon('file-input')
+        .setButtonText(t('settingsRulesImportJsonButton'))
+        .onClick(() => {
+          new RulesImportExportModal(app, 'import', settings.schemaRules ?? [], async (imported) => {
+            const next = [...(settings.schemaRules ?? []), ...imported];
+            await saveRules(next, { refreshUI: true });
           }).open();
         });
     });
