@@ -110,6 +110,7 @@ export default {
     settingsRulesErrorMissingPattern: 'Au moins un motif est requis',
     settingsRulesErrorMissingChildren: 'Au moins un enfant est requis',
     settingsRulesPreviewToggle: 'Aperçu des correspondances',
+    settingsRulesMatchCount: '{{count}} correspondances',
     settingsRulesPreviewMatches: 'Notes correspondantes ({{count}})',
     settingsRulesPreviewNoMatches: 'Aucune note ne correspond à cette règle',
     settingsRulesPreviewTruncated: '…et {{count}} de plus',

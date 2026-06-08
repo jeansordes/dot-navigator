@@ -110,6 +110,7 @@ export default {
     settingsRulesErrorMissingPattern: 'At least one pattern is required',
     settingsRulesErrorMissingChildren: 'At least one child is required',
     settingsRulesPreviewToggle: 'Preview matches',
+    settingsRulesMatchCount: '{{count}} matches',
     settingsRulesPreviewMatches: 'Matched notes ({{count}})',
     settingsRulesPreviewNoMatches: 'No notes match this rule',
     settingsRulesPreviewTruncated: '…and {{count}} more',

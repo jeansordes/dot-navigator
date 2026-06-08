@@ -21,6 +21,7 @@ export function addSchemaSuggestionsToggle(
   callbacks: SchemaToggleCallbacks
 ): void {
   section.addSetting((setting) => {
+    setting.settingEl.addClass('dotnav-schema-toggle');
     setting
       .setName(t('settingsEnableSchemaSuggestions'))
       .setDesc(t('settingsEnableSchemaSuggestionsDesc'))
