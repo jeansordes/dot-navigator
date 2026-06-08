@@ -97,13 +97,14 @@
         color: var(--dotn_color-text-hover);
     }
 
-    .dotn_tree-item-title[data-node-kind="folder"] {
-        padding-left: 0;
-    }
-
     .dotn_tree-item-title[data-node-kind="folder"],
     .dotn_tree-item-title[data-node-kind="virtual"] {
         background-color: unset;
+    }
+
+    .dotn_tree-item-title[data-node-kind="folder"]:hover:not(.is-active),
+    .dotn_tree-item-title[data-node-kind="virtual"]:hover:not(.is-active) {
+        background-color: var(--dotn_bg-hover);
     }
 
     /* Schema-suggested virtual nodes styling */
