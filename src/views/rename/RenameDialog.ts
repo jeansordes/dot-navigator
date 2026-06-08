@@ -1,13 +1,14 @@
 import { App, Modal, Platform } from 'obsidian';
-import { t } from '../../i18n';
-import { RenameDialogData, RenameMode, RenameOptions, RenameProgress as RenameProgressData } from '../../types';
+import { RenameDialogData, RenameMode, RenameOperation, RenameOptions, RenameProgress as RenameProgressData } from '../../types';
 import { loadDirectories } from '../../utils/misc/PathLoadingUtils';
 import { shouldProceedWithRename } from '../../utils/rename/RenameLogicUtils';
-import { hideWarning } from '../../utils/validation/PathValidationUtils';
 import { shouldShowModeSelection as shouldShowModeSelectionUtil } from '../../utils/rename/RenameDialogUIUtils';
 import { RenameProgress } from './RenameProgress';
 import { setupRenameDialogContent } from './RenameDialogContent';
-import type { MobileHeaderConfig } from './RenameDialogMobileSetup';
+import {
+    getRenameMobileHeaderConfig,
+    updateRenameMobileSubmitButton,
+} from './RenameDialogMobileUtils';
 import type { AutocompleteState } from '../../utils/misc/AutocompleteUtils';
 import {
     showNoChangesMessage as showNoChangesMessageHelper,
@@ -19,6 +20,8 @@ import {
     type ProgressContext
 } from './RenameDialogProgressUtils';
 import { executeRename, performRevert } from './RenameDialogOperations';
+import { cleanupRenameDialog } from './RenameDialogCleanupUtils';
+import { restoreCompletedRenameState } from './RenameDialogRestoreUtils';
 import { refreshDialogState as refreshDialogStateHelper } from './RenameDialogStateUtils';
 import { MobileKeyboardHandler } from './MobileKeyboardHandler.js';
 import { attachModZUndoShortcut } from '../../utils/keyboard/undoShortcut';
@@ -39,23 +42,23 @@ export class RenameDialog extends Modal {
     private isRenaming = false;
     private shouldHideProgressOnInteraction = false;
     private childrenListEl: HTMLElement | null = null;
-    private mobileTouchStartHandler?: (event: TouchEvent) => void;
-    private mobileTouchMoveHandler?: (event: TouchEvent) => void;
-    private mobileTouchEndHandler?: (event: TouchEvent) => void;
     private mobileKeyboardHandler?: MobileKeyboardHandler;
     private mobileSubmitButton?: HTMLButtonElement;
     private detachUndoShortcut?: () => void;
+    private restoreOperations?: RenameOperation[];
 
     constructor(
         app: App,
         data: RenameDialogData,
         onRename: (options: RenameOptions) => Promise<void>,
-        onUndo?: (onProgress?: (progress: RenameProgressData) => void) => Promise<string | null>
+        onUndo?: (onProgress?: (progress: RenameProgressData) => void) => Promise<string | null>,
+        restoreOperations?: RenameOperation[]
     ) {
         super(app);
         this.data = data;
         this.onRename = onRename;
         this.onUndo = onUndo;
+        this.restoreOperations = restoreOperations;
         this.loadDirectories();
 
         // Remove the close button
@@ -73,28 +76,6 @@ export class RenameDialog extends Modal {
         return this.allDirectories;
     }
 
-    private getMobileHeaderConfig(): MobileHeaderConfig {
-        const isProgressVisible = this.isProgressVisible();
-
-        return {
-            submitButtonText: isProgressVisible ? 'Done' : t('renameDialogConfirm'),
-            onSubmit: isProgressVisible ? () => this.close() : () => this.attemptSubmit(),
-            onClose: () => this.close()
-        };
-    }
-
-    private isProgressVisible(): boolean {
-        if (!this.renameProgress) {
-            return false;
-        }
-        const progressEl = this.renameProgress.getElement();
-        // If the element is not attached to the DOM yet, consider it hidden
-        if (!progressEl.parentElement) {
-            return false;
-        }
-        return !progressEl.hasClass('is-hidden');
-    }
-
     private attemptSubmit(): void {
         if (this.shouldProceedWithRename()) {
             this.handleRename();
@@ -104,12 +85,12 @@ export class RenameDialog extends Modal {
     }
 
     private updateMobileSubmitButton(): void {
-        if (Platform.isMobile && this.mobileSubmitButton) {
-            const config = this.getMobileHeaderConfig();
-            this.mobileSubmitButton.textContent = config.submitButtonText;
-            // Update the click handler
-            this.mobileSubmitButton.onclick = () => config.onSubmit();
-        }
+        updateRenameMobileSubmitButton(
+            this.mobileSubmitButton,
+            this.renameProgress,
+            () => this.close(),
+            () => this.attemptSubmit()
+        );
     }
 
     onOpen(): void {
@@ -140,7 +121,12 @@ export class RenameDialog extends Modal {
             getAutocompleteState: () => this.autocompleteState,
             setAutocompleteState: (state) => { this.autocompleteState = state; },
             closeModal: () => this.close(),
-            getMobileHeaderConfig: () => this.getMobileHeaderConfig()
+            getMobileHeaderConfig: () => getRenameMobileHeaderConfig(
+                this.renameProgress,
+                () => this.close(),
+                () => this.attemptSubmit()
+            ),
+            skipInitialFocus: Boolean(this.restoreOperations?.length)
         });
 
         this.pathInput = pathInput;
@@ -164,8 +150,16 @@ export class RenameDialog extends Modal {
             () => this.renameProgress?.isUndoAvailable() ?? false,
             () => { void this.handleRevert('undo'); }
         );
-    }
 
+        if (this.restoreOperations && this.restoreOperations.length > 0) {
+            restoreCompletedRenameState(this.restoreOperations, {
+                renameProgress: this.renameProgress,
+                leaveRenamingState: (keepVisible) => this.leaveRenamingState(keepVisible),
+                updateMobileSubmitButton: () => this.updateMobileSubmitButton(),
+            });
+            this.restoreOperations = undefined;
+        }
+    }
 
     private getProgressContext(): ProgressContext {
         return {
@@ -351,26 +345,15 @@ export class RenameDialog extends Modal {
     }
 
     onClose(): void {
-        const { contentEl } = this;
-        hideWarning(contentEl);
-        this.hideInfoMessage();
-        this.autocompleteState = null;
-
-        // Clean up mobile keyboard handler
-        if (this.mobileKeyboardHandler) {
-            this.mobileKeyboardHandler.destroy();
-            this.mobileKeyboardHandler = undefined;
-        }
-
-        this.detachUndoShortcut?.();
-        this.detachUndoShortcut = undefined;
-
-        // Clean up progress component
-        if (this.renameProgress) {
-            this.renameProgress.destroy();
-            this.renameProgress = null;
-        }
-
-        contentEl.empty();
+        cleanupRenameDialog({
+            contentEl: this.contentEl,
+            mobileKeyboardHandler: this.mobileKeyboardHandler,
+            detachUndoShortcut: this.detachUndoShortcut,
+            renameProgress: this.renameProgress,
+            setAutocompleteState: (state) => { this.autocompleteState = state; },
+            setMobileKeyboardHandler: (handler) => { this.mobileKeyboardHandler = handler; },
+            setDetachUndoShortcut: (handler) => { this.detachUndoShortcut = handler; },
+            setRenameProgress: (progress) => { this.renameProgress = progress; },
+        });
     }
 }

@@ -23,7 +23,8 @@ export function setupPathInput(
     handlePostOperationInteraction: () => void,
     getModeSelection: () => RenameMode,
     getNameInput: () => HTMLTextAreaElement,
-    extensionInput?: HTMLInputElement
+    extensionInput?: HTMLInputElement,
+    skipInitialFocus = false
 ): PathInputSetupResult {
     let pathInput: HTMLTextAreaElement;
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
@@ -76,10 +77,12 @@ export function setupPathInput(
         autocompleteState = getState();
         setAutocompleteState(autocompleteState);
 
-        setTimeout(() => {
-            const event = new Event('focus');
-            pathInput.dispatchEvent(event);
-        }, 50);
+        if (!skipInitialFocus) {
+            setTimeout(() => {
+                const event = new Event('focus');
+                pathInput.dispatchEvent(event);
+            }, 50);
+        }
     } else {
         pathInput = document.createElement('textarea');
         pathInput.setAttribute('rows', '1');

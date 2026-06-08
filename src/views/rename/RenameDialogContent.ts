@@ -30,6 +30,7 @@ export interface RenameDialogUISetupParams {
     setAutocompleteState: (state: AutocompleteState | null) => void;
     closeModal: () => void;
     getMobileHeaderConfig?: () => MobileHeaderConfig;
+    skipInitialFocus?: boolean;
 }
 
 export interface RenameDialogUISetupResult {
@@ -59,7 +60,8 @@ export function setupRenameDialogContent({
     getAutocompleteState,
     setAutocompleteState,
     closeModal,
-    getMobileHeaderConfig
+    getMobileHeaderConfig,
+    skipInitialFocus = false
 }: RenameDialogUISetupParams): RenameDialogUISetupResult {
     contentEl.empty();
     contentEl.addClass('rename-dialog-content');
@@ -106,7 +108,8 @@ export function setupRenameDialogContent({
         handlePostOperationInteraction,
         getModeSelection,
         () => nameInput, // nameInput will be created after
-        undefined
+        undefined,
+        skipInitialFocus
     );
     autocompleteState = newAutocompleteState;
 
@@ -149,12 +152,14 @@ export function setupRenameDialogContent({
 
     createHints(layoutContainer, data);
 
-    setTimeout(() => {
-        // Focus the name input (second input) when opening the modal
-        nameInput.focus();
-        nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
-        validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || data.extension || '', data.path, app, contentEl);
-    }, 0);
+    if (!skipInitialFocus) {
+        setTimeout(() => {
+            // Focus and select all text in the name input (second input) when opening the modal
+            nameInput.focus();
+            nameInput.select();
+            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || data.extension || '', data.path, app, contentEl);
+        }, 0);
+    }
 
     return {
         pathInput,

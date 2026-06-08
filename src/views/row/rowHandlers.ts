@@ -4,7 +4,7 @@ import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { handleActionButtonClick, handleTitleClick } from './rowEvents';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import type { MenuItemKind } from '../../types';
-import { isShortcutItem } from '../../core/aliasVirtualData';
+import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
 import createDebug from 'debug';
 const debugError = createDebug('dot-navigator:views:row-handlers:error');
 
@@ -210,7 +210,7 @@ export function onRowClick(
   const triggerRename = (): boolean => {
     if (isShortcutItem(item)) return false;
     if (!renameManager) return false;
-    void renameManager.showRenameDialog(id, kind);
+    void renameManager.showRenameDialog(resolveTargetPath(item), kind);
     return true;
   };
 

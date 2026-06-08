@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, setIcon } from 'obsidian';
+import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
 import {
     computeMoveDestination,
@@ -11,10 +11,18 @@ import {
     moveShortcutByDragAndDrop as moveShortcutByDrag,
 } from './ShortcutDragUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
+import {
+    clearRenameSession,
+    clearRenameSessionIfEntry,
+    clearRenameSessionIfRemoved,
+    getRestorableSession,
+    saveRenameSession,
+    type UndoStackEntry,
+} from './RenameSessionUtils';
 import { RenameDialog } from '../../views/rename/RenameDialog';
 import { ViewLayout } from '../../core/ViewLayout';
 import { t } from '../../i18n';
-import { shouldHandleModZUndo } from '../keyboard/undoShortcut';
+import { createMoveNoticeHandlers } from './RenameMoveNotice';
 import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:rename-manager');
@@ -26,12 +34,10 @@ export interface RenameDialogLaunchOptions {
 
 export class RenameManager {
     private app: App;
-    private undoStack: Array<{ operations: RenameOperation[]; options: RenameOptions }> = [];
+    private undoStack: UndoStackEntry[] = [];
     private maxUndoStackSize = 10;
     private layout?: ViewLayout;
-    private moveNoticeUndoActive = false;
-    private moveNoticeUndoNotice?: Notice;
-    private moveNoticeUndoTimeout?: number;
+    private moveNotice = createMoveNoticeHandlers();
 
     constructor(app: App, layout?: ViewLayout) {
         this.app = app;
@@ -41,17 +47,8 @@ export class RenameManager {
     /**
      * Register a document-level Mod+Z handler for move notices with undo UI.
      */
-    registerMoveNoticeUndoShortcut(host: Plugin): void {
-        host.registerDomEvent(document, 'keydown', (event: KeyboardEvent) => {
-            if (!this.moveNoticeUndoActive || !shouldHandleModZUndo(event)) {
-                return;
-            }
-            event.preventDefault();
-            event.stopPropagation();
-            this.clearMoveNoticeUndoShortcut();
-            this.moveNoticeUndoNotice?.hide();
-            void this.undoLastRename();
-        }, true);
+    registerMoveNoticeUndoShortcut(host: Parameters<typeof this.moveNotice.registerMoveNoticeUndoShortcut>[0]): void {
+        this.moveNotice.registerMoveNoticeUndoShortcut(host);
     }
 
     /**
@@ -68,13 +65,15 @@ export class RenameManager {
         debug('Showing rename dialog for:', path, kind);
 
         const dialogData = this.prepareDialogData(path, kind);
+        const restoreSession = getRestorableSession(path, this.undoStack);
 
         const dialog: RenameDialog = new RenameDialog(
             this.app,
             dialogData,
             (options: RenameOptions) => this.performRename(options, dialog),
             (onProgress?: (progress: RenameProgress) => void): Promise<string | null> =>
-                this.undoLastRename(onProgress)
+                this.undoLastRename(onProgress),
+            restoreSession?.operations
         );
 
         dialog.open();
@@ -158,10 +157,12 @@ export class RenameManager {
             );
 
             // Add to undo stack
-            this.addToUndoStack(operations, options);
+            const undoEntry = this.addToUndoStack(operations, options);
+            const successful = operations.filter(op => op.success).length;
+            const failed = operations.length - successful;
 
             // Refresh dialog inputs to reflect new state when rename succeeded
-            if (operations.some(op => op.success)) {
+            if (successful > 0) {
                 dialog.refreshDialogState(options.newPath, options.newTitle);
             }
 
@@ -175,8 +176,8 @@ export class RenameManager {
             const finalProgress: RenameProgress = {
                 total: operations.length,
                 completed: operations.length,
-                successful: operations.filter(op => op.success).length,
-                failed: operations.filter(op => !op.success).length,
+                successful,
+                failed,
                 errors: operations.filter(op => !op.success).map(op => ({
                     path: op.originalPath,
                     error: op.error || 'Unknown error'
@@ -185,6 +186,14 @@ export class RenameManager {
             };
             dialog.updateProgress(finalProgress);
             dialog.markOperationCompleted();
+
+            if (undoEntry && successful > 0) {
+                saveRenameSession(options.newPath, options.kind, operations, undoEntry, options);
+            }
+
+            if (failed === 0 && successful > 0) {
+                dialog.close();
+            }
 
         } catch (error) {
             debug('Rename operation failed:', error);
@@ -196,19 +205,24 @@ export class RenameManager {
     /**
      * Add operations to the undo stack
      */
-    private addToUndoStack(operations: RenameOperation[], options: RenameOptions): void {
+    private addToUndoStack(operations: RenameOperation[], options: RenameOptions): UndoStackEntry | null {
         // Only add if there were successful operations
         const successfulOps = operations.filter(op => op.success);
-        if (successfulOps.length === 0) return;
+        if (successfulOps.length === 0) {
+            return null;
+        }
 
-        this.undoStack.push({ operations, options });
+        const entry: UndoStackEntry = { operations, options };
+        this.undoStack.push(entry);
 
         // Limit stack size
         if (this.undoStack.length > this.maxUndoStackSize) {
-            this.undoStack.shift();
+            const removed = this.undoStack.shift()!;
+            clearRenameSessionIfRemoved(removed);
         }
 
         debug('Added to undo stack, stack size:', this.undoStack.length);
+        return entry;
     }
 
     /**
@@ -220,7 +234,10 @@ export class RenameManager {
             return null;
         }
 
-        const { operations, options } = this.undoStack.pop()!;
+        const entry = this.undoStack.pop()!;
+        clearRenameSessionIfEntry(entry);
+
+        const { operations, options } = entry;
         debug('Undoing rename operations:', operations);
 
         try {
@@ -239,6 +256,7 @@ export class RenameManager {
      */
     clearUndoStack(): void {
         this.undoStack = [];
+        clearRenameSession();
         debug('Undo stack cleared');
     }
 
@@ -315,7 +333,11 @@ export class RenameManager {
             }
 
             this.addToUndoStack(operations, options);
-            this.showMoveNotice(successful.length, operations.length - successful.length);
+            this.moveNotice.showMoveNotice(
+                successful.length,
+                operations.length - successful.length,
+                () => this.undoLastRename()
+            );
             return true;
         } catch (error) {
             debug('Drag move failed:', error);
@@ -325,51 +347,4 @@ export class RenameManager {
         }
     }
 
-    private showMoveNotice(successCount: number, failCount: number): void {
-        let message: string;
-        if (failCount === 0) {
-            message = t('noticeMovedFile', { count: String(successCount) });
-        } else if (successCount === 0) {
-            message = t('noticeMoveFailed', { count: String(failCount) });
-        } else {
-            message = t('noticeMovePartial', {
-                success: String(successCount),
-                failed: String(failCount),
-            });
-        }
-
-        const noticeDurationMs = 8000;
-        const notice = new Notice(message, noticeDurationMs);
-        if (successCount > 0) {
-            notice.messageEl.addClass('dotn_move-notice');
-            const undoBtn = notice.messageEl.createEl('button', { cls: 'dotn_move-notice-undo' });
-            setIcon(undoBtn.createSpan({ cls: 'dotn_move-notice-undo-icon' }), 'undo-2');
-            undoBtn.createSpan({ text: t('renameNotificationUndo') });
-            this.enableMoveNoticeUndoShortcut(notice, noticeDurationMs);
-            undoBtn.addEventListener('click', () => {
-                this.clearMoveNoticeUndoShortcut();
-                notice.hide();
-                void this.undoLastRename();
-            });
-        }
-    }
-
-    private enableMoveNoticeUndoShortcut(notice: Notice, durationMs: number): void {
-        this.clearMoveNoticeUndoShortcut();
-        this.moveNoticeUndoActive = true;
-        this.moveNoticeUndoNotice = notice;
-        this.moveNoticeUndoTimeout = window.setTimeout(
-            () => this.clearMoveNoticeUndoShortcut(),
-            durationMs + 100
-        );
-    }
-
-    private clearMoveNoticeUndoShortcut(): void {
-        this.moveNoticeUndoActive = false;
-        this.moveNoticeUndoNotice = undefined;
-        if (this.moveNoticeUndoTimeout !== undefined) {
-            window.clearTimeout(this.moveNoticeUndoTimeout);
-            this.moveNoticeUndoTimeout = undefined;
-        }
-    }
 }
