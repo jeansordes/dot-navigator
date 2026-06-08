@@ -20,7 +20,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Instant loading with IndexedDB caching**, the tree view loads instantly even for large vaults by caching the tree structure
 - **Performance optimized for very large vaults**, meaning you can expand all 10K notes from your vault at once on your phone, it will still run and scroll smoothly 👌
 - **Designed and optimized for mobile before desktop** with lazy loading of suggestions for better mobile performance
-- **Rule-based suggestions** that surface virtual child notes based on configurable JSON rules so you can scaffold structures before the notes exist
+- **Rule-based suggestions** with an in-app rules editor in settings — define patterns and children, preview matches, reorder rules, and import/export JSON so you can scaffold structures before the notes exist
 
 <img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
 
@@ -29,7 +29,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 - **Persistent expanded state across sessions** (the tree view will remember which nodes are expanded or collapsed when you close/reopen the app)
 - **Horizontal scrolling** support for deeply nested structures (you can write very long path notes and scroll horizontally to see the full path of the note)
-- **Drag-and-drop to move files and folders** directly in the tree (children are moved/renamed along with their parent). Press **Escape** while dragging to cancel.
+- **Drag-and-drop to move files, folders, and virtual nodes** directly in the tree (children are moved/renamed along with their parent). Press **Escape** while dragging to cancel.
 
 <img width="430" alt="Dragging a node to a new position in the tree" src="docs/images/drag-and-drop.png" />
 
@@ -45,7 +45,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 <img width="460" alt="Header toggle to show or hide hidden nodes" src="docs/images/hidden-nodes-toggle.png" />
 <img width="440" alt="Hidden nodes management section in settings" src="docs/images/hidden-nodes-settings.png" />
 
-- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings. Remove a shortcut from the context menu without deleting the underlying note.
+- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings. Delete or remove a shortcut from the context menu without deleting the underlying note.
 
 <img width="520" alt="Aliases defined in a note's frontmatter" src="docs/images/alias-frontmatter.png" />
 <img width="480" alt="Alias shortcut nodes shown in the tree, pointing to their target" src="docs/images/alias-shortcut-nodes.png" />
@@ -54,7 +54,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
 
-- **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI, with **Cmd/Ctrl+Z** when undo is available, or with a command dedicated for that)
+- **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI, with **Cmd/Ctrl+Z** when undo is available, or with a command dedicated for that). The dialog auto-closes when the rename finishes and restores undo state when reopened.
 
 <img width="722" height="470" alt="CleanShot 2025-09-26 at 23 13 38@2x" src="https://github.com/user-attachments/assets/3d0ceb40-2910-48fa-8eea-8c4500d91e87" />
 
@@ -74,6 +74,8 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="3097" height="1897" src="https://github.com/user-attachments/assets/dfff2d5c-0ff1-447c-9b8e-8e0c700b0abc" />
 
+- **Child count badges** — optionally show direct children, total descendants, or both on tree rows (configurable in settings under **Tree display**)
+
 - **YAML title support** - displays custom titles from frontmatter instead of filenames (e.g. `prj.md` with the property `title = "Projects"` will be displayed as `Projects` in the tree view)
 
 <img width="1178" height="432" src="https://github.com/user-attachments/assets/8f3da2eb-6fb4-4ae9-b893-141539fb10e9" />
@@ -84,10 +86,15 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 Dot Navigator supports **rule-based suggestions** that automatically suggest virtual child notes for existing files. This allows you to scaffold note hierarchies before the actual notes exist.
 
-### Setting Up Rule Configuration
+### Setting Up Rules
 
-1. **Create a configuration file** named `dot-navigator-rules.json` in your vault root, or specify a custom path in settings
-2. **Define rules** as a JSON array of rule objects
+1. Open **Dot Navigator settings** in Obsidian
+2. Go to the **Note suggestion schema** section
+3. **Add rules** with the in-app editor, or **Import JSON** to load an existing configuration
+
+Each rule is edited as a card with pattern, exclude, and children fields. You can preview which notes match a pattern, drag to reorder rules, and use **View JSON** to copy or back up your configuration.
+
+If you previously used a `dot-navigator-rules.json` file in your vault, rules are migrated automatically into plugin settings on first load after upgrading.
 
 ### Rule Syntax
 
@@ -138,34 +145,12 @@ For dotted children like `"architecture.backend"`, the plugin creates nested sug
 
 You can create deeply nested hierarchies by using multiple dots, such as `"a.b.c.d"`.
 
-### Configuration File Location
+### Importing and Exporting Rules
 
-The configuration can be stored in:
+- **View JSON** — copy your current rules as a JSON array for backup or sharing
+- **Import JSON** — paste a JSON array of rules to add them to your existing configuration (unknown fields are preserved)
 
-1. **JSON file**: `dot-navigator-rules.json` (recommended)
-2. **Markdown file**: `dot-navigator-rules.md` with JSON in a code block:
-
-   ````markdown
-   # Dot Navigator Rules
-
-   ```json
-   [
-     {
-       "pattern": ["prj.*"],
-       "children": ["roadmap", "ideas"]
-     }
-   ]
-   ```
-   ````
-
-### Creating the Configuration File
-
-1. Open the **Dot Navigator settings** in Obsidian
-2. Go to **Schema Configuration** section
-3. Click **"Create new file"** to generate a template
-4. Edit the generated file with your rules
-
-The plugin will automatically reload rules when the configuration file changes.
+Rules are stored in plugin settings and reload immediately when you save changes in the editor.
 
 ## Available Commands
 
@@ -180,7 +165,7 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 - **Open Closest Parent Note**: Opens the nearest existing parent note of the current file (checks dotted parents like `a.b.c` → `a.b` → `a`)
 
 ### Note creation
-- **Create Child Note**: Will create a new child note for the currently active file with the node name being "untitled" (e.g. if you trigger this command on `a.md`, it will create `a.untitled.md`) and will open the rename dialog for the new note (you can customize the name of the new note in the settings)
+- **Create Child Note**: Creates a new child note for the currently active file with the node name being "untitled" (e.g. if you trigger this command on `a.md`, it will create `a.untitled.md`). Use **Rename Current File** or the tree context menu to rename it afterward (you can customize the default name in settings)
 
 ### Suggestion Interaction
 - **Double-click suggestions**: Quickly create suggested notes by double-clicking on them in the tree view

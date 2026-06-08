@@ -1,3 +1,16 @@
+# [1.28.0](https://github.com/jeansordes/dot-navigator/compare/1.27.0...1.28.0) (2026-06-08)
+
+### Bug Fixes
+
+* **delete:** use native confirm-before-delete in tree menu ([46fd142](https://github.com/jeansordes/dot-navigator/commit/46fd1421a9ff40690adc472721c850467116458c))
+* **rename:** avoid double-prefixing hierarchical paths ([07c9ee6](https://github.com/jeansordes/dot-navigator/commit/07c9ee64518befd3fd35c862ae875a4676d65d0c))
+* **tree:** add scrollable padding below the last row ([151d630](https://github.com/jeansordes/dot-navigator/commit/151d63092be03439b0c910bb98b6a996d9f280a4))
+
+### Features
+
+* **settings:** add in-app schema suggestion rules editor ([03c4422](https://github.com/jeansordes/dot-navigator/commit/03c4422bf503d6e040fd087ca84644e520392ae0))
+* **tree:** add configurable child count badges ([31760d5](https://github.com/jeansordes/dot-navigator/commit/31760d54274514c395473593045b799fa1a696f5))
+
 # [1.27.0](https://github.com/jeansordes/dot-navigator/compare/1.26.2...1.27.0) (2026-06-07)
 
 ### Bug Fixes
