@@ -5,6 +5,7 @@ import { FileUtils } from './utils/file/FileUtils';
 import PluginMainPanel from './views/components/PluginMainPanel';
 import createDebug from 'debug';
 import { DotNavigatorSettingTab } from './settings/SettingsTab';
+import { migrateChildCountSettings } from './settings/ChildCountSettings';
 import { RenameManager } from './utils/rename/RenameManager';
 import { RuleManager } from './utils/schema/RuleManager';
 import { schemaRulesFromFileContent } from './utils/schema/schemaRulesMigration';
@@ -319,6 +320,10 @@ export default class DotNavigatorPlugin extends Plugin {
             }
         } catch {
             debug("Settings migration failed; proceeding with defaults");
+        }
+
+        if (migrateChildCountSettings(this.settings)) {
+            await this.saveData(this.settings);
         }
 
         // Restore expanded nodes if available

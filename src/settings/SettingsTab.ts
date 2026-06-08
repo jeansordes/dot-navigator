@@ -4,6 +4,7 @@ import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuilt
 import { addFileCreationSection } from './FileCreationSettings';
 import { addAliasVirtualModeSetting } from './AliasSettings';
 import { addHiddenNodesSettings } from './HiddenNodesSettings';
+import { addChildCountSetting } from './ChildCountSettings';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
 import { addBuiltinItemsSection } from './BuiltinItemsSettings';
 import { addCustomCommandsSection, addCustomCommandActions } from './CustomCommandsSettings';
@@ -90,6 +91,10 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       createGroupHeading(t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription'))
     );
     addAliasVirtualModeSetting(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
+    addChildCountSetting(treeDisplayGroup, this.plugin.settings, {
+      ...this.settingsCallbacks,
+      refreshDisplay: this.display.bind(this),
+    });
 
     const hiddenCount = this.plugin.settings.hiddenNodes?.length ?? 0;
     addHiddenNodesSettings(

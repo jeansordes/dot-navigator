@@ -1,3 +1,4 @@
+import { countSubtreeSizes } from './utils/childCount';
 import { VirtualTreeBaseItem, VirtualTreeItem } from './types';
 
 export function flattenTree(
@@ -15,7 +16,11 @@ export function flattenTree(
   for (const n of nodes) {
     if (!showHidden && n.isHidden) continue;
 
-    const hasChildren = Array.isArray(n.children) && n.children.length > 0;
+    const visibleChildren = Array.isArray(n.children)
+      ? n.children.filter(c => showHidden || !c.isHidden)
+      : [];
+    const { direct, total } = countSubtreeSizes(n, showHidden);
+    const hasChildren = visibleChildren.length > 0;
     // Include hasChildren so virtual row renderers can decide whether to show toggles
     // Preserve optional fields like `extension` so file icons can render
     out.push({
@@ -33,6 +38,8 @@ export function flattenTree(
       isHidden: n.isHidden,
       level,
       hasChildren,
+      childrenCount: direct,
+      descendantsCount: total,
     });
     if (hasChildren) {
       const isOpen = expandedMap.get(n.id) ?? n.expanded ?? false;

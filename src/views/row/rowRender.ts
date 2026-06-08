@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
-import { createActionButtons, createFolderPlaceholder, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon, createHiddenIcon } from './rowDom';
+import { createActionButtons, createFolderPlaceholder, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon, createHiddenIcon, insertChildCountBadge } from './rowDom';
 import { setRowIndentation } from '../../utils/misc/rowState';
 
 function insertToggleSlot(row: HTMLElement, slot: HTMLElement): void {
@@ -44,6 +44,10 @@ function syncToggleSlot(row: HTMLElement, item: RowItem, hasChildren: boolean, i
       existingPlaceholder.remove();
     }
   }
+}
+
+function syncChildCountBadge(row: HTMLElement, item: RowItem): void {
+  insertChildCountBadge(row, item);
 }
 
 function syncHiddenIcon(row: HTMLElement, isHidden: boolean): void {
@@ -92,6 +96,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
     row.classList.toggle('dotn_hidden', !!item.isHidden);
     syncHiddenIcon(row, !!item.isHidden);
+    syncChildCountBadge(row, item);
     row.setAttribute('tabindex', isFocused ? '0' : '-1');
     row.setAttribute('aria-selected', String(isSelected));
     // aria-expanded handled above together with toggle button sync
@@ -125,6 +130,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   const extEl = maybeCreateExtension(item);
   if (extEl) row.appendChild(extEl);
   row.appendChild(createActionButtons(item, app));
+  syncChildCountBadge(row, item);
 
   const titleEl = row.querySelector('.dotn_tree-item-title');
   if (titleEl) {

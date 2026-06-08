@@ -172,6 +172,28 @@
         /* Prevent icons from shrinking */
     }
 
+    .dotn_tree-count-badge {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        align-self: center;
+        flex-shrink: 0;
+        min-width: 1.25em;
+        height: calc(var(--dotn_button-size) - 6px);
+        padding: 0 0.35em;
+        border-radius: var(--dotn_border-radius);
+        font-size: 0.7rem;
+        line-height: 1;
+        color: var(--dotn_color-text-clickable);
+        background-color: var(--dotn_bg);
+        border: 1px solid var(--dotn_border-color);
+        user-select: none;
+    }
+
+    &.dotn_show-child-count.dotn_child-count-always .dotn_tree-count-badge {
+        display: inline-flex;
+    }
+
     /* Action buttons container */
     .dotn_action-buttons-container {
         position: sticky;
@@ -360,6 +382,11 @@
 
     .is-clickable {
         cursor: pointer;
+    }
+
+    .dotn_tree-item-title[data-node-kind="folder"],
+    .dotn_tree-item-title[data-node-kind="virtual"] {
+        cursor: grab;
     }
 
     .dotn_button-icon:hover,

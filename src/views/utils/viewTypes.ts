@@ -1,7 +1,7 @@
 import type { VItem } from '../../core/virtualData';
 
 // Shape of items after flattening, as consumed by the virtual renderer
-export type RowItem = VItem & { level: number; hasChildren?: boolean };
+export type RowItem = VItem & { level: number; hasChildren?: boolean; childrenCount?: number; descendantsCount?: number };
 
 // Minimal interface to access required properties/methods of VirtualTree
 export interface VirtualTreeLike {

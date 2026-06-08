@@ -57,6 +57,7 @@ export class VirtualTreeManager {
     } else {
       await this.buildAndRenderFreshTree(rootContainer, expanded);
     }
+    this.syncShowChildCountClass();
   }
 
   private async loadFromCache(
@@ -74,6 +75,7 @@ export class VirtualTreeManager {
       expanded
     );
     this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
+    this.syncShowChildCountClass();
   }
 
 
@@ -101,6 +103,7 @@ export class VirtualTreeManager {
       expanded
     );
     this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
+    this.syncShowChildCountClass();
     await CacheUtils.saveTreeToCache(
       this.cacheManager,
       data,
@@ -238,9 +241,32 @@ export class VirtualTreeManager {
 
     if (this.vt && this.rootContainer) {
       this.vt.setShowHidden(newSettings.showHiddenNodes ?? false);
+      this.syncShowChildCountClass();
       // Rebuild the tree data with new settings
       await this.updateOnVaultChange();
     }
+  }
+
+  private syncShowChildCountClass(): void {
+    const root = this.rootContainer;
+    if (!root) return;
+
+    let mode = this.settings?.childCountDisplay;
+    if (mode !== 'off' && mode !== 'hover' && mode !== 'always') {
+      mode = this.settings?.showChildCount === true ? 'always' : 'off';
+    }
+    if (mode === 'hover') mode = 'always';
+    const enabled = mode !== 'off';
+
+    root.classList.toggle('dotn_show-child-count', enabled);
+    root.classList.toggle('dotn_child-count-always', enabled);
+    root.classList.remove('dotn_child-count-hover');
+    root.classList.remove('dotn_hide-count-expanded');
+
+    const countMode = this.settings?.childCountMode ?? 'direct';
+    root.dataset.childCountMode = countMode;
+
+    this.vt?._render();
   }
 
   /**

@@ -1,8 +1,9 @@
 import { setIcon } from 'obsidian';
 import type { App } from 'obsidian';
 import { t } from '../../i18n';
+import type { ChildCountMode } from '../../types';
+import { resolveChildCountBadge } from '../../utils/childCount';
 import type { RowItem } from '../utils/viewTypes';
-import type { VItem } from '../../core/virtualData';
 
 export function createIndentGuides(level: number): HTMLElement {
   const indent = document.createElement('div');
@@ -177,7 +178,60 @@ export function maybeCreateExtension(_item: RowItem): HTMLElement | null {
   return null;
 }
 
-export function createActionButtons(item: VItem, _app: App): HTMLElement {
+function resolveChildCountMode(row: HTMLElement): ChildCountMode {
+  const mode = row.closest('.dotn_view')?.getAttribute('data-child-count-mode');
+  if (mode === 'total' || mode === 'both') return mode;
+  return 'direct';
+}
+
+export function buildChildCountBadge(row: HTMLElement, item: RowItem): HTMLElement | null {
+  if (item.kind === 'suggestion') return null;
+
+  const direct = item.childrenCount ?? 0;
+  const total = item.descendantsCount ?? direct;
+
+  if (direct > 0 || total > 0) {
+    const resolved = resolveChildCountBadge(direct, total, resolveChildCountMode(row));
+    if (!resolved) return null;
+
+    const badge = document.createElement('span');
+    badge.className = 'dotn_tree-count-badge';
+    badge.textContent = resolved.text;
+    badge.title = resolved.tooltip;
+    return badge;
+  }
+
+  if (item.kind === 'virtual') {
+    const badge = document.createElement('span');
+    badge.className = 'dotn_tree-count-badge';
+    badge.textContent = '+';
+    badge.title = t('tooltipChildCountEmpty');
+    return badge;
+  }
+
+  return null;
+}
+
+export function insertChildCountBadge(row: HTMLElement, item: RowItem): void {
+  const actionBtns = row.querySelector('.dotn_action-buttons-container');
+  row.querySelector(':scope > .dotn_tree-count-badge')?.remove();
+
+  const existing = actionBtns?.querySelector('.dotn_tree-count-badge');
+  const badge = buildChildCountBadge(row, item);
+
+  if (badge) {
+    if (existing instanceof HTMLElement) {
+      existing.textContent = badge.textContent;
+      existing.title = badge.title;
+    } else if (actionBtns) {
+      actionBtns.insertBefore(badge, actionBtns.firstChild);
+    }
+  } else if (existing instanceof HTMLElement) {
+    existing.remove();
+  }
+}
+
+export function createActionButtons(item: RowItem, _app: App): HTMLElement {
   const container = document.createElement('div');
   container.className = 'dotn_action-buttons-container';
 

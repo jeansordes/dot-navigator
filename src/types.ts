@@ -11,6 +11,8 @@ export enum DashTransformation {
 }
 
 export type AliasVirtualMode = 'off' | 'dotted' | 'all';
+export type ChildCountDisplayMode = 'off' | 'hover' | 'always';
+export type ChildCountMode = 'direct' | 'total' | 'both';
 
 /** User-authored schema suggestion rule stored in plugin settings */
 export interface SchemaRule {
@@ -38,6 +40,12 @@ export interface PluginSettings {
     aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
     hiddenNodes?: string[]; // Paths of explicitly hidden files/folders
     showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
+    /** @deprecated Migrated to childCountDisplay === 'off' */
+    showChildCount?: boolean;
+    childCountDisplay?: ChildCountDisplayMode; // When to reveal the count badge
+    childCountMode?: ChildCountMode; // What the badge counts: direct, total, or both
+    /** @deprecated Removed — migrated away on load */
+    hideChildCountWhenExpanded?: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -55,6 +63,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
     hiddenNodes: [],
     showHiddenNodes: false,
+    childCountDisplay: 'off',
+    childCountMode: 'direct',
 }
 
 export enum TreeNodeType {
@@ -97,6 +107,8 @@ export interface VirtualTreeBaseItem {
 export interface VirtualTreeItem extends VirtualTreeBaseItem {
     level: number;
     hasChildren?: boolean;
+    childrenCount?: number;
+    descendantsCount?: number;
 }
 
 export interface VirtualTreeOptions {
