@@ -1,4 +1,5 @@
 import type { VItem } from '../../core/virtualData';
+import { getMaxScrollTop } from '../../utils/misc/measure';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 
 function buildItemMap(items: VItem[]): Map<string, VItem> {
@@ -51,9 +52,10 @@ export function applyTreeDataUpdate(
         vt.focusedIndex = Math.max(0, vt.total - 1);
     }
 
-    const maxScrollTop = Math.max(0, vt.total * vt.rowHeight - host.clientHeight);
+    vt._render();
+
+    const maxScrollTop = getMaxScrollTop(host);
     if (prevScrollTop > maxScrollTop) host.scrollTop = maxScrollTop;
 
-    vt._render();
     onExpansionChange?.();
 }

@@ -28,6 +28,26 @@ export function computeRowHeight(rootContainer: HTMLElement): number | null {
   return null;
 }
 
+export function getMaxScrollTop(scrollEl: HTMLElement): number {
+  return Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight);
+}
+
+export function computeTreeBottomPadding(rootContainer: HTMLElement): number {
+  try {
+    const viewTree = rootContainer.querySelector('.dotn_view-tree');
+    const host = viewTree instanceof HTMLElement ? viewTree : rootContainer;
+    const probe = document.createElement('div');
+    probe.className = 'dotn_probe dotn_probe-bottom-pad';
+    host.appendChild(probe);
+    const h = Math.round(probe.getBoundingClientRect().height);
+    probe.remove();
+    if (Number.isFinite(h) && h > 0) return h;
+  } catch (error) {
+    debugError('Error computing tree bottom padding:', error);
+  }
+  return 48;
+}
+
 export function computeGap(rootContainer: HTMLElement): number | null {
   try {
     const viewBody = rootContainer.querySelector('.dotn_view-body');

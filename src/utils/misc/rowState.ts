@@ -2,6 +2,8 @@
  * Utility functions for row state management and improved scrolling behavior
  */
 
+import { getMaxScrollTop } from './measure';
+
 /**
  * Sets dynamic indentation using CSS custom properties
  * Works with the CSS rule: padding-left: calc(var(--dotn_view-padding) + var(--dotn_gap) + (var(--row-indent, 0) * 20px))
@@ -133,10 +135,7 @@ export function scrollIntoView(options: UnifiedScrollOptions): void {
     }
 
     // Clamp to valid scroll range
-    if (typeof totalRows === 'number') {
-      const maxScrollTop = Math.max(0, totalRows * rowHeight - scrollContainer.clientHeight);
-      newScrollTop = Math.min(newScrollTop, maxScrollTop);
-    }
+    newScrollTop = Math.min(newScrollTop, getMaxScrollTop(scrollContainer));
   }
 
   // Handle element-based scrolling

@@ -24,6 +24,11 @@
     height: var(--dotn_gap);
 }
 
+.dotn_probe-bottom-pad {
+    height: 0;
+    padding-bottom: var(--dotn_tree-bottom-padding);
+}
+
 .vt-spacer {
     width: 1px;
 }

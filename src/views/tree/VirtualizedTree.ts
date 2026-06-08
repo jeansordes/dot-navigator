@@ -284,6 +284,7 @@ export class ComplexVirtualTree extends VirtualTree {
       row.addEventListener('contextmenu', (ev) => { if (ev instanceof MouseEvent) this._onRowContextMenu(ev, row); });
     });
     renderVisibleRows(this.virtualTree, vItems, (row, item, idx, start) => this._renderRow(row, item, idx, start));
+    this._syncVirtualizerHeight(this.virtualTree.total * this.virtualTree.rowHeight);
     maybeScheduleRowWidthAdjust(this.virtualTree, {
       getTimer: () => this._widthAdjustTimer,
       setTimer: (n) => { this._widthAdjustTimer = n; },

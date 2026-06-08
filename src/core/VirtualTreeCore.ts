@@ -9,6 +9,7 @@ import {
   observeElementRect,
 } from '@tanstack/virtual-core';
 import { VirtualTreeBaseItem, VirtualTreeItem, VirtualTreeOptions } from '../types';
+import { computeTreeBottomPadding } from '../utils/misc/measure';
 import { setRowIndentation, scrollIntoView } from '../utils/misc/rowState';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:virtual-tree');
@@ -312,13 +313,17 @@ export class VirtualTree {
     return this.showHidden;
   }
 
+  protected _syncVirtualizerHeight(contentHeight: number): void {
+    if (!this.virtualizer) return;
+    const bottomPad = computeTreeBottomPadding(this.container);
+    this.virtualizer.style.height = `${contentHeight + bottomPad}px`;
+  }
+
   private _recomputeVisible(): void {
     this.visible = flattenTree(this.data, this.expanded, 0, [], this.showHidden);
     this.total = this.visible.length;
-    // Set the virtualizer height to create scrollable area
-    if (this.virtualizer) {
-      this.virtualizer.style.height = `${this.total * this.rowHeight}px`;
-    }
+    // Set the virtualizer height to create scrollable area (includes bottom pad)
+    this._syncVirtualizerHeight(this.total * this.rowHeight);
     // Sync TanStack virtualizer count if present
     if (this._v) this._v.setOptions({
       ...this._v.options,
@@ -334,7 +339,7 @@ export class VirtualTree {
       const vItems = v.getVirtualItems();
       // Ensure container height matches virtualized total
       const totalSize = v.getTotalSize();
-      if (this.virtualizer) this.virtualizer.style.height = `${totalSize}px`;
+      this._syncVirtualizerHeight(totalSize);
 
       // Grow pool if needed
       if (vItems.length > this.poolSize) {
