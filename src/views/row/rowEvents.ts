@@ -89,7 +89,7 @@ export function handleActionButtonClick(
     if (isShortcut) return;
     // @ts-expect-error - plugins registry exists at runtime
     const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-    FileUtils.createChildNote(app, actionPath, plugin?.settings, plugin?.renameManager);
+    FileUtils.createChildNote(app, actionPath, plugin?.settings);
   } else if (action === 'more') {
     const menu = new Menu();
 
@@ -113,7 +113,7 @@ export function handleActionButtonClick(
               .onClick(async () => {
                 // @ts-expect-error - plugins registry exists at runtime
                 const plugin = app?.plugins?.getPlugin?.('dot-navigator');
-                await FileUtils.createChildNote(app, actionPath, plugin?.settings, plugin?.renameManager);
+                await FileUtils.createChildNote(app, actionPath, plugin?.settings);
               });
           });
         } else if (it.builtin === 'delete') {

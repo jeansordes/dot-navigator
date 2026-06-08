@@ -22,7 +22,6 @@ export interface PluginSettings {
     userMenuItems?: MoreMenuItemCommand[]; // only custom command items
     viewWasOpen?: boolean; // Whether the view was open when plugin was unloaded
     defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
-    autoOpenRenameDialog?: boolean; // Whether to automatically open rename dialog when creating child notes
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
     dendronConfigFilePath?: string; // Path to the rule config file (default: dot-navigator-rules.json)
@@ -39,7 +38,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     userMenuItems: [],
     viewWasOpen: true, // Auto-open the panel on first install
     defaultNewFileName: '', // Empty string means use i18n default
-    autoOpenRenameDialog: true, // Automatically open rename dialog when creating child notes
     transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Default rule config file path
@@ -237,7 +235,6 @@ export type RenameTriggerSource =
     | 'double-click'
     | 'context-menu'
     | 'command'
-    | 'auto-create'
     | 'quick-create'
     | 'other';
 

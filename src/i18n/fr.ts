@@ -62,8 +62,6 @@ export default {
     settingsFileCreationDescription: 'Personnalisez la façon dont les nouveaux fichiers sont créés.',
     settingsDefaultNewFileName: 'Nom par défaut des nouveaux fichiers',
     settingsDefaultNewFileNameDesc: 'Le nom par défaut des nouveaux fichiers (laissez vide pour utiliser "sans-titre" ou l\'équivalent localisé)',
-    settingsAutoOpenRenameDialog: 'Ouverture automatique de la boîte de dialogue de renommage pour les notes enfants',
-    settingsAutoOpenRenameDialogDesc: 'Ouvre automatiquement la boîte de dialogue de renommage lors de la création de nouvelles notes enfants',
     settingsTransformDashes: 'Transformer les tirets dans les noms de notes',
     settingsTransformDashesDesc: 'Choisissez comment transformer les noms de notes contenant des tirets pour une meilleure lisibilité dans l\'arborescence',
     settingsDashTransformNone: 'Aucun changement',

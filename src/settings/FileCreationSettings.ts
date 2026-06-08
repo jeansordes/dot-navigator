@@ -10,7 +10,6 @@ export interface FileCreationSettingsCallbacks {
 
 export interface FileCreationSettingsData {
   defaultNewFileName?: string;
-  autoOpenRenameDialog?: boolean;
   transformDashesToSpaces?: DashTransformation;
 }
 
@@ -28,19 +27,6 @@ export function addFileCreationSection(
           .setPlaceholder(t('untitledPath'))
           .onChange(async (value) => {
             settings.defaultNewFileName = value;
-            await callbacks.saveSettings();
-          });
-      });
-  });
-
-  section.addSetting((setting) => {
-    setting
-      .setName(t('settingsAutoOpenRenameDialog'))
-      .setDesc(t('settingsAutoOpenRenameDialogDesc'))
-      .addToggle((toggle) => {
-        toggle.setValue(settings.autoOpenRenameDialog ?? true)
-          .onChange(async (value) => {
-            settings.autoOpenRenameDialog = value;
             await callbacks.saveSettings();
           });
       });

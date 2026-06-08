@@ -2,7 +2,6 @@ import { App, TFile, TFolder } from "obsidian";
 import { Notice } from "obsidian";
 import { t } from "../../i18n";
 import { PluginSettings } from "../../types";
-import { RenameManager } from "../rename/RenameManager";
 export class FileUtils {
     public static basename(path: string): string {
         const normalizedPath = path.replace(/\\/g, '/');
@@ -108,17 +107,9 @@ export class FileUtils {
         }
     }
 
-    public static async createChildNote(app: App, path: string, settings?: PluginSettings, renameManager?: RenameManager): Promise<void> {
+    public static async createChildNote(app: App, path: string, settings?: PluginSettings): Promise<void> {
         const childPath = this.getChildPath(path, app, settings);
         await this.createAndOpenNote(app, childPath);
-
-        // Open rename dialog if setting is enabled
-        if (settings?.autoOpenRenameDialog && renameManager) {
-            // Small delay to ensure the file is created and opened before showing rename dialog
-            setTimeout(() => {
-                renameManager.showRenameDialog(childPath, 'file', { source: 'auto-create' });
-            }, 100);
-        }
     }
     
     public static async openFile(app: App, file: TFile, newTab = false): Promise<void> {

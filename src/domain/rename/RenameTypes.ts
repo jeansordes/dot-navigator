@@ -73,7 +73,6 @@ export type RenameTriggerSource =
   | 'double-click'
   | 'context-menu'
   | 'command'
-  | 'auto-create'
   | 'quick-create'
   | 'other';
 

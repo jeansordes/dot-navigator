@@ -62,8 +62,6 @@ export default {
     settingsFileCreationDescription: 'Customize how new files are created.',
     settingsDefaultNewFileName: 'Default new file name',
     settingsDefaultNewFileNameDesc: 'The default name for new files (leave empty to use "untitled" or localized equivalent)',
-    settingsAutoOpenRenameDialog: 'Auto-open rename dialog for child notes',
-    settingsAutoOpenRenameDialogDesc: 'Automatically open the rename dialog when creating new child notes',
     settingsTransformDashes: 'Transform dashes in note names',
     settingsTransformDashesDesc: 'Choose how to transform note names with dashes for better readability in the tree view',
     settingsDashTransformNone: 'No changes',
