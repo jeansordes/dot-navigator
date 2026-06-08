@@ -16,6 +16,72 @@ export interface RenameWithProgressDependencies {
     ): Promise<Array<{ path: string; error: string }>>;
 }
 
+export function buildPlannedRenames(
+    app: App,
+    options: RenameOptions,
+    findChildrenFiles: (app: App, parentPath: string) => string[]
+): Array<{ from: string; to: string }> {
+    const filesToRename: Array<{ from: string; to: string }> = [];
+
+    if (options.mode === RenameMode.FILE_ONLY || options.kind === "folder") {
+        filesToRename.push({
+            from: options.originalPath,
+            to: options.newPath
+        });
+        return filesToRename;
+    }
+
+    const children = findChildrenFiles(app, options.originalPath);
+
+    const mainFile = app.vault.getAbstractFileByPath(options.originalPath);
+    if (mainFile instanceof TFile) {
+        filesToRename.push({
+            from: options.originalPath,
+            to: options.newPath
+        });
+    }
+
+    const originalBaseName = options.originalPath.replace(/\.md$/i, "");
+    const newBaseName = options.newPath.replace(/\.md$/i, "");
+
+    for (const childPath of children) {
+        const lastDotIndex = childPath.lastIndexOf('.');
+        const childExtension = lastDotIndex > 0 ? childPath.substring(lastDotIndex) : '';
+        const childBaseName = childPath.substring(0, lastDotIndex > 0 ? lastDotIndex : childPath.length);
+
+        const childSuffix = childBaseName.substring(originalBaseName.length);
+        const newChildPath = `${newBaseName}${childSuffix}${childExtension}`;
+
+        filesToRename.push({
+            from: childPath,
+            to: newChildPath
+        });
+    }
+
+    return filesToRename;
+}
+
+/**
+ * Returns the first destination path that already exists and is not a source path being moved.
+ */
+export function findRenameConflict(
+    app: App,
+    planned: Array<{ from: string; to: string }>
+): string | null {
+    const sourcePaths = new Set(planned.map((p) => p.from));
+
+    for (const { to } of planned) {
+        if (sourcePaths.has(to)) {
+            continue;
+        }
+        if (app.vault.getAbstractFileByPath(to)) {
+            return to;
+        }
+    }
+
+    return null;
+}
+
 export async function renameWithProgress(
     deps: RenameWithProgressDependencies,
     app: App,
@@ -27,42 +93,7 @@ export async function renameWithProgress(
 
     const operations: RenameOperation[] = [];
     const createdDirectories: string[] = [];
-    const filesToRename: Array<{ from: string; to: string }> = [];
-
-    if (options.mode === RenameMode.FILE_ONLY || options.kind === "folder") {
-        filesToRename.push({
-            from: options.originalPath,
-            to: options.newPath
-        });
-    } else {
-        const children = deps.findChildrenFiles(app, options.originalPath);
-
-        const mainFile = app.vault.getAbstractFileByPath(options.originalPath);
-        if (mainFile instanceof TFile) {
-            filesToRename.push({
-                from: options.originalPath,
-                to: options.newPath
-            });
-        }
-
-        const originalBaseName = options.originalPath.replace(/\.md$/i, "");
-        const newBaseName = options.newPath.replace(/\.md$/i, "");
-
-        for (const childPath of children) {
-            // Extract the original extension from the child path
-            const lastDotIndex = childPath.lastIndexOf('.');
-            const childExtension = lastDotIndex > 0 ? childPath.substring(lastDotIndex) : '';
-            const childBaseName = childPath.substring(0, lastDotIndex > 0 ? lastDotIndex : childPath.length);
-
-            const childSuffix = childBaseName.substring(originalBaseName.length);
-            const newChildPath = `${newBaseName}${childSuffix}${childExtension}`;
-
-            filesToRename.push({
-                from: childPath,
-                to: newChildPath
-            });
-        }
-    }
+    const filesToRename = buildPlannedRenames(app, options, deps.findChildrenFiles);
 
     const progress: RenameProgress = {
         total: filesToRename.length,

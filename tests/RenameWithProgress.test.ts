@@ -1,6 +1,12 @@
 import { App } from 'obsidian';
-import { renameWithProgress, RenameWithProgressDependencies } from '../src/utils/rename/RenameWithProgress';
+import {
+    buildPlannedRenames,
+    findRenameConflict,
+    renameWithProgress,
+    RenameWithProgressDependencies,
+} from '../src/utils/rename/RenameWithProgress';
 import { RenameMode, RenameOptions } from '../src/types';
+import { RenameUtils } from '../src/utils/rename/RenameUtils';
 import { createMockApp, createMockFile } from './setup';
 
 // Mock the i18n function
@@ -36,6 +42,121 @@ describe('renameWithProgress', () => {
         };
 
         jest.clearAllMocks();
+    });
+
+    describe('buildPlannedRenames', () => {
+        it('should plan only child renames for a virtual node without a backing file', () => {
+            const originalPath = '+ Notes/journal.md';
+            const newPath = '+ Brainstorming/journal.md';
+            const options: RenameOptions = {
+                originalPath,
+                newPath,
+                newTitle: 'journal',
+                mode: RenameMode.FILE_AND_CHILDREN,
+                kind: 'virtual',
+            };
+
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockReturnValue(null);
+            jest.spyOn(RenameUtils, 'findChildrenFiles').mockReturnValue([
+                '+ Notes/journal.2024.03.12.md',
+            ]);
+
+            const planned = buildPlannedRenames(
+                app,
+                options,
+                RenameUtils.findChildrenFiles.bind(RenameUtils)
+            );
+
+            expect(planned).toEqual([
+                {
+                    from: '+ Notes/journal.2024.03.12.md',
+                    to: '+ Brainstorming/journal.2024.03.12.md',
+                },
+            ]);
+        });
+
+        it('should plan a single rename for file-only mode', () => {
+            const options: RenameOptions = {
+                originalPath: 'notes.md',
+                newPath: 'archive/notes.md',
+                newTitle: 'notes',
+                mode: RenameMode.FILE_ONLY,
+                kind: 'file',
+            };
+
+            const planned = buildPlannedRenames(app, options, RenameUtils.findChildrenFiles.bind(RenameUtils));
+
+            expect(planned).toEqual([
+                { from: 'notes.md', to: 'archive/notes.md' },
+            ]);
+        });
+    });
+
+    describe('findRenameConflict', () => {
+        it('should ignore the virtual node destination when only child files are moved', () => {
+            const planned = [
+                {
+                    from: '+ Notes/journal.2024.03.12.md',
+                    to: '+ Brainstorming/journal.2024.03.12.md',
+                },
+            ];
+
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockImplementation((path: string) => {
+                if (path === '+ Brainstorming/journal.md') {
+                    return createMockFile(path);
+                }
+                return null;
+            });
+
+            expect(findRenameConflict(app, planned)).toBeNull();
+        });
+
+        it('should detect a conflict when a child destination already exists', () => {
+            const planned = [
+                {
+                    from: '+ Notes/journal.2024.03.12.md',
+                    to: '+ Brainstorming/journal.2024.03.12.md',
+                },
+            ];
+
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockImplementation((path: string) => {
+                if (path === '+ Brainstorming/journal.2024.03.12.md') {
+                    return createMockFile(path);
+                }
+                return null;
+            });
+
+            expect(findRenameConflict(app, planned)).toBe('+ Brainstorming/journal.2024.03.12.md');
+        });
+
+        it('should ignore destinations that are also source paths in the same batch', () => {
+            const planned = [
+                { from: 'a.md', to: 'b.md' },
+                { from: 'b.md', to: 'c.md' },
+            ];
+
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockImplementation((path: string) => {
+                if (path === 'b.md') {
+                    return createMockFile(path);
+                }
+                return null;
+            });
+
+            expect(findRenameConflict(app, planned)).toBeNull();
+        });
+
+        it('should detect a conflict for a regular file move', () => {
+            const planned = [{ from: 'notes.md', to: 'archive/notes.md' }];
+
+            jest.spyOn(app.vault, 'getAbstractFileByPath').mockImplementation((path: string) => {
+                if (path === 'archive/notes.md') {
+                    return createMockFile('other.md');
+                }
+                return null;
+            });
+
+            expect(findRenameConflict(app, planned)).toBe('archive/notes.md');
+        });
     });
 
     describe('batch rename with different file extensions', () => {
