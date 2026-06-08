@@ -16,22 +16,43 @@ export function createIndentGuides(level: number): HTMLElement {
   return indent;
 }
 
-export function createToggleButton(): HTMLElement {
+function appendChevronIcon(container: HTMLElement): void {
+  setIcon(container, 'right-triangle');
+  const svg = container.querySelector('svg');
+  if (svg) svg.classList.add('right-triangle');
+}
+
+export function createToggleButton(isFolder = false): HTMLElement {
   const toggleBtn = document.createElement('div');
   toggleBtn.className = 'dotn_button-icon';
   toggleBtn.setAttribute('data-action', 'toggle');
   toggleBtn.title = 'Toggle';
-  setIcon(toggleBtn, 'right-triangle');
-  const svg = toggleBtn.querySelector('svg');
-  if (svg) svg.classList.add('right-triangle');
+
+  if (isFolder) {
+    toggleBtn.classList.add('dotn_toggle-folder');
+
+    const folderIcon = document.createElement('span');
+    folderIcon.className = 'dotn_toggle-folder-icon';
+    setIcon(folderIcon, 'folder');
+
+    const chevronIcon = document.createElement('span');
+    chevronIcon.className = 'dotn_toggle-chevron-icon';
+    appendChevronIcon(chevronIcon);
+
+    toggleBtn.appendChild(folderIcon);
+    toggleBtn.appendChild(chevronIcon);
+  } else {
+    appendChevronIcon(toggleBtn);
+  }
+
   return toggleBtn;
 }
 
-export function createFolderIcon(): HTMLElement {
-  const icon = document.createElement('div');
-  icon.className = 'dotn_icon';
-  setIcon(icon, 'folder');
-  return icon;
+export function createFolderPlaceholder(): HTMLElement {
+  const placeholder = document.createElement('div');
+  placeholder.className = 'dotn_button-icon dotn_folder-placeholder';
+  setIcon(placeholder, 'folder');
+  return placeholder;
 }
 
 export function createFileIconOrBadge(item: RowItem): HTMLElement | null {

@@ -106,10 +106,6 @@
         background-color: unset;
     }
 
-    .dotn_tree-item-title[data-node-kind="virtual"]:hover:not(.is-active) {
-        background-color: var(--dotn_bg-hover);
-    }
-
     /* Schema-suggested virtual nodes styling */
     .dotn_tree-item-title[data-node-kind="suggestion"] {
         border: 1px dashed var(--frame-muted-color);
@@ -215,13 +211,12 @@
         transform: rotate(-90deg);
     }
 
-    .rotate-180deg svg {
-        transform: rotate(180deg);
+    .tree-row.collapsed .dotn_toggle-folder .dotn_toggle-chevron-icon svg.right-triangle {
+        transform: rotate(-90deg);
     }
 
-    .dotn_icon[data-icon-name="folder"] {
-        margin-right: 0;
-        /* keep icon from overlapping the toggle */
+    .rotate-180deg svg {
+        transform: rotate(180deg);
     }
 
     /* Ensure icons reserve consistent space and align with row height */
@@ -322,17 +317,48 @@
         position: relative;
     }
 
-    .dotn_button-icon[data-action="toggle"] {
+    .dotn_button-icon[data-action="toggle"],
+    .dotn_folder-placeholder {
         margin-right: var(--dotn_gap);
+    }
+
+    .dotn_toggle-folder {
+        .dotn_toggle-folder-icon,
+        .dotn_toggle-chevron-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dotn_toggle-chevron-icon {
+            display: none;
+        }
+    }
+
+    @media (hover: hover) {
+        .dotn_toggle-folder:hover {
+            .dotn_toggle-folder-icon {
+                display: none;
+            }
+
+            .dotn_toggle-chevron-icon {
+                display: inline-flex;
+            }
+        }
+    }
+
+    .dotn_folder-placeholder {
+        cursor: default;
+        pointer-events: none;
+
+        &:hover {
+            color: var(--dotn_color-text-clickable);
+            background-color: var(--dotn_bg-hover);
+        }
     }
 
     .is-clickable {
         cursor: pointer;
-    }
-
-    .dotn_tree-item-title[data-node-kind="folder"],
-    .dotn_tree-item-title[data-node-kind="virtual"] {
-        cursor: grab;
     }
 
     .dotn_button-icon:hover,
