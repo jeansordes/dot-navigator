@@ -1,7 +1,7 @@
 import { resolveAliasPathForTarget } from '../../core/aliasVirtualData';
 import type { MenuItemKind } from '../../types';
 
-export type DraggableKind = 'file' | 'folder';
+export type DraggableKind = 'file' | 'folder' | 'virtual';
 export type DropTargetKind = MenuItemKind | 'root';
 
 export interface DragLeaf {

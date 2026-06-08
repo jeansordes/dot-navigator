@@ -137,7 +137,7 @@ export class RowDragController {
         if ((e.target as Element).closest('.dotn_button-icon')) return;
 
         const kindAttr = title.getAttribute('data-node-kind');
-        if (kindAttr !== 'file' && kindAttr !== 'folder') return;
+        if (kindAttr !== 'file' && kindAttr !== 'folder' && kindAttr !== 'virtual') return;
 
         const row = title.closest('.tree-row');
         if (!(row instanceof HTMLElement) || !row.dataset.id) return;

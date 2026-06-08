@@ -22,6 +22,11 @@ describe('getDragLeaf', () => {
     it('extracts folder name without extension', () => {
         expect(getDragLeaf('archive/old', 'folder')).toEqual({ leaf: 'old', extension: '' });
     });
+
+    it('extracts leaf and extension from virtual node paths', () => {
+        expect(getDragLeaf('a.b.md', 'virtual')).toEqual({ leaf: 'b', extension: '.md' });
+        expect(getDragLeaf('folder/a.b.md', 'virtual')).toEqual({ leaf: 'b', extension: '.md' });
+    });
 });
 
 describe('computeMoveDestination', () => {
@@ -69,6 +74,33 @@ describe('computeMoveDestination', () => {
             targetKind: 'folder',
         })).toBeNull();
     });
+
+    it('moves virtual node onto folder with slash separator', () => {
+        expect(computeMoveDestination({
+            draggedPath: 'a.b.md',
+            draggedKind: 'virtual',
+            targetPath: 'archive',
+            targetKind: 'folder',
+        })).toBe('archive/b.md');
+    });
+
+    it('moves virtual node onto file/virtual with dot separator', () => {
+        expect(computeMoveDestination({
+            draggedPath: 'a.b.md',
+            draggedKind: 'virtual',
+            targetPath: 'x.y.md',
+            targetKind: 'virtual',
+        })).toBe('x.y.b.md');
+    });
+
+    it('moves virtual node to root', () => {
+        expect(computeMoveDestination({
+            draggedPath: 'a.b.md',
+            draggedKind: 'virtual',
+            targetPath: '',
+            targetKind: 'root',
+        })).toBe('b.md');
+    });
 });
 
 describe('isStrictDescendant', () => {
@@ -90,6 +122,10 @@ describe('isMarkdownShortcutEligible', () => {
     it('rejects folders and non-markdown files', () => {
         expect(isMarkdownShortcutEligible('notes/foo', 'folder')).toBe(false);
         expect(isMarkdownShortcutEligible('image.png', 'file')).toBe(false);
+    });
+
+    it('rejects virtual nodes', () => {
+        expect(isMarkdownShortcutEligible('a.b.md', 'virtual')).toBe(false);
     });
 });
 
@@ -265,6 +301,24 @@ describe('isValidDrop', () => {
             draggedKind: 'file',
             targetPath: 'suggested.md',
             targetKind: 'suggestion',
+        })).toBe(false);
+    });
+
+    it('allows valid virtual-to-file move', () => {
+        expect(isValidDrop({
+            draggedPath: 'a.b.md',
+            draggedKind: 'virtual',
+            targetPath: 'x.y.md',
+            targetKind: 'file',
+        })).toBe(true);
+    });
+
+    it('rejects virtual drop onto descendant', () => {
+        expect(isValidDrop({
+            draggedPath: 'a.b.md',
+            draggedKind: 'virtual',
+            targetPath: 'a.b.c.md',
+            targetKind: 'file',
         })).toBe(false);
     });
 });

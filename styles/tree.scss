@@ -106,6 +106,10 @@
         background-color: unset;
     }
 
+    .dotn_tree-item-title[data-node-kind="virtual"]:hover:not(.is-active) {
+        background-color: var(--dotn_bg-hover);
+    }
+
     /* Schema-suggested virtual nodes styling */
     .dotn_tree-item-title[data-node-kind="suggestion"] {
         border: 1px dashed var(--frame-muted-color);
@@ -324,6 +328,11 @@
 
     .is-clickable {
         cursor: pointer;
+    }
+
+    .dotn_tree-item-title[data-node-kind="folder"],
+    .dotn_tree-item-title[data-node-kind="virtual"] {
+        cursor: grab;
     }
 
     .dotn_button-icon:hover,

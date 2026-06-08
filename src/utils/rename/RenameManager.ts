@@ -300,7 +300,7 @@ export class RenameManager {
             originalPath: draggedPath,
             newPath,
             newTitle: leaf,
-            mode: draggedKind === 'file' ? RenameMode.FILE_AND_CHILDREN : RenameMode.FILE_ONLY,
+            mode: draggedKind === 'folder' ? RenameMode.FILE_ONLY : RenameMode.FILE_AND_CHILDREN,
             kind: draggedKind,
         };
 
