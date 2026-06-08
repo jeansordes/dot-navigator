@@ -112,5 +112,29 @@ describe('PathUtils', () => {
             const result = constructNewPath('Notes/', 'test', '.md', 'Notes/old.md', mockApp);
             expect(result).toBe('Notes/test.md');
         });
+
+        it('should not double-prefix when name already includes hierarchical path prefix', () => {
+            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue(null);
+            const result = constructNewPath('a.b', 'a.b.c', '.md', 'a.b.c.md', mockApp);
+            expect(result).toBe('a.b.c.md');
+        });
+
+        it('should not double-prefix when name equals path prefix', () => {
+            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue(null);
+            const result = constructNewPath('a.b', 'a.b', '.md', 'x.md', mockApp);
+            expect(result).toBe('a.b.md');
+        });
+
+        it('should still construct hierarchical paths with dot separator when name does not include prefix', () => {
+            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue(null);
+            const result = constructNewPath('journal.2025', 'test', '.md', 'journal.2025.old.md', mockApp);
+            expect(result).toBe('journal.2025.test.md');
+        });
+
+        it('should not apply double-prefix guard to folder paths with slash separator', () => {
+            jest.spyOn(mockApp.vault, 'getAbstractFileByPath').mockReturnValue(createMockFolder('Notes'));
+            const result = constructNewPath('Notes', 'Notes.x', '.md', 'Notes/old.md', mockApp);
+            expect(result).toBe('Notes/Notes.x.md');
+        });
     });
 });

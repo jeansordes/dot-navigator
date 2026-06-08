@@ -130,9 +130,14 @@ export function constructPath(
       : pathValue;
 
     // Use directory separator or dot separator
-    newPath = useDirectorySeparator
-      ? `${cleanPathValue}/${nameValue}`
-      : `${cleanPathValue}.${nameValue}`;
+    if (useDirectorySeparator) {
+      newPath = `${cleanPathValue}/${nameValue}`;
+    } else if (nameValue === cleanPathValue || nameValue.startsWith(cleanPathValue + '.')) {
+      // Avoid double-prefixing when the name already includes the hierarchical path prefix
+      newPath = nameValue;
+    } else {
+      newPath = `${cleanPathValue}.${nameValue}`;
+    }
   } else {
     newPath = nameValue;
   }
