@@ -6,7 +6,8 @@ import PluginMainPanel from './views/components/PluginMainPanel';
 import createDebug from 'debug';
 import { DotNavigatorSettingTab } from './settings/SettingsTab';
 import { RenameManager } from './utils/rename/RenameManager';
-import { RuleManager } from './utils/schema/RuleManager'; 
+import { RuleManager } from './utils/schema/RuleManager';
+import { schemaRulesFromFileContent } from './utils/schema/schemaRulesMigration';
 
 const debug = createDebug('dot-navigator:main');
 
@@ -25,7 +26,7 @@ export default class DotNavigatorPlugin extends Plugin {
     }
 
     updateRuleManager(): void {
-        this.ruleManager = new RuleManager(this.app, this.settings.dendronConfigFilePath || 'dot-navigator-rules.json');
+        this.ruleManager = new RuleManager(() => this.settings.schemaRules ?? []);
     }
 
     async updateRuleConfigPath(): Promise<void> {
@@ -63,7 +64,7 @@ export default class DotNavigatorPlugin extends Plugin {
         
         await this.loadSettings();
 
-        this.ruleManager = new RuleManager(this.app, this.settings.dendronConfigFilePath || 'dot-navigator-rules.json');
+        this.ruleManager = new RuleManager(() => this.settings.schemaRules ?? []);
 
         // Initialize rename manager (layout will be set later when view is created)
         this.renameManager = new RenameManager(this.app);
@@ -324,6 +325,34 @@ export default class DotNavigatorPlugin extends Plugin {
         if (this.pluginMainPanel && this.settings.expandedNodes) {
             this.pluginMainPanel.restoreExpandedNodesFromSettings(this.settings.expandedNodes);
         }
+
+        await this.migrateSchemaRulesIfNeeded();
+    }
+
+    private async migrateSchemaRulesIfNeeded(): Promise<void> {
+        if (this.settings.schemaRules !== undefined) {
+            return;
+        }
+
+        const configPath = this.settings.dendronConfigFilePath || 'dot-navigator-rules.json';
+        const configFile = this.app.vault.getAbstractFileByPath(configPath);
+
+        if (configFile && configFile instanceof TFile) {
+            try {
+                const content = await this.app.vault.read(configFile);
+                const { rules } = schemaRulesFromFileContent(content, configPath);
+                this.settings.schemaRules = rules;
+                debug('Migrated %d schema rules from %s', rules.length, configPath);
+            } catch (error) {
+                debug('Failed to migrate schema rules from file:', error);
+                this.settings.schemaRules = [];
+            }
+        } else {
+            this.settings.schemaRules = [];
+        }
+
+        await this.saveData(this.settings);
+        this.updateRuleManager();
     }
 
     async saveSettings() {

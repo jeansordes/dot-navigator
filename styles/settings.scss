@@ -182,3 +182,147 @@ body.dotnav-reordering * {
         display: none;
     }
 }
+
+/* Suggestion rules editor */
+.dotnav-rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-3);
+    margin-top: var(--size-4-2);
+}
+
+.dotnav-rule-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    background-color: var(--background-primary);
+    padding: var(--size-4-3);
+}
+
+.dotnav-rule-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--size-4-2);
+    margin-bottom: var(--size-4-3);
+}
+
+.dotnav-rule-card-title {
+    font-weight: var(--font-medium);
+    color: var(--text-normal);
+}
+
+.dotnav-rule-card-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--size-2-2);
+}
+
+.dotnav-rule-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: var(--radius-s);
+}
+
+.dotnav-rule-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-2);
+    width: 100%;
+}
+
+.dotnav-rule-field-label {
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+    margin-bottom: var(--size-2-1);
+}
+
+.dotnav-rule-textarea,
+.dotnav-rules-json-textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 4rem;
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-small);
+    resize: vertical;
+}
+
+.dotnav-rule-errors {
+    margin-top: var(--size-4-2);
+    font-size: var(--font-ui-small);
+}
+
+.dotnav-rule-preview {
+    margin-top: var(--size-2-2);
+}
+
+.dotnav-rule-preview-toggle {
+    background: none;
+    border: none;
+    color: var(--text-accent);
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+    padding: 0;
+}
+
+.dotnav-rule-preview-body {
+    margin-top: var(--size-4-2);
+    font-size: var(--font-ui-small);
+}
+
+.dotnav-rule-preview-list {
+    margin: var(--size-2-2) 0 var(--size-4-2) 1rem;
+    max-height: 8rem;
+    overflow-y: auto;
+}
+
+.dotnav-rule-preview-heading {
+    font-weight: var(--font-medium);
+    margin-top: var(--size-4-2);
+}
+
+.dotnav-rules-json-error {
+    margin: var(--size-4-2) 0;
+    font-size: var(--font-ui-small);
+    white-space: pre-wrap;
+}
+
+.dotnav-rules-actions {
+    margin-top: var(--size-4-2);
+
+    > .setting-item {
+        background-color: transparent;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    > .setting-item .setting-item-control {
+        width: 100%;
+        justify-content: stretch;
+        flex-wrap: wrap;
+        gap: var(--size-4-2);
+    }
+
+    > .setting-item .setting-item-control button {
+        flex: 1 1 auto;
+    }
+}
+
+.is-mobile .dotnav-rule-card-header {
+    flex-wrap: wrap;
+}
+
+.is-mobile .dotnav-rules-actions > .setting-item .setting-item-control {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+        width: 100%;
+        white-space: normal;
+    }
+}

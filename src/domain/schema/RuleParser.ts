@@ -144,13 +144,39 @@ function parseRule(raw: unknown, filePath: string, index: number, allErrors: Rul
 }
 
 /**
- * Parse a rule file content and extract rules
+ * Parse an array of raw rule objects into validated rules.
  */
-export function parseRuleFile(content: string, filePath: string): { rules: Rule[]; errors: RuleError[] } {
+export function parseRuleArray(rules: unknown[], source: string): { rules: Rule[]; errors: RuleError[] } {
+  const errors: RuleError[] = [];
+
+  if (!Array.isArray(rules)) {
+    errors.push({
+      file: source,
+      message: 'Rules must be an array',
+      details: rules
+    });
+    return { rules: [], errors };
+  }
+
+  const parsed: Rule[] = [];
+  for (let i = 0; i < rules.length; i++) {
+    const rule = parseRule(rules[i], source, i, errors);
+    if (rule) {
+      parsed.push(rule);
+    }
+  }
+
+  return { rules: parsed, errors };
+}
+
+/**
+ * Extract and parse the JSON rules document from file content.
+ * Returns the raw array (preserving unknown fields) for settings migration.
+ */
+export function parseRulesJsonDocument(content: string, filePath: string): { doc: unknown[] | null; errors: RuleError[] } {
   const errors: RuleError[] = [];
 
   try {
-    // Extract JSON content from the file (handles both .json and .md files)
     const { json, isMarkdown } = extractJsonContent(content, filePath);
 
     if (!json) {
@@ -161,10 +187,9 @@ export function parseRuleFile(content: string, filePath: string): { rules: Rule[
           : 'File content is empty or invalid',
         details: null
       });
-      return { rules: [], errors };
+      return { doc: null, errors };
     }
 
-    // Parse the extracted JSON
     const doc = JSON.parse(json);
 
     if (!Array.isArray(doc)) {
@@ -173,19 +198,10 @@ export function parseRuleFile(content: string, filePath: string): { rules: Rule[
         message: 'Rule file must contain an array of rules',
         details: doc
       });
-      return { rules: [], errors };
+      return { doc: null, errors };
     }
 
-    const rules: Rule[] = [];
-    for (let i = 0; i < doc.length; i++) {
-      const rule = parseRule(doc[i], filePath, i, errors);
-      if (rule) {
-        rules.push(rule);
-      }
-    }
-
-    return { rules, errors };
-
+    return { doc, errors };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     errors.push({
@@ -193,7 +209,21 @@ export function parseRuleFile(content: string, filePath: string): { rules: Rule[
       message: 'Failed to parse JSON',
       details: message
     });
+    return { doc: null, errors };
+  }
+}
+
+/**
+ * Parse a rule file content and extract rules
+ */
+export function parseRuleFile(content: string, filePath: string): { rules: Rule[]; errors: RuleError[] } {
+  const { doc, errors } = parseRulesJsonDocument(content, filePath);
+
+  if (!doc) {
     return { rules: [], errors };
   }
+
+  const parsed = parseRuleArray(doc, filePath);
+  return { rules: parsed.rules, errors: [...errors, ...parsed.errors] };
 }
 

@@ -2,6 +2,7 @@ import { App } from 'obsidian';
 import { TreeCacheManager, type CachedTreeData, type VaultStats } from './TreeCacheManager';
 import { PluginSettings } from '../types';
 import { RuleManager } from '../utils/schema/RuleManager';
+import { hashSchemaRules } from '../utils/schema/schemaRulesMigration';
 import type { VItem } from './virtualData';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:cache-utils');
@@ -128,7 +129,7 @@ export class CacheUtils {
   private static computeSettingsHash(settings?: PluginSettings): string {
     const relevantSettings = {
       enableSchemaSuggestions: settings?.enableSchemaSuggestions,
-      dendronConfigFilePath: settings?.dendronConfigFilePath,
+      schemaRules: settings?.schemaRules,
       hiddenNodes: settings?.hiddenNodes,
     };
     return JSON.stringify(relevantSettings);
@@ -141,7 +142,16 @@ export class CacheUtils {
     if (!ruleManager) return 'none';
     try {
       const index = await ruleManager.ensureLatest();
-      return index.rules.length.toString();
+      const rulesHash = hashSchemaRules(
+        index.rules.map(rule => ({
+          pattern: Array.isArray(rule.pattern) ? rule.pattern : [rule.pattern],
+          exclude: rule.exclude
+            ? (Array.isArray(rule.exclude) ? rule.exclude : [rule.exclude])
+            : undefined,
+          children: rule.children,
+        }))
+      );
+      return `${index.rules.length}:${rulesHash}`;
     } catch {
       return 'error';
     }

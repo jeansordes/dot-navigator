@@ -2,6 +2,7 @@ import createDebug from 'debug';
 import type { RuleIndex } from './RuleTypes';
 import { TreeNodeType } from '../../types';
 import type { TreeNode } from '../../types';
+import { matchesAnyPattern, stripMdExtension } from './patternMatch';
 
 const debug = createDebug('dot-navigator:rule:suggester');
 
@@ -12,65 +13,16 @@ export class RuleSuggester {
     this.index = index;
   }
 
-  private isRegexPattern(pattern: string): boolean {
-    return pattern.startsWith('/') && pattern.endsWith('/');
-  }
-
-  private extractRegex(pattern: string): RegExp {
-    // Remove the surrounding slashes
-    const regexStr = pattern.slice(1, -1);
-    return new RegExp(regexStr);
-  }
-
-  private matchesPattern(filePath: string, pattern: string): boolean {
-    if (this.isRegexPattern(pattern)) {
-      try {
-        const regex = this.extractRegex(pattern);
-        return regex.test(filePath);
-      } catch (error) {
-        debug('Invalid regex pattern:', pattern, error);
-        return false;
-      }
-    } else {
-      // Enhanced glob-like matching:
-      // * matches within single segment (no dots)
-      // ** matches across segments (with dots)
-      let escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-
-      // Replace ** with a placeholder to avoid conflict with * replacement
-      escaped = escaped.replace(/\*\*/g, '__DOUBLE_STAR__');
-      // Replace remaining * with [^.]* (single segment matching, stops at dots)
-      escaped = escaped.replace(/\*/g, '[^.]*');
-      // Replace placeholder with .* (recursive matching across dots)
-      escaped = escaped.replace(/__DOUBLE_STAR__/g, '.*');
-
-      const regex = new RegExp(`^${escaped}$`);
-      return regex.test(filePath);
-    }
-  }
-
-  private matchesAnyPattern(filePath: string, patterns: string | string[]): boolean {
-    const patternArray = Array.isArray(patterns) ? patterns : [patterns];
-    return patternArray.some(pattern => this.matchesPattern(filePath, pattern));
-  }
-
-  /**
-   * Strip .md extension from file path to get note path for pattern matching
-   */
-  private stripMdExtension(filePath: string): string {
-    return filePath.endsWith('.md') ? filePath.slice(0, -3) : filePath;
-  }
-
   /**
    * Get virtual children for a given file path based on the rules
    */
   getChildren(filePath: string): string[] {
-    const notePath = this.stripMdExtension(filePath);
+    const notePath = stripMdExtension(filePath);
     const children = new Set<string>();
 
     for (const rule of this.index.rules) {
       // Check if file matches the pattern
-      const matchesPattern = this.matchesAnyPattern(notePath, rule.pattern);
+      const matchesPattern = matchesAnyPattern(notePath, rule.pattern);
 
       if (!matchesPattern) {
         continue;
@@ -79,7 +31,7 @@ export class RuleSuggester {
       // Check if file should be excluded
       let isExcluded = false;
       if (rule.exclude) {
-        isExcluded = this.matchesAnyPattern(notePath, rule.exclude);
+        isExcluded = matchesAnyPattern(notePath, rule.exclude);
       }
 
       if (isExcluded) {
@@ -155,7 +107,7 @@ export class RuleSuggester {
       filesWithSuggestions++;
 
       // Track suggestions by pattern for summary
-      const notePath = this.stripMdExtension(node.path);
+      const notePath = stripMdExtension(node.path);
       const matchingPattern = this.getMatchingPattern(notePath);
       if (matchingPattern) {
         const current = suggestionsByPattern.get(matchingPattern) || 0;
@@ -188,10 +140,10 @@ export class RuleSuggester {
    */
   private getMatchingPattern(notePath: string): string | null {
     for (const rule of this.index.rules) {
-      if (this.matchesAnyPattern(notePath, rule.pattern)) {
+      if (matchesAnyPattern(notePath, rule.pattern)) {
         let isExcluded = false;
         if (rule.exclude) {
-          isExcluded = this.matchesAnyPattern(notePath, rule.exclude);
+          isExcluded = matchesAnyPattern(notePath, rule.exclude);
         }
         if (!isExcluded) {
           return Array.isArray(rule.pattern) ? rule.pattern.join('|') : rule.pattern;

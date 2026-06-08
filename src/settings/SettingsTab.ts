@@ -112,14 +112,17 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       containerEl,
       createGroupHeading(t('settingsSchemaConfigurationHeader'), t('settingsSchemaConfigurationDescription'))
     );
-    addSchemaSuggestionsToggle(schemaGroup, this.plugin.settings, this.settingsCallbacks);
+    addSchemaSuggestionsToggle(schemaGroup, this.plugin.settings, {
+      ...this.settingsCallbacks,
+      refreshDisplay: this.redisplayPreservingScroll.bind(this),
+    });
     addSchemaConfigurationSection(
       schemaGroup,
       this.plugin.settings,
       {
         ...this.settingsCallbacks,
-        refreshDisplay: this.display.bind(this),
-        reloadConfig: this.reloadConfig.bind(this)
+        refreshDisplay: this.redisplayPreservingScroll.bind(this),
+        reloadRules: this.reloadRulesSilently.bind(this),
       },
       this.app
     );
@@ -241,24 +244,20 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     };
   }
 
-  private async reloadConfig(): Promise<void> {
+  private async reloadRulesSilently(): Promise<void> {
     try {
-      const configPath = this.plugin.settings.dendronConfigFilePath || 'dot-navigator-rules.json';
-
       await this.plugin.updateRuleConfigPath();
 
       const ruleManager = this.plugin.getRuleManager();
       if (ruleManager) {
         await ruleManager.refresh(true);
-        new Notice(`Reloaded Dendron config: ${configPath}`);
       }
 
       await this.updateTreeView();
-      this.display();
     } catch (error: unknown) {
-      console.error('Failed to reload config:', error);
+      console.error('Failed to reload rules:', error);
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`Failed to reload config: ${message}`);
+      new Notice(`${t('settingsRulesReloadFailed')}: ${message}`);
     }
   }
 }

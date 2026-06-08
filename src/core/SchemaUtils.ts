@@ -1,4 +1,5 @@
 import { RuleManager } from '../utils/schema/RuleManager';
+import { hashSchemaRules } from '../utils/schema/schemaRulesMigration';
 import { RuleSuggester } from '../utils/schema/RuleSuggester';
 import { PluginSettings, TreeNode, TreeNodeType } from '../types';
 import createDebug from 'debug';
@@ -156,7 +157,16 @@ export class SchemaUtils {
     if (!ruleManager) return 'none';
     try {
       const index = await ruleManager.ensureLatest();
-      return index.rules.length.toString();
+      const rulesHash = hashSchemaRules(
+        index.rules.map(rule => ({
+          pattern: Array.isArray(rule.pattern) ? rule.pattern : [rule.pattern],
+          exclude: rule.exclude
+            ? (Array.isArray(rule.exclude) ? rule.exclude : [rule.exclude])
+            : undefined,
+          children: rule.children,
+        }))
+      );
+      return `${index.rules.length}:${rulesHash}`;
     } catch {
       return 'error';
     }

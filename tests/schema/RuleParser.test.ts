@@ -1,4 +1,5 @@
-import { parseRuleFile } from '../../src/domain/schema/RuleParser';
+import { parseRuleFile, parseRuleArray } from '../../src/domain/schema/RuleParser';
+import { rawArrayToSchemaRules, schemaRulesFromFileContent } from '../../src/utils/schema/schemaRulesMigration';
 
 describe('RuleParser', () => {
   describe('parseRuleFile', () => {
@@ -179,6 +180,57 @@ created: 2025-09-23
       });
     });
 
+  });
+
+  describe('parseRuleArray', () => {
+    it('should parse a valid rules array', () => {
+      const raw = [
+        { pattern: 'prj.*', children: ['ideas'] },
+        { pattern: ['work.*'], exclude: 'work.archives', children: ['notes'] },
+      ];
+
+      const result = parseRuleArray(raw, 'settings');
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.rules).toHaveLength(2);
+      expect(result.rules[0].pattern).toEqual(['prj.*']);
+      expect(result.rules[1].exclude).toEqual(['work.archives']);
+    });
+
+    it('should reject non-array input', () => {
+      const result = parseRuleArray({} as unknown as unknown[], 'settings');
+      expect(result.rules).toHaveLength(0);
+      expect(result.errors[0].message).toContain('array');
+    });
+  });
+
+  describe('schemaRulesFromFileContent', () => {
+    it('should preserve unknown fields when migrating from file content', () => {
+      const content = JSON.stringify([
+        {
+          pattern: 'prj.*',
+          children: ['ideas'],
+          customField: 'keep-me',
+        },
+      ]);
+
+      const { rules, errors } = schemaRulesFromFileContent(content, 'rules.json');
+
+      expect(errors).toHaveLength(0);
+      expect(rules).toHaveLength(1);
+      expect(rules[0].customField).toBe('keep-me');
+    });
+
+    it('should convert raw array to schema rules', () => {
+      const rules = rawArrayToSchemaRules([
+        { pattern: ['a.*'], children: ['child'], extra: true },
+        { pattern: 'broken' },
+      ]);
+
+      expect(rules).toHaveLength(1);
+      expect(rules[0].pattern).toEqual(['a.*']);
+      expect(rules[0].extra).toBe(true);
+    });
   });
 });
 

@@ -83,7 +83,7 @@ export default class PluginMainPanel extends ItemView {
             this.app,
             this.refresh.bind(this),
             120,
-            this.settings.dendronConfigFilePath || 'dot-navigator-rules.json',
+            '',
             this.reloadSchemaConfig.bind(this),
             this.handleSchemaConfigRename.bind(this)
         );
@@ -248,10 +248,9 @@ export default class PluginMainPanel extends ItemView {
     }
 
     async reloadSchemaConfig(): Promise<void> {
-        // Reload the schema configuration using the schema manager
         if (this.ruleManager) {
             await this.ruleManager.refresh(true);
-            new Notice(`Dendron config reloaded: ${this.settings.dendronConfigFilePath || 'dendron.yaml'}`);
+            new Notice(t('settingsRulesReloaded'));
         }
     }
 
@@ -269,23 +268,9 @@ export default class PluginMainPanel extends ItemView {
     }
 
     async updateRuleConfigPath(): Promise<void> {
-        // Update the main plugin's rule manager with the new path
         this.plugin.updateRuleManager();
         this.ruleManager = this.plugin.getRuleManager()!;
 
-        // Update the event handler to watch the new config file path
-        this.eventHandler.unregisterFileEvents();
-        this.eventHandler = new DendronEventHandler(
-            this.app,
-            this.refresh.bind(this),
-            120,
-            this.settings.dendronConfigFilePath || 'dot-navigator-rules.json',
-            this.reloadSchemaConfig.bind(this),
-            this.handleSchemaConfigRename.bind(this)
-        );
-        this.eventHandler.registerFileEvents();
-
-        // Update the rule manager reference in VirtualTreeManager
         if (this.vtManager) {
             await this.vtManager.updateRuleManager(this.ruleManager);
         }

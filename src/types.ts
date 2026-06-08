@@ -12,6 +12,14 @@ export enum DashTransformation {
 
 export type AliasVirtualMode = 'off' | 'dotted' | 'all';
 
+/** User-authored schema suggestion rule stored in plugin settings */
+export interface SchemaRule {
+    pattern: string[];
+    exclude?: string[];
+    children: string[];
+    [key: string]: unknown;
+}
+
 export interface PluginSettings {
     mySetting: string;
     expandedNodes?: string[]; // Array of node paths that are expanded
@@ -24,7 +32,9 @@ export interface PluginSettings {
     defaultNewFileName?: string; // Custom default name for new files (empty string uses i18n default)
     transformDashesToSpaces?: DashTransformation; // How to transform dashes in note names for better readability
     enableSchemaSuggestions?: boolean; // Enable schema-based virtual suggestions
-    dendronConfigFilePath?: string; // Path to the rule config file (default: dot-navigator-rules.json)
+    /** @deprecated Legacy file path — used only for one-time migration to schemaRules */
+    dendronConfigFilePath?: string;
+    schemaRules?: SchemaRule[]; // Managed suggestion rules (primary source)
     aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
     hiddenNodes?: string[]; // Paths of explicitly hidden files/folders
     showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
@@ -40,7 +50,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     defaultNewFileName: '', // Empty string means use i18n default
     transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
-    dendronConfigFilePath: 'dot-navigator-rules.json', // Default rule config file path
+    dendronConfigFilePath: 'dot-navigator-rules.json', // Legacy — migration only
+    schemaRules: [],
     aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
     hiddenNodes: [],
     showHiddenNodes: false,
