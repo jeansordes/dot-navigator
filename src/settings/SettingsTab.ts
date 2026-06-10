@@ -96,15 +96,17 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
 
     const hiddenCount = this.plugin.settings.hiddenNodes?.length ?? 0;
+    const hiddenNodesGroup = addSettingsGroup(
+      containerEl,
+      createGroupHeading(
+        t('settingsHiddenNodesHeader'),
+        t('settingsHiddenNodesDescription'),
+        hiddenCount
+      )
+    );
+    hiddenNodesGroup.groupEl.addClass('dotnav-hidden-nodes');
     addHiddenNodesSettings(
-      addSettingsGroup(
-        containerEl,
-        createGroupHeading(
-          t('settingsHiddenNodesHeader'),
-          t('settingsHiddenNodesDescription'),
-          hiddenCount
-        )
-      ),
+      hiddenNodesGroup,
       this.plugin.settings,
       {
         ...this.settingsCallbacks,

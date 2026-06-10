@@ -38,8 +38,11 @@ export function addHiddenNodesSettings(
     hiddenPaths.forEach((path) => {
       section.addSetting((row) => {
         row.settingEl.addClass('dotnav-hidden-node-item');
-        row.setName(FileUtils.basename(path));
-        row.setDesc(path);
+        const name = FileUtils.basename(path);
+        row.setName(name);
+        if (path !== name) {
+          row.setDesc(path);
+        }
 
         row.addExtraButton((btn) => {
           btn
@@ -57,6 +60,7 @@ export function addHiddenNodesSettings(
   }
 
   section.addSetting((setting) => {
+    setting.settingEl.addClass('dotnav-hidden-nodes-clear');
     setting
       .setName(t('settingsClearHiddenNodes'))
       .setDesc(t('settingsClearHiddenNodesDesc'))
