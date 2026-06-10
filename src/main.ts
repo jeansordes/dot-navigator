@@ -1,6 +1,6 @@
 import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { t } from './i18n';
-import { DEFAULT_SETTINGS, FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON, MoreMenuItemCommand } from './types';
+import { DEFAULT_SETTINGS, FILE_TREE_VIEW_TYPE, PluginSettings, SchemaRule, TREE_VIEW_ICON, MoreMenuItemCommand } from './types';
 import { FileUtils } from './utils/file/FileUtils';
 import PluginMainPanel from './views/components/PluginMainPanel';
 import createDebug from 'debug';
@@ -9,6 +9,7 @@ import { migrateChildCountSettings } from './settings/ChildCountSettings';
 import { RenameManager } from './utils/rename/RenameManager';
 import { RuleManager } from './utils/schema/RuleManager';
 import { schemaRulesFromFileContent } from './utils/schema/schemaRulesMigration';
+import { resolveSchemaRulesOnLoad } from './utils/schema/schemaRulesOnLoad';
 
 const debug = createDebug('dot-navigator:main');
 
@@ -335,29 +336,40 @@ export default class DotNavigatorPlugin extends Plugin {
     }
 
     private async migrateSchemaRulesIfNeeded(): Promise<void> {
-        if (this.settings.schemaRules !== undefined) {
-            return;
+        const persistedSchemaRules = this.settings.schemaRules;
+        const migratedFromFile = await this.readLegacySchemaRulesFile();
+
+        const { schemaRules, shouldPersist } = resolveSchemaRulesOnLoad(
+            persistedSchemaRules,
+            migratedFromFile,
+        );
+
+        this.settings.schemaRules = schemaRules;
+
+        if (shouldPersist) {
+            debug('Migrated %d schema rules from legacy vault file', schemaRules?.length ?? 0);
+            await this.saveData(this.settings);
         }
 
+        this.updateRuleManager();
+    }
+
+    private async readLegacySchemaRulesFile(): Promise<SchemaRule[] | null> {
         const configPath = this.settings.dendronConfigFilePath || 'dot-navigator-rules.json';
         const configFile = this.app.vault.getAbstractFileByPath(configPath);
 
-        if (configFile && configFile instanceof TFile) {
-            try {
-                const content = await this.app.vault.read(configFile);
-                const { rules } = schemaRulesFromFileContent(content, configPath);
-                this.settings.schemaRules = rules;
-                debug('Migrated %d schema rules from %s', rules.length, configPath);
-            } catch (error) {
-                debug('Failed to migrate schema rules from file:', error);
-                this.settings.schemaRules = [];
-            }
-        } else {
-            this.settings.schemaRules = [];
+        if (!configFile || !(configFile instanceof TFile)) {
+            return null;
         }
 
-        await this.saveData(this.settings);
-        this.updateRuleManager();
+        try {
+            const content = await this.app.vault.read(configFile);
+            const { rules } = schemaRulesFromFileContent(content, configPath);
+            return rules;
+        } catch (error) {
+            debug('Failed to migrate schema rules from file:', error);
+            return [];
+        }
     }
 
     async saveSettings() {

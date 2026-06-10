@@ -59,7 +59,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Legacy — migration only
-    schemaRules: [],
     aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
     hiddenNodes: [],
     showHiddenNodes: false,
