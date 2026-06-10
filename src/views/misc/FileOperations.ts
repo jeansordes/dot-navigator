@@ -1,6 +1,5 @@
 import { Notice, App } from 'obsidian';
 import { t } from '../../i18n';
-import { RenameManager } from '../../utils/rename/RenameManager';
 import { FileUtils } from '../../utils/file/FileUtils';
 import createDebug from 'debug';
 
@@ -9,15 +8,13 @@ const debugError = debug.extend('error');
 
 export class FileOperations {
     private app: App;
-    private renameManager?: RenameManager;
 
-    constructor(app: App, renameManager?: RenameManager) {
+    constructor(app: App) {
         this.app = app;
-        this.renameManager = renameManager;
     }
 
     /**
-     * Create a new file and immediately open rename dialog
+     * Create a new file at the vault root and open it.
      */
     async createNewFile(): Promise<void> {
         try {
@@ -37,16 +34,7 @@ export class FileOperations {
             const newFile = await this.app.vault.create(fullPath, '');
             debug('Created file:', fullPath);
 
-            // Open the file before showing rename dialog
             await FileUtils.openFile(this.app, newFile);
-
-            // Trigger rename dialog
-            if (this.renameManager) {
-                // Use a small delay to ensure the file has been opened
-                setTimeout(() => {
-                    this.renameManager?.showRenameDialog(fullPath, 'file', { source: 'quick-create' });
-                }, 100);
-            }
 
             new Notice(t('noticeCreatedNote', { path: fullPath }));
 
@@ -57,7 +45,7 @@ export class FileOperations {
     }
 
     /**
-     * Create a new folder and immediately open rename dialog
+     * Create a new folder at the vault root.
      */
     async createNewFolder(): Promise<void> {
         try {
@@ -84,19 +72,6 @@ export class FileOperations {
             const createdFolder = this.app.vault.getAbstractFileByPath(fullPath);
             if (!createdFolder) {
                 throw new Error(`Failed to create folder: ${fullPath}`);
-            }
-
-            // Trigger rename dialog with a longer delay to ensure everything is ready
-            if (this.renameManager) {
-                setTimeout(() => {
-                    // Double-check the folder still exists before showing rename dialog
-                    const folderCheck = this.app.vault.getAbstractFileByPath(fullPath);
-                    if (folderCheck) {
-                        this.renameManager?.showRenameDialog(fullPath, 'folder', { source: 'quick-create' });
-                    } else {
-                        debugError('Folder disappeared before rename dialog could open:', fullPath);
-                    }
-                }, 150);
             }
 
             new Notice(`Created folder: ${fullPath}`);

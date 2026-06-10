@@ -61,7 +61,7 @@ export default class PluginMainPanel extends ItemView {
         this.ruleManager = ruleManager;
 
         // Initialize file operations
-        this.fileOperations = new FileOperations(this.app, this.renameManager);
+        this.fileOperations = new FileOperations(this.app);
 
         // Initialize persistence manager
         this.persistenceManager = new PersistenceManager(
