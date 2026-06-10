@@ -1,3 +1,10 @@
+## [1.28.1](https://github.com/jeansordes/dot-navigator/compare/1.28.0...1.28.1) (2026-06-10)
+
+### Bug Fixes
+
+* **create:** stop opening rename dialog after quick create ([c2cef1d](https://github.com/jeansordes/dot-navigator/commit/c2cef1dd2a94cb7576c877f630588812161fffde))
+* **settings:** avoid overwriting synced schema rules on mobile ([bdbeadb](https://github.com/jeansordes/dot-navigator/commit/bdbeadb1ae1df86cc9437cb3997e304d61f6042b))
+
 # [1.28.0](https://github.com/jeansordes/dot-navigator/compare/1.27.0...1.28.0) (2026-06-08)
 
 ### Bug Fixes
