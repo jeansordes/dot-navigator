@@ -37,4 +37,6 @@ export interface VirtualTreeLike {
   dragInsertIndex?: number | null;
   /** Which part of a redirect stub row is highlighted when selected */
   selectedActivePart?: 'title' | 'stub-icon';
+  /** Keep the shortcut row highlighted after opening its target from the tree title. */
+  preferShortcutRevealOnNextActiveFile?: () => void;
 }

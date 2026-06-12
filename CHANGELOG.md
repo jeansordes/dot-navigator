@@ -6,6 +6,7 @@
 
 ### Features
 
+* **shortcuts:** redirect stubs now resolve targets by vault path, bare note name, or wikilink (`[[...]]`), using Obsidian link rules relative to the stub
 * **tree:** folder title clicks now toggle expand/collapse; double-clicking the title expands or collapses all descendants (rename folders from the context menu instead of double-click)
 
 ## [1.28.3](https://github.com/jeansordes/dot-navigator/compare/1.28.2...1.28.3) (2026-06-12)

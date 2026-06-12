@@ -44,7 +44,8 @@ export class DendronEventHandler {
     registerFileEvents(): void {
         // Clear any existing event handlers to prevent duplicates
         this.unregisterFileEvents();
-        
+        this.seedYamlCaches();
+
         // Register event handlers using bound methods to maintain 'this' context
         this.app.vault.on('create', this.handleFileCreate);
         this.app.vault.on('delete', this.handleFileDelete);
@@ -287,5 +288,12 @@ export class DendronEventHandler {
 
     private isSchemaFile(path: string | undefined): boolean {
         return typeof path === 'string' && this.schemaRegex.test(path);
+    }
+
+    private seedYamlCaches(): void {
+        for (const file of this.app.vault.getMarkdownFiles()) {
+            this.yamlTitleCache.set(file.path, getYamlTitle(this.app, file.path));
+            this.yamlRedirectCache.set(file.path, getYamlRedirectSignature(this.app, file.path));
+        }
     }
 }

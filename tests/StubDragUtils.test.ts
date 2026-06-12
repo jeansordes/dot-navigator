@@ -1,5 +1,6 @@
 import { InMemoryVaultAdapter } from '../src/adapters/testing/InMemoryVaultAdapter';
 import { buildStubFileContent } from '../src/core/redirectStub';
+import { FileUtils } from '../src/utils/file/FileUtils';
 import { createStubByDragAndDrop, deleteRedirectStub } from '../src/utils/rename/StubDragUtils';
 import { App, TFile } from 'obsidian';
 import { createMockFile } from './setup';
@@ -31,13 +32,14 @@ describe('StubDragUtils', () => {
     vault = new InMemoryVaultAdapter();
   });
 
-  it('buildStubFileContent writes redirect frontmatter', () => {
-    expect(buildStubFileContent('notes/target.md')).toContain('redirect: notes/target.md');
+  it('buildStubFileContent writes redirect frontmatter as a wikilink', () => {
+    expect(buildStubFileContent('notes/target.md')).toBe('---\nredirect: "[[notes/target]]"\n---\n');
   });
 
   it('creates a redirect stub at the computed destination', async () => {
     vault.addFile('notes/a.b.c.md');
     const app = makeApp(vault);
+    const openSpy = jest.spyOn(FileUtils, 'openAndFocusFile').mockResolvedValue();
 
     const success = await createStubByDragAndDrop(
       app,
@@ -50,6 +52,8 @@ describe('StubDragUtils', () => {
     expect(success).toBe(true);
     expect(vault.getFileByPath('notes/x.y.c.md')).not.toBeNull();
     expect(await vault.readFile('notes/x.y.c.md')).toBe(buildStubFileContent('notes/a.b.c.md'));
+    expect(openSpy).toHaveBeenCalledWith(app, expect.objectContaining({ path: 'notes/x.y.c.md' }));
+    openSpy.mockRestore();
   });
 
   it('deletes a redirect stub file', async () => {

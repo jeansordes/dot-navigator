@@ -2,6 +2,7 @@ import { buildVirtualizedData } from '../src/core/virtualData';
 import {
   buildStubFileContent,
   collectRedirectEntries,
+  createVaultLinkpathResolver,
   enrichRedirectStubs,
   parseRedirectTarget,
 } from '../src/core/redirectStub';
@@ -28,25 +29,37 @@ describe('parseRedirectTarget', () => {
 });
 
 describe('buildStubFileContent', () => {
-  it('writes redirect frontmatter', () => {
-    expect(buildStubFileContent('notes/target.md')).toBe('---\nredirect: notes/target.md\n---\n');
+  it('writes redirect frontmatter as a wikilink', () => {
+    expect(buildStubFileContent('notes/target.md')).toBe('---\nredirect: "[[notes/target]]"\n---\n');
   });
 });
 
 describe('buildVirtualizedData redirect stubs', () => {
   function makeApp(stubs: Record<string, string>, files: string[]): App {
     const fileSet = new Set(files);
+    const mockFiles = files.map(path => createMockFile(path));
+    const getFile = (path: string) => (fileSet.has(path) ? createMockFile(path) : null);
+    const resolveLinkpath = createVaultLinkpathResolver(
+      getFile,
+      () => mockFiles.map(file => ({
+        path: file.path,
+        basename: file.name.replace(/\.md$/u, ''),
+      })),
+    );
+
     return {
       vault: {
-        getFiles: () => files.map(path => createMockFile(path)),
-        getAbstractFileByPath: (path: string) => (
-          fileSet.has(path) ? createMockFile(path) : null
-        ),
+        getFiles: () => mockFiles,
+        getAbstractFileByPath: getFile,
       },
       metadataCache: {
         getFileCache: (file: TFile) => {
           const redirect = stubs[file.path];
           return redirect ? { frontmatter: { redirect } } : undefined;
+        },
+        getFirstLinkpathDest: (linkpath: string, sourcePath: string) => {
+          const resolved = resolveLinkpath(linkpath, sourcePath);
+          return resolved ? { path: resolved } : null;
         },
       },
     } as unknown as App;
@@ -148,6 +161,46 @@ describe('buildVirtualizedData redirect stubs', () => {
     });
   });
 
+  it('resolves bare-name redirects to notes outside the stub folder', () => {
+    const rootNode: TreeNode = {
+      path: '',
+      nodeType: TreeNodeType.VIRTUAL,
+      children: new Map([
+        ['folder', {
+          path: 'folder',
+          nodeType: TreeNodeType.FOLDER,
+          children: new Map([
+            ['folder/target.md', {
+              path: 'folder/target.md',
+              nodeType: TreeNodeType.FILE,
+              children: new Map(),
+            }],
+          ]),
+        }],
+        ['foo.bar.md', {
+          path: 'foo.bar.md',
+          nodeType: TreeNodeType.FILE,
+          children: new Map(),
+        }],
+      ]),
+    };
+    const app = makeApp(
+      { 'foo.bar.md': 'target' },
+      ['folder/target.md', 'foo.bar.md'],
+    );
+
+    const result = buildVirtualizedData(app, rootNode, {
+      mySetting: 'default',
+      transformDashesToSpaces: DashTransformation.NONE,
+    });
+
+    const stub = result.data.find(item => item.id === 'foo.bar.md');
+    expect(stub).toMatchObject({
+      isRedirect: true,
+      targetPath: 'folder/target.md',
+    });
+  });
+
   it('skips stubs whose target does not exist', () => {
     const data: Array<{ id: string; name: string; kind: 'file'; isRedirect?: boolean }> = [{
       id: 'foo.bar.md',
@@ -166,20 +219,39 @@ describe('buildVirtualizedData redirect stubs', () => {
 });
 
 describe('collectRedirectEntries', () => {
-  it('collects redirect frontmatter from vault files', () => {
+  it('collects and resolves redirect frontmatter from vault files', () => {
+    const files = ['foo.bar.md', 'notes/target.md'];
+    const mockFiles = files.map(path => createMockFile(path));
+    const fileSet = new Set(files);
+    const getFile = (path: string) => (fileSet.has(path) ? createMockFile(path) : null);
+    const resolveLinkpath = createVaultLinkpathResolver(
+      getFile,
+      () => mockFiles.map(file => ({
+        path: file.path,
+        basename: file.name.replace(/\.md$/u, ''),
+      })),
+    );
+
     const app = {
       vault: {
-        getFiles: () => [{ path: 'foo.bar.md' }, { path: 'target.md' }],
+        getFiles: () => mockFiles,
+        getAbstractFileByPath: getFile,
       },
       metadataCache: {
-        getFileCache: (file: { path: string }) => (
-          file.path === 'foo.bar.md' ? { frontmatter: { redirect: 'target.md' } } : undefined
+        getFileCache: (file: TFile) => (
+          file.path === 'foo.bar.md'
+            ? { frontmatter: { redirect: '[[notes/target]]' } }
+            : undefined
         ),
+        getFirstLinkpathDest: (linkpath: string, sourcePath: string) => {
+          const resolved = resolveLinkpath(linkpath, sourcePath);
+          return resolved ? { path: resolved } : null;
+        },
       },
     } as unknown as App;
 
     expect(collectRedirectEntries(app)).toEqual([
-      { stubPath: 'foo.bar.md', targetPath: 'target.md' },
+      { stubPath: 'foo.bar.md', targetPath: 'notes/target.md' },
     ]);
   });
 });

@@ -35,7 +35,11 @@ describe('executeDragDropComplete', () => {
             targetPath,
             targetKind: 'file',
         });
-        expect(onMoveComplete).toHaveBeenCalledWith(stubPath);
+        expect(onMoveComplete).toHaveBeenCalledTimes(1);
+        expect(onMoveComplete).toHaveBeenCalledWith(stubPath, {
+            expandSelf: true,
+            waitForRedirect: true,
+        });
     });
 
     it('clears pending focus when shortcut creation fails', async () => {
@@ -62,8 +66,8 @@ describe('executeDragDropComplete', () => {
             onMoveComplete,
         );
 
-        expect(onMoveComplete).toHaveBeenCalledTimes(2);
-        expect(onMoveComplete).toHaveBeenLastCalledWith('');
+        expect(onMoveComplete).toHaveBeenCalledTimes(1);
+        expect(onMoveComplete).toHaveBeenCalledWith('');
     });
 
     it('moves redirect stubs via physical rename', async () => {

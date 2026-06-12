@@ -21,7 +21,16 @@ export function collapseAll(vt: VirtualTreeLike): void {
   vt._render();
 }
 
-export async function revealPath(vt: VirtualTreeLike, parentMap: Map<string, string | undefined>, path: string): Promise<number | undefined> {
+export interface RevealPathOptions {
+  expandSelf?: boolean;
+}
+
+export async function revealPath(
+  vt: VirtualTreeLike,
+  parentMap: Map<string, string | undefined>,
+  path: string,
+  options?: RevealPathOptions,
+): Promise<number | undefined> {
   const expanded = vt.expanded;
   let cur: string | undefined = path;
   const guard = new Set<string>();
@@ -30,6 +39,9 @@ export async function revealPath(vt: VirtualTreeLike, parentMap: Map<string, str
     const parent = parentMap.get(cur);
     if (parent) expanded.set(parent, true);
     cur = parent;
+  }
+  if (options?.expandSelf) {
+    expanded.set(path, true);
   }
   vt._recomputeVisible();
   const list = vt.visible;

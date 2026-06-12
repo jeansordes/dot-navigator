@@ -36,15 +36,25 @@ describe('resolveRevealPathForActiveFile', () => {
     [projectedId, { id: projectedId, targetPath: 'notes/target.child.md' }],
   ]);
 
-  it('keeps shortcut selection when active file matches target', () => {
-    expect(resolveRevealPathForActiveFile(stubPath, filePath, (id) => items.get(id))).toBe(stubPath);
+  it('reveals canonical path when active file matches shortcut target by default', () => {
+    expect(resolveRevealPathForActiveFile(stubPath, filePath, (id) => items.get(id))).toBe(filePath);
   });
 
-  it('keeps projected child selection when active file matches target', () => {
+  it('keeps shortcut selection when opened from the tree title click', () => {
+    expect(resolveRevealPathForActiveFile(
+      stubPath,
+      filePath,
+      (id) => items.get(id),
+      { preferShortcutReveal: true },
+    )).toBe(stubPath);
+  });
+
+  it('keeps projected child selection when opened from the tree title click', () => {
     expect(resolveRevealPathForActiveFile(
       projectedId,
       'notes/target.child.md',
-      (id) => items.get(id)
+      (id) => items.get(id),
+      { preferShortcutReveal: true },
     )).toBe(projectedId);
   });
 

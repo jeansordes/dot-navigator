@@ -1,5 +1,6 @@
 import { App, Notice, TFile } from 'obsidian';
 import { buildStubFileContent } from '../../core/redirectStub';
+import { FileUtils } from '../file/FileUtils';
 import { t } from '../../i18n';
 import {
     computeMoveDestination,
@@ -46,7 +47,10 @@ export async function createStubByDragAndDrop(
     }
 
     try {
-        await app.vault.create(destPath, buildStubFileContent(draggedPath));
+        const stubFile = await app.vault.create(destPath, buildStubFileContent(draggedPath));
+        if (stubFile instanceof TFile) {
+            await FileUtils.openAndFocusFile(app, stubFile);
+        }
         new Notice(t('noticeShortcutCreated', { alias: destPath }));
         return true;
     } catch (error) {

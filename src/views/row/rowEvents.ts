@@ -311,6 +311,9 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
     vt.selectedIndex = idx;
     vt.selectedActivePart = 'title';
     setSelectedId(id);
+    if (item && isShortcutItem(item)) {
+      vt.preferShortcutRevealOnNextActiveFile?.();
+    }
     const file = app.vault.getAbstractFileByPath(openPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey; // CMD on Mac, CTRL on Windows/Linux

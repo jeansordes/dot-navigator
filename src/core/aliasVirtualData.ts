@@ -25,21 +25,39 @@ export function resolveTargetPath(item: { id: string; targetPath?: string }): st
   return isShortcutItem(item) ? item.targetPath! : item.id;
 }
 
+export interface RevealPathForActiveFileOptions {
+  /** Set when opening a target from a shortcut row title click in the tree. */
+  preferShortcutReveal?: boolean;
+}
+
 /**
- * When the active editor file matches a shortcut row's target, keep revealing that row
- * instead of jumping to the canonical file path in the tree.
+ * Resolve which tree row to reveal for the active editor file.
+ * Shortcut rows stay selected only when explicitly opened from the tree title click.
  */
 export function resolveRevealPathForActiveFile(
   selectedId: string | undefined,
   activeFilePath: string,
-  findItemById: (id: string) => { id: string; targetPath?: string } | undefined
+  findItemById: (id: string) => { id: string; targetPath?: string } | undefined,
+  options?: RevealPathForActiveFileOptions,
 ): string {
   if (!selectedId) {
     return activeFilePath;
   }
 
   const selected = findItemById(selectedId);
-  if (!selected || resolveTargetPath(selected) !== activeFilePath) {
+  if (!selected) {
+    return activeFilePath;
+  }
+
+  if (selected.id === activeFilePath) {
+    return activeFilePath;
+  }
+
+  if (!options?.preferShortcutReveal) {
+    return activeFilePath;
+  }
+
+  if (resolveTargetPath(selected) !== activeFilePath) {
     return activeFilePath;
   }
 

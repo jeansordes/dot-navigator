@@ -11,7 +11,13 @@ import { applyTreeDataUpdate } from './treeDataUpdate';
 import { growRowPool, maybeScheduleRowWidthAdjust, renderVisibleRows } from './treeRenderPass';
 import { expandAllInData, expandChildrenInData, collapseChildrenInData } from './treeOps';
 import { setupAttachment, attachToViewBodyImpl } from '../utils/attachUtils'; 
-import { collapseAll as collapseAllAction, revealPath as revealAction, selectPath as selectPathAction } from './treeActions';
+import {
+  collapseAll as collapseAllAction,
+  revealPath as revealAction,
+  selectPath as selectPathAction,
+  type RevealPathOptions,
+} from './treeActions';
+import type { MoveCompleteOptions } from '../row/rowDragDropComplete';
 import { bindRowHandlers, onRowClick as handleRowClick, onRowContextMenu as handleRowContextMenu } from '../row/rowHandlers';
 import type { RowDragController } from '../row/rowDragDrop';
 import { attachTreeDragController, detachTreeDragController } from './treeDragAttach';
@@ -26,6 +32,7 @@ export class ComplexVirtualTree extends VirtualTree {
   private _resizeObs?: ResizeObserver;
   private _onExpansionChange?: () => void;
   private _selectedId?: string;
+  private _preferShortcutReveal = false;
   private _isAttached: boolean = false;
   // Lazily initialized because base class constructor calls into our _render before fields run
   private _ctxMenuBound?: WeakSet<HTMLElement>;
@@ -36,7 +43,7 @@ export class ComplexVirtualTree extends VirtualTree {
   // Rename manager
   private _renameManager?: RenameManager;
   private _dragController?: RowDragController;
-  private _pendingRevealPath?: string;
+  private _pendingReveal?: { path: string; expandSelf?: boolean; waitForRedirect?: boolean };
   /** Which part of a redirect stub row shows the active highlight */
   selectedActivePart: 'title' | 'stub-icon' = 'title';
 
@@ -92,7 +99,7 @@ export class ComplexVirtualTree extends VirtualTree {
       virtualTree: this.virtualTree,
       viewBody,
       renameManager: this._renameManager,
-      onMoveComplete: (path) => this.revealAfterUpdate(path),
+      onMoveComplete: (path, options) => this.revealAfterUpdate(path, options),
     });
   }
 
@@ -138,12 +145,23 @@ export class ComplexVirtualTree extends VirtualTree {
     return this._selectedId;
   }
 
-  public revealAfterUpdate(path: string): void {
+  public revealAfterUpdate(path: string, options?: MoveCompleteOptions): void {
     if (!path) {
-      this._pendingRevealPath = undefined;
+      this._pendingReveal = undefined;
       return;
     }
-    this._pendingRevealPath = path;
+    this._pendingReveal = { path, ...options };
+  }
+
+  private _findItemInData(path: string, items: VItem[] = this.virtualTree.data): VItem | undefined {
+    for (const item of items) {
+      if (item.id === path) return item;
+      if (item.children) {
+        const found = this._findItemInData(path, item.children);
+        if (found) return found;
+      }
+    }
+    return undefined;
   }
 
   public updateData(data: VItem[], parentMap: Map<string, string | undefined>): void {
@@ -155,11 +173,16 @@ export class ComplexVirtualTree extends VirtualTree {
       () => this._reapplySelection(),
       () => this._onExpansionChange?.()
     );
-    if (this._pendingRevealPath) {
-      const path = this._pendingRevealPath;
-      this._pendingRevealPath = undefined;
-      void this.revealPath(path);
+    if (!this._pendingReveal) return;
+
+    const pending = this._pendingReveal;
+    if (pending.waitForRedirect) {
+      const item = this._findItemInData(pending.path, data);
+      if (!item?.isRedirect) return;
     }
+
+    this._pendingReveal = undefined;
+    void this.revealPath(pending.path, { expandSelf: pending.expandSelf });
   }
 
   public expandAll(): void {
@@ -205,18 +228,24 @@ export class ComplexVirtualTree extends VirtualTree {
     this._onExpansionChange?.();
   }
 
-  public async revealPath(path: string): Promise<void> {
-    const idx = await revealAction(this.virtualTree, this.parentMap, path);
+  public async revealPath(path: string, options?: RevealPathOptions): Promise<void> {
+    const idx = await revealAction(this.virtualTree, this.parentMap, path, options);
     if (idx != null) this._selectedId = path;
     this._onExpansionChange?.();
+  }
+
+  public preferShortcutRevealOnNextActiveFile(): void {
+    this._preferShortcutReveal = true;
   }
 
   public revealPathForActiveFile(filePath: string): void {
     const revealId = resolveRevealPathForActiveFile(
       this._selectedId,
       filePath,
-      (id) => this.virtualTree.visible.find(item => item.id === id)
+      (id) => this.virtualTree.visible.find(item => item.id === id),
+      { preferShortcutReveal: this._preferShortcutReveal },
     );
+    this._preferShortcutReveal = false;
     const item = this.virtualTree.visible.find(i => i.id === revealId);
     if (item?.isRedirect) {
       this.selectedActivePart = item.id === filePath ? 'stub-icon' : 'title';

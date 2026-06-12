@@ -154,6 +154,22 @@ describe('TreeService', () => {
       expect(projectedChild.targetPath).toBe('target.child.md');
       expect(result.parentMap.get(projectedChild.id)).toBe(stub!.id);
     });
+
+    it('should resolve bare-name redirects to targets in subfolders', () => {
+      vault.addFolder('folder');
+      vault.addFile('folder/target.md');
+      vault.addFile('foo.bar.md');
+      metadata.setFrontmatter('foo.bar.md', { redirect: 'target' });
+
+      const result = treeService.buildVirtualizedData(DashTransformation.NONE);
+      const foo = result.data.find(item => item.id === 'foo.md');
+      const stub = foo?.children?.find(item => item.id === 'foo.bar.md');
+
+      expect(stub).toMatchObject({
+        isRedirect: true,
+        targetPath: 'folder/target.md',
+      });
+    });
   });
 });
 

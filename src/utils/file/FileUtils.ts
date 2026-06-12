@@ -119,6 +119,11 @@ export class FileUtils {
         }
     }
 
+    public static async openAndFocusFile(app: App, file: TFile, newTab = false): Promise<void> {
+        await this.openFile(app, file, newTab);
+        this.focusLeafForFile(app, file);
+    }
+
     /** Open a shortcut's target note and jump to its canonical row in the tree. */
     public static async openShortcutTarget(
         app: App,
@@ -126,8 +131,7 @@ export class FileUtils {
         newTab: boolean,
         revealCanonicalPath?: (path: string) => void
     ): Promise<void> {
-        await this.openFile(app, file, newTab);
-        this.focusLeafForFile(app, file);
+        await this.openAndFocusFile(app, file, newTab);
         revealCanonicalPath?.(file.path);
     }
 

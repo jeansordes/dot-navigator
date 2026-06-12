@@ -48,9 +48,14 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 - **Redirect shortcut stubs** - create `.md` stub files with `redirect` frontmatter to place a note at alternate locations in the tree. Shift+drag (or Alt+Cmd/Ctrl+drag) onto another node to create a stub; drag the stub row to move it; delete stubs from the context menu without deleting the target note. Title click opens the redirect target; use the symlink icon to open the stub file.
 
+The `redirect` value accepts a vault path, a note name, or a wikilink. Ambiguous names follow Obsidian wikilink resolution relative to the stub file.
+
 ```yaml
 ---
-redirect: notes/target.md
+redirect: notes/target.md   # full vault path
+redirect: notes/target      # path without extension
+redirect: target            # note name (no folder, no .md)
+redirect: "[[My Note]]"     # wikilink
 ---
 ```
 

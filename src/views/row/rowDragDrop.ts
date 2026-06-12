@@ -12,7 +12,7 @@ import {
     resolveDragSource,
     resolveDropTarget,
 } from './rowDragDropUi';
-import { executeDragDropComplete } from './rowDragDropComplete';
+import { executeDragDropComplete, type MoveCompleteOptions } from './rowDragDropComplete';
 
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 400;
@@ -49,7 +49,7 @@ export interface RowDragControllerOptions {
     virtualizer: HTMLElement;
     viewBody: HTMLElement;
     renameManager?: RenameManager;
-    onMoveComplete?: (newPath: string) => void;
+    onMoveComplete?: (newPath: string, options?: MoveCompleteOptions) => void;
 }
 
 export class RowDragController {

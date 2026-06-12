@@ -1,10 +1,105 @@
 import { App, TFile } from 'obsidian';
 import { projectChildren, type ShortcutVItem } from './aliasVirtualData';
+import { basename, dirname } from '../domain/file/PathUtils';
 import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:redirect-stub');
 
 export const REDIRECT_FM_KEY = 'redirect';
+
+export type LinkpathResolver = (linkpath: string, sourcePath: string) => string | null;
+
+function looksExtensionless(path: string): boolean {
+  const base = basename(path);
+  return !/\.[^/]+$/u.test(base);
+}
+
+function stripMdExtension(linkpath: string): string {
+  return linkpath.endsWith('.md') ? linkpath.slice(0, -3) : linkpath;
+}
+
+export function resolveRedirectTargetPath(
+  linkpath: string,
+  stubPath: string,
+  fileExists: (path: string) => boolean,
+  resolveLinkpath: LinkpathResolver,
+): string | null {
+  if (fileExists(linkpath)) {
+    return linkpath;
+  }
+
+  if (looksExtensionless(linkpath)) {
+    const withMd = `${linkpath}.md`;
+    if (fileExists(withMd)) {
+      return withMd;
+    }
+  }
+
+  const resolved = resolveLinkpath(linkpath, stubPath);
+  if (resolved && fileExists(resolved)) {
+    return resolved;
+  }
+
+  if (linkpath.endsWith('.md')) {
+    const withoutMd = stripMdExtension(linkpath);
+    const retry = resolveLinkpath(withoutMd, stubPath);
+    if (retry && fileExists(retry)) {
+      return retry;
+    }
+  }
+
+  return null;
+}
+
+export function createObsidianLinkpathResolver(app: App): LinkpathResolver {
+  return (linkpath, sourcePath) =>
+    app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath)?.path ?? null;
+}
+
+export function createVaultLinkpathResolver(
+  getFileByPath: (path: string) => unknown,
+  getFiles: () => Array<{ path: string; basename: string }>,
+): LinkpathResolver {
+  const pickFromMatches = (matches: string[], sourcePath: string): string | null => {
+    if (matches.length === 0) return null;
+    if (matches.length === 1) return matches[0] ?? null;
+
+    const stubFolder = dirname(sourcePath);
+    const sameFolder = matches.filter(p => dirname(p) === stubFolder);
+    if (sameFolder.length === 1) return sameFolder[0] ?? null;
+
+    const pool = sameFolder.length > 1 ? sameFolder : matches;
+    return [...pool].sort((a, b) => a.length - b.length || a.localeCompare(b))[0] ?? null;
+  };
+
+  return (linkpath, sourcePath) => {
+    if (getFileByPath(linkpath)) return linkpath;
+
+    const withMd = looksExtensionless(linkpath) ? `${linkpath}.md` : null;
+    if (withMd && getFileByPath(withMd)) return withMd;
+
+    const stubFolder = dirname(sourcePath);
+    const candidates = new Set<string>();
+
+    if (stubFolder) {
+      candidates.add(`${stubFolder}/${linkpath}`);
+      if (withMd) candidates.add(`${stubFolder}/${withMd}`);
+    }
+    candidates.add(linkpath);
+    if (withMd) candidates.add(withMd);
+
+    for (const candidate of candidates) {
+      if (getFileByPath(candidate)) return candidate;
+    }
+
+    const linkBase = stripMdExtension(basename(linkpath));
+    const matches = getFiles()
+      .filter(f => f.basename === linkBase)
+      .map(f => f.path);
+
+    return pickFromMatches(matches, sourcePath);
+  };
+}
 
 export interface RedirectEntry {
   stubPath: string;
@@ -39,19 +134,62 @@ export function parseRedirectTarget(raw: unknown): string | null {
   return /\.[^/]+$/u.test(unwrapped) ? unwrapped : `${unwrapped}.md`;
 }
 
+export function formatRedirectWikilink(targetPath: string): string {
+  const linkpath = stripMdExtension(targetPath);
+  return `[[${linkpath}]]`;
+}
+
 export function buildStubFileContent(targetPath: string): string {
-  return `---\nredirect: ${targetPath}\n---\n`;
+  return `---\nredirect: "${formatRedirectWikilink(targetPath)}"\n---\n`;
+}
+
+/** Only vault-path redirects are rewritten on target rename; names and wikilinks keep resolving. */
+export function shouldRewriteRedirectOnRename(raw: unknown): boolean {
+  if (typeof raw !== 'string') {
+    return false;
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed || /^\[\[/u.test(trimmed)) {
+    return false;
+  }
+
+  return trimmed.includes('/') || /\.[^/]+$/u.test(trimmed);
+}
+
+function resolveRedirectEntry(
+  stubPath: string,
+  raw: unknown,
+  fileExists: (path: string) => boolean,
+  resolveLinkpath: LinkpathResolver,
+): RedirectEntry | null {
+  const linkpath = parseRedirectTarget(raw);
+  if (!linkpath) {
+    return null;
+  }
+
+  const targetPath = resolveRedirectTargetPath(linkpath, stubPath, fileExists, resolveLinkpath);
+  if (!targetPath || stubPath === targetPath) {
+    return null;
+  }
+
+  return { stubPath, targetPath };
 }
 
 export function collectRedirectEntries(app: App): RedirectEntry[] {
   try {
+    const fileExists = (path: string) => app.vault.getAbstractFileByPath(path) instanceof TFile;
+    const resolveLinkpath = createObsidianLinkpathResolver(app);
+
     return app.vault.getFiles().flatMap(file => {
       const cache = app.metadataCache.getFileCache(file);
-      const targetPath = parseRedirectTarget(cache?.frontmatter?.[REDIRECT_FM_KEY]);
-      if (!targetPath) {
-        return [];
-      }
-      return [{ stubPath: file.path, targetPath }];
+      const entry = resolveRedirectEntry(
+        file.path,
+        cache?.frontmatter?.[REDIRECT_FM_KEY],
+        fileExists,
+        resolveLinkpath,
+      );
+      return entry ? [entry] : [];
     });
   } catch {
     return [];
@@ -130,11 +268,20 @@ export async function updateRedirectTargetsOnRename(
     return;
   }
 
+  const fileExists = (path: string) => app.vault.getAbstractFileByPath(path) instanceof TFile;
+  const resolveLinkpath = createObsidianLinkpathResolver(app);
+
   const stubsToUpdate: TFile[] = [];
   for (const file of app.vault.getFiles()) {
     const cache = app.metadataCache.getFileCache(file);
-    const redirect = parseRedirectTarget(cache?.frontmatter?.[REDIRECT_FM_KEY]);
-    if (redirect === oldPath) {
+    const raw = cache?.frontmatter?.[REDIRECT_FM_KEY];
+    const linkpath = parseRedirectTarget(raw);
+    if (!linkpath || !shouldRewriteRedirectOnRename(raw)) {
+      continue;
+    }
+
+    const resolved = resolveRedirectTargetPath(linkpath, file.path, fileExists, resolveLinkpath);
+    if (resolved === oldPath) {
       stubsToUpdate.push(file);
     }
   }

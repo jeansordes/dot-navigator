@@ -19,11 +19,16 @@ export interface DragCompleteContext {
     shortcutEligible: boolean;
 }
 
+export interface MoveCompleteOptions {
+    expandSelf?: boolean;
+    waitForRedirect?: boolean;
+}
+
 export async function executeDragDropComplete(
     drag: DragCompleteContext,
     drop: ResolvedDropTarget,
     renameManager: RenameManager,
-    onMoveComplete?: (newPath: string) => void,
+    onMoveComplete?: (newPath: string, options?: MoveCompleteOptions) => void,
 ): Promise<void> {
     if (drag.isShortcut && drop.rowId === drag.rowId) return;
 
@@ -53,11 +58,14 @@ export async function executeDragDropComplete(
 
     if (shortcutMode) {
         debug('Executing stub creation', params);
-        onMoveComplete?.(newPath);
         const success = await renameManager.createShortcutByDragAndDrop(
             drag.path, drag.kind, drop.targetPath, drop.targetKind,
         );
-        if (!success) onMoveComplete?.('');
+        if (success) {
+            onMoveComplete?.(newPath, { expandSelf: true, waitForRedirect: true });
+        } else {
+            onMoveComplete?.('');
+        }
         return;
     }
 

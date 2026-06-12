@@ -1,4 +1,5 @@
 import { RowDragController } from '../row/rowDragDrop';
+import type { MoveCompleteOptions } from '../row/rowDragDropComplete';
 import type { RenameManager } from '../../utils/rename/RenameManager';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 
@@ -6,7 +7,7 @@ export function attachTreeDragController(opts: {
     virtualTree: VirtualTreeLike;
     viewBody: HTMLElement;
     renameManager?: RenameManager;
-    onMoveComplete?: (newPath: string) => void;
+    onMoveComplete?: (newPath: string, options?: MoveCompleteOptions) => void;
 }): RowDragController | undefined {
     const scrollContainer = opts.virtualTree.scrollContainer;
     const virtualizer = opts.virtualTree.virtualizer;

@@ -9,8 +9,10 @@ import type { MetadataPort } from '../ports/MetadataPort.js';
 import { basename } from '../domain/file/PathUtils.js';
 import {
   REDIRECT_FM_KEY,
+  createVaultLinkpathResolver,
   enrichRedirectStubs,
   parseRedirectTarget,
+  resolveRedirectTargetPath,
   type RedirectEntry,
 } from '../core/redirectStub.js';
 
@@ -181,12 +183,29 @@ export class TreeService {
   }
 
   private collectRedirectEntries(): RedirectEntry[] {
+    const fileExists = (path: string) => this.vault.getFileByPath(path) !== null;
+    const resolveLinkpath = createVaultLinkpathResolver(
+      (path) => this.vault.getFileByPath(path),
+      () => this.vault.getFiles(),
+    );
+
     return this.vault.getFiles().flatMap(file => {
       const raw = this.metadata.getFrontmatterField(file.path, REDIRECT_FM_KEY);
-      const targetPath = parseRedirectTarget(raw);
-      if (!targetPath) {
+      const linkpath = parseRedirectTarget(raw);
+      if (!linkpath) {
         return [];
       }
+
+      const targetPath = resolveRedirectTargetPath(
+        linkpath,
+        file.path,
+        fileExists,
+        resolveLinkpath,
+      );
+      if (!targetPath || targetPath === file.path) {
+        return [];
+      }
+
       return [{ stubPath: file.path, targetPath }];
     });
   }
