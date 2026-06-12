@@ -1,6 +1,7 @@
 import { App, TFile, TAbstractFile } from 'obsidian';
 import { TreeNode } from '../../types';
-import { getYamlAliasSignature, getYamlTitle } from './YamlTitleUtils';
+import { getYamlRedirectSignature, getYamlTitle } from './YamlTitleUtils';
+import { updateRedirectTargetsOnRename } from '../../core/redirectStub';
 
 export class DendronEventHandler {
     private app: App;
@@ -12,9 +13,9 @@ export class DendronEventHandler {
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
-    // Cache YAML titles and aliases to detect changes on modify or metadata events
+    // Cache YAML titles and redirects to detect changes on modify or metadata events
     private yamlTitleCache: Map<string, string | null> = new Map();
-    private yamlAliasCache: Map<string, string> = new Map();
+    private yamlRedirectCache: Map<string, string> = new Map();
     // Short grace period after construction to avoid racing with initial setup
     private readonly initAt = Date.now();
     private readonly graceMs = 300; // keep very small to reduce perceived lag
@@ -68,7 +69,7 @@ export class DendronEventHandler {
         // Full rebuild safest for structural add; allow small debounce
         if (file instanceof TFile) {
             this.yamlTitleCache.set(file.path, getYamlTitle(this.app, file.path));
-            this.yamlAliasCache.set(file.path, getYamlAliasSignature(this.app, file.path));
+            this.yamlRedirectCache.set(file.path, getYamlRedirectSignature(this.app, file.path));
         }
         this.queueRefresh(file?.path, true, false);
     };
@@ -76,7 +77,7 @@ export class DendronEventHandler {
     private handleFileDelete = (file: TAbstractFile) => {
         // Full rebuild safest for structural delete; allow small debounce
         this.yamlTitleCache.delete(file.path);
-        this.yamlAliasCache.delete(file.path);
+        this.yamlRedirectCache.delete(file.path);
         this.queueRefresh(file?.path, true, false);
     };
 
@@ -96,11 +97,12 @@ export class DendronEventHandler {
         // Defer to unified rebuild path; debounce lightly for stability
         if (file instanceof TFile) {
             const cachedTitle = this.yamlTitleCache.get(oldPath) ?? getYamlTitle(this.app, file.path);
-            const cachedAliases = this.yamlAliasCache.get(oldPath) ?? getYamlAliasSignature(this.app, file.path);
+            const cachedRedirect = this.yamlRedirectCache.get(oldPath) ?? getYamlRedirectSignature(this.app, file.path);
             this.yamlTitleCache.delete(oldPath);
-            this.yamlAliasCache.delete(oldPath);
+            this.yamlRedirectCache.delete(oldPath);
             this.yamlTitleCache.set(file.path, cachedTitle);
-            this.yamlAliasCache.set(file.path, cachedAliases);
+            this.yamlRedirectCache.set(file.path, cachedRedirect);
+            void updateRedirectTargetsOnRename(this.app, oldPath, file.path);
         }
         this.queueRefresh(file?.path, false, true);
     };
@@ -135,18 +137,18 @@ export class DendronEventHandler {
     private handleFrontmatterChange(path: string): void {
         const newTitle = getYamlTitle(this.app, path);
         const oldTitle = this.yamlTitleCache.get(path) ?? null;
-        const newAliases = getYamlAliasSignature(this.app, path);
-        const oldAliases = this.yamlAliasCache.get(path) ?? '';
+        const newRedirect = getYamlRedirectSignature(this.app, path);
+        const oldRedirect = this.yamlRedirectCache.get(path) ?? '';
         const titleChanged = oldTitle !== newTitle;
-        const aliasesChanged = oldAliases !== newAliases;
+        const redirectChanged = oldRedirect !== newRedirect;
 
-        if (!titleChanged && !aliasesChanged) {
+        if (!titleChanged && !redirectChanged) {
             return;
         }
 
         this.yamlTitleCache.set(path, newTitle);
-        this.yamlAliasCache.set(path, newAliases);
-        this.queueRefresh(path, aliasesChanged, true);
+        this.yamlRedirectCache.set(path, newRedirect);
+        this.queueRefresh(path, redirectChanged, true);
     }
     
     /**

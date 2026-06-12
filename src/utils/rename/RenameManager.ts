@@ -6,10 +6,7 @@ import {
     type DraggableKind,
     type DropTargetKind,
 } from './DragMoveUtils';
-import {
-    createShortcutByDragAndDrop as createShortcutByDrag,
-    moveShortcutByDragAndDrop as moveShortcutByDrag,
-} from './ShortcutDragUtils';
+import { createStubByDragAndDrop } from './StubDragUtils';
 import { RenameOptions, RenameOperation, RenameProgress, RenameDialogData, MenuItemKind, RenameMode, RenameTriggerSource } from '../../types';
 import {
     clearRenameSession,
@@ -268,7 +265,7 @@ export class RenameManager {
     }
 
     /**
-     * Create a tree shortcut by appending a YAML alias instead of moving the file.
+     * Create a redirect stub file instead of moving the source note.
      */
     async createShortcutByDragAndDrop(
         draggedPath: string,
@@ -276,16 +273,7 @@ export class RenameManager {
         targetPath: string,
         targetKind: DropTargetKind
     ): Promise<boolean> {
-        return createShortcutByDrag(this.app, draggedPath, draggedKind, targetPath, targetKind);
-    }
-
-    async moveShortcutByDragAndDrop(
-        aliasPath: string,
-        noteTargetPath: string,
-        dropTargetPath: string,
-        dropTargetKind: DropTargetKind
-    ): Promise<boolean> {
-        return moveShortcutByDrag(this.app, aliasPath, noteTargetPath, dropTargetPath, dropTargetKind);
+        return createStubByDragAndDrop(this.app, draggedPath, draggedKind, targetPath, targetKind);
     }
 
     /**

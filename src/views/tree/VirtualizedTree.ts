@@ -37,6 +37,8 @@ export class ComplexVirtualTree extends VirtualTree {
   private _renameManager?: RenameManager;
   private _dragController?: RowDragController;
   private _pendingRevealPath?: string;
+  /** Which part of a redirect stub row shows the active highlight */
+  selectedActivePart: 'title' | 'stub-icon' = 'title';
 
   // Cast this to access VirtualTree properties with proper typing
   private get virtualTree(): VirtualTreeLike {
@@ -215,6 +217,12 @@ export class ComplexVirtualTree extends VirtualTree {
       filePath,
       (id) => this.virtualTree.visible.find(item => item.id === id)
     );
+    const item = this.virtualTree.visible.find(i => i.id === revealId);
+    if (item?.isRedirect) {
+      this.selectedActivePart = item.id === filePath ? 'stub-icon' : 'title';
+    } else {
+      this.selectedActivePart = 'title';
+    }
     void this.revealPath(revealId);
   }
 

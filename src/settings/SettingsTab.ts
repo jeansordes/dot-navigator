@@ -2,7 +2,6 @@ import { App, PluginSettingTab, Notice } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, FILE_TREE_VIEW_TYPE } from '../types';
 import { addFileCreationSection } from './FileCreationSettings';
-import { addAliasVirtualModeSetting } from './AliasSettings';
 import { addHiddenNodesSettings } from './HiddenNodesSettings';
 import { addChildCountSetting } from './ChildCountSettings';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
@@ -89,7 +88,6 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       containerEl,
       createGroupHeading(t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription'))
     );
-    addAliasVirtualModeSetting(treeDisplayGroup, this.plugin.settings, this.settingsCallbacks);
     addChildCountSetting(treeDisplayGroup, this.plugin.settings, {
       ...this.settingsCallbacks,
       refreshDisplay: this.display.bind(this),

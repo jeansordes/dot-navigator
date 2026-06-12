@@ -1,8 +1,8 @@
-import { App } from 'obsidian';
+import { App, TFile } from 'obsidian';
 import { FileUtils } from '../utils/file/FileUtils';
-import { TreeNode, TreeNodeType, PluginSettings, DashTransformation, type AliasVirtualMode } from '../types';
+import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
 import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
-import { applyAliasesToVirtualizedData, isDottedAlias, normalizeAliases, type AliasEntry } from './aliasVirtualData';
+import { collectRedirectEntries, enrichRedirectStubs } from './redirectStub';
 
 export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
@@ -13,8 +13,7 @@ export interface VItem {
   title?: string;
   kind: Kind;
   extension?: string;
-  isAlias?: boolean;
-  aliasPath?: string;
+  isRedirect?: boolean;
   targetPath?: string;
   targetKind?: Kind;
   targetName?: string;
@@ -92,11 +91,9 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
       return name;
     }
 
-    // Replace dashes with spaces
     let transformed = name.replace(/-/g, ' ');
 
     if (transformation === DashTransformation.SENTENCE_CASE) {
-      // Capitalize only the first letter of the string
       transformed = transformed.charAt(0).toUpperCase() + transformed.slice(1);
     }
 
@@ -110,8 +107,6 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     if (node.nodeType === TreeNodeType.FOLDER) {
       name = base.replace(/ \(\d+\)$/u, '');
     } else if (node.nodeType === TreeNodeType.SUGGESTION) {
-      // Suggestion nodes: extract the last segment after the last dot
-      // First remove .md extension if present (for leaf suggestion nodes)
       let baseForName = base;
       if (baseForName.endsWith('.md')) {
         baseForName = baseForName.slice(0, -3);
@@ -120,7 +115,6 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
       name = lastDotIndex >= 0 ? baseForName.substring(lastDotIndex + 1) : baseForName;
       name = name.replace(/ \(\d+\)$/u, '');
     } else {
-      // File nodes: remove extension if present
       const matched = base.match(/([^.]+)\.[^.]+$/u);
       name = (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
     }
@@ -172,32 +166,12 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     .sort(([_aKey, aNode], [_bKey, bNode]) => sortKey(aNode).localeCompare(sortKey(bNode)))
     .forEach(([, child]) => data.push(build(child, root.path)));
 
-  const aliasMode = settings?.aliasVirtualMode ?? 'dotted';
-  applyAliasesToVirtualizedData(data, parentMap, collectAliasEntries(app, aliasMode), {
+  enrichRedirectStubs(data, parentMap, collectRedirectEntries(app), {
     transformName,
     getSortKey: (item) => item.title ?? item.name,
-  });
+  }, (path) => app.vault.getAbstractFileByPath(path) instanceof TFile);
 
   markHiddenItems(data, settings?.hiddenNodes ?? []);
 
   return { data, parentMap };
-}
-
-function collectAliasEntries(app: App, mode: AliasVirtualMode): AliasEntry[] {
-  if (mode === 'off') {
-    return [];
-  }
-
-  try {
-    return app.vault.getFiles().flatMap(file => {
-      const cache = app.metadataCache.getFileCache(file);
-      const aliases = normalizeAliases(cache?.frontmatter?.aliases);
-      const filtered = mode === 'dotted'
-        ? aliases.filter(isDottedAlias)
-        : aliases;
-      return filtered.map(alias => ({ alias, targetPath: file.path }));
-    });
-  } catch {
-    return [];
-  }
 }

@@ -46,7 +46,8 @@ export function handleActionButtonClick(
   anchorEl?: HTMLElement,
   ev?: MouseEvent,
   renameManager?: RenameManager,
-  revealCanonicalPath?: (path: string) => void
+  _revealCanonicalPath?: (path: string) => void,
+  setSelectedId?: (id: string) => void,
 ): void {
   if (!action) return;
   const treeItem = vt.visible.find(item => item.id === id);
@@ -80,11 +81,18 @@ export function handleActionButtonClick(
     const hidden = plugin?.settings?.hiddenNodes ?? [];
     void persistHiddenNodesAndRefresh(app, toggleHiddenPath(hidden, actionPath));
   } else if (action === 'open-target') {
-    const target = app.vault.getAbstractFileByPath(actionPath);
-    if (target instanceof TFile) {
-      const openInNewTab = !!(ev?.metaKey || ev?.ctrlKey);
-      void FileUtils.openShortcutTarget(app, target, openInNewTab, revealCanonicalPath);
+    const idx = vt.visible.findIndex(item => item.id === id);
+    if (idx >= 0) {
+      vt.selectedIndex = idx;
+      vt.selectedActivePart = 'stub-icon';
+      setSelectedId?.(id);
     }
+    const stub = app.vault.getAbstractFileByPath(id);
+    if (stub instanceof TFile) {
+      const openInNewTab = !!(ev?.metaKey || ev?.ctrlKey);
+      void FileUtils.openFile(app, stub, openInNewTab);
+    }
+    vt._render();
   } else if (action === 'create-child') {
     if (isShortcut) return;
     // @ts-expect-error - plugins registry exists at runtime
@@ -298,11 +306,12 @@ export function shouldShowFor(item: MoreMenuItem, kind: MenuItemKind): boolean {
 
 export function handleTitleClick(app: App, kind: string | null, id: string, idx: number, vt: VirtualTreeLike, setSelectedId: (id: string) => void, ev?: MouseEvent): void {
   const item = vt.visible[idx];
-  const targetPath = item ? resolveTargetPath(item) : id;
+  const openPath = item ? resolveTargetPath(item) : id;
   if (kind === 'file') {
     vt.selectedIndex = idx;
+    vt.selectedActivePart = 'title';
     setSelectedId(id);
-    const file = app.vault.getAbstractFileByPath(targetPath);
+    const file = app.vault.getAbstractFileByPath(openPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey; // CMD on Mac, CTRL on Windows/Linux
       FileUtils.openFile(app, file, openInNewTab);

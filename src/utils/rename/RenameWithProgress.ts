@@ -2,6 +2,7 @@ import { App, TFile, TFolder } from "obsidian";
 import createDebug from "debug";
 import { RenameMode, RenameOperation, RenameOptions, RenameProgress } from "src/types";
 import { t } from "../../i18n";
+import { updateRedirectTargetsOnRename } from "../../core/redirectStub";
 
 const debug = createDebug("dot-navigator:rename-utils");
 
@@ -233,6 +234,13 @@ export async function renameWithProgress(
     }
 
     debug("Rename operation completed:", progress);
+
+    for (const operation of operations) {
+        if (operation.success) {
+            await updateRedirectTargetsOnRename(app, operation.originalPath, operation.newPath);
+        }
+    }
+
     deps.setAbortController(null);
     return operations;
 }

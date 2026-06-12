@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### BREAKING CHANGES
+
+* **shortcuts:** YAML `aliases` no longer create virtual shortcut nodes. Use stub markdown files with `redirect` frontmatter instead. Existing alias-based shortcuts disappear from the tree until recreated as stubs.
+
 ## [1.28.3](https://github.com/jeansordes/dot-navigator/compare/1.28.2...1.28.3) (2026-06-12)
 
 ## [1.28.2](https://github.com/jeansordes/dot-navigator/compare/1.28.1...1.28.2) (2026-06-10)

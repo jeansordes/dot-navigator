@@ -1,6 +1,6 @@
 import { App, Menu, Platform, TFile, TFolder } from 'obsidian';
 import { t } from '../../i18n';
-import { deleteShortcutAlias } from '../../utils/rename/ShortcutDragUtils';
+import { deleteRedirectStub } from '../../utils/rename/StubDragUtils';
 import type { RowItem } from '../utils/viewTypes';
 
 function styleDangerMenuItem(mi: object): void {
@@ -22,12 +22,12 @@ export function addDeleteMenuItem(
   folder: TFolder | null,
   icon?: string,
 ): boolean {
-  if (treeItem?.isAlias && treeItem.aliasPath && treeItem.targetPath) {
+  if (treeItem?.isRedirect) {
     menu.addItem((mi) => {
       mi.setTitle(t('menuDeleteShortcut'))
         .setIcon(icon || 'trash-2')
         .onClick(async () => {
-          await deleteShortcutAlias(app, treeItem.aliasPath!, treeItem.targetPath!);
+          await deleteRedirectStub(app, treeItem.id);
         });
       styleDangerMenuItem(mi);
     });

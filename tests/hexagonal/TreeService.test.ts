@@ -117,41 +117,42 @@ describe('TreeService', () => {
       expect(fileItem?.kind).toBe('file');
     });
 
-    it('should add aliases from frontmatter as shortcut items in dot-path position', () => {
+    it('should enrich redirect stub files as shortcut items in dot-path position', () => {
       vault.addFile('target.md');
-      metadata.setFrontmatter('target.md', { aliases: ['foo.bar'] });
+      vault.addFile('foo.bar.md');
+      metadata.setFrontmatter('foo.bar.md', { redirect: 'target.md' });
 
       const result = treeService.buildVirtualizedData(DashTransformation.NONE);
 
       const foo = result.data.find(item => item.id === 'foo.md');
-      const alias = foo?.children?.find(item => item.aliasPath === 'foo.bar.md');
+      const stub = foo?.children?.find(item => item.id === 'foo.bar.md');
       expect(foo?.kind).toBe('virtual');
-      expect(alias).toMatchObject({
+      expect(stub).toMatchObject({
         name: 'bar',
         kind: 'file',
-        isAlias: true,
-        aliasPath: 'foo.bar.md',
+        isRedirect: true,
         targetPath: 'target.md',
         targetKind: 'file',
       });
-      expect(result.parentMap.get(alias!.id)).toBe('foo.md');
+      expect(result.parentMap.get(stub!.id)).toBe('foo.md');
     });
 
-    it('should project target children under aliases with scoped ids', () => {
+    it('should project target children under redirect stubs with scoped ids', () => {
       vault.addFile('target.md');
       vault.addFile('target.child.md');
-      metadata.setFrontmatter('target.md', { aliases: ['shortcut.target'] });
+      vault.addFile('shortcut.target.md');
+      metadata.setFrontmatter('shortcut.target.md', { redirect: 'target.md' });
 
       const result = treeService.buildVirtualizedData(DashTransformation.NONE);
-      const shortcut = result.data
+      const stub = result.data
         .find(item => item.id === 'shortcut.md')
-        ?.children?.find(item => item.aliasPath === 'shortcut.target.md');
+        ?.children?.find(item => item.id === 'shortcut.target.md');
 
-      expect(shortcut?.children).toHaveLength(1);
-      const projectedChild = shortcut!.children![0];
-      expect(projectedChild.id).toContain(shortcut!.id);
+      expect(stub?.children).toHaveLength(1);
+      const projectedChild = stub!.children![0];
+      expect(projectedChild.id).toContain(stub!.id);
       expect(projectedChild.targetPath).toBe('target.child.md');
-      expect(result.parentMap.get(projectedChild.id)).toBe(shortcut!.id);
+      expect(result.parentMap.get(projectedChild.id)).toBe(stub!.id);
     });
   });
 });

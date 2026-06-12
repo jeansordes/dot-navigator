@@ -45,10 +45,16 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 <img width="460" alt="Header toggle to show or hide hidden nodes" src="docs/images/hidden-nodes-toggle.png" />
 <img width="440" alt="Hidden nodes management section in settings" src="docs/images/hidden-nodes-settings.png" />
 
-- **Alias shortcut nodes** - YAML `aliases` can place a note at alternate locations in the tree as shortcut nodes. Choose between dotted aliases only, all aliases, or off in the settings. Delete or remove a shortcut from the context menu without deleting the underlying note.
+- **Redirect shortcut stubs** - create `.md` stub files with `redirect` frontmatter to place a note at alternate locations in the tree. Shift+drag (or Alt+Cmd/Ctrl+drag) onto another node to create a stub; drag the stub row to move it; delete stubs from the context menu without deleting the target note. Title click opens the redirect target; use the symlink icon to open the stub file.
 
-<img width="520" alt="Aliases defined in a note's frontmatter" src="docs/images/alias-frontmatter.png" />
-<img width="480" alt="Alias shortcut nodes shown in the tree, pointing to their target" src="docs/images/alias-shortcut-nodes.png" />
+```yaml
+---
+redirect: notes/target.md
+---
+```
+
+<img width="520" alt="Redirect frontmatter in a stub file" src="docs/images/alias-frontmatter.png" />
+<img width="480" alt="Redirect stub rows shown in the tree, pointing to their target" src="docs/images/alias-shortcut-nodes.png" />
 
 - **UI for renaming a note and its children** with a nice UI
 

@@ -176,11 +176,11 @@ export function onRowClick(
         const interaction = resolveTouchInteraction(id, e);
         if (interaction && isTouchDoubleTapFor(lastToggleTouchTap, id, interaction)) {
           const syntheticDouble = new MouseEvent('click', { detail: 2 });
-          handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, syntheticDouble, renameManager, revealCanonicalPath);
+          handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, syntheticDouble, renameManager, revealCanonicalPath, setSelectedId);
           return;
         }
       }
-      handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager, revealCanonicalPath);
+      handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager, revealCanonicalPath, setSelectedId);
     }
     return;
   }
@@ -227,6 +227,7 @@ export function onRowClick(
   const applySelection = (): void => {
     if (kind === 'file') {
       vt.selectedIndex = idx;
+      vt.selectedActivePart = 'title';
       setSelectedId(id);
     } else {
       vt.focusedIndex = idx;

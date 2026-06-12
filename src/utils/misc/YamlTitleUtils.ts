@@ -1,5 +1,5 @@
 import { App, TFile } from "obsidian";
-import { normalizeAliases } from "../../core/aliasVirtualData";
+import { parseRedirectTarget, REDIRECT_FM_KEY } from "../../core/redirectStub";
 
 /**
  * Reads the YAML title from a file's frontmatter
@@ -34,24 +34,24 @@ export function hasYamlTitle(app: App, filePath: string): boolean {
 }
 
 /**
- * Builds a stable signature from frontmatter aliases for change detection.
+ * Builds a stable signature from redirect frontmatter for change detection.
  */
-export function aliasesToSignature(aliases: unknown): string {
-  return normalizeAliases(aliases).join("\n");
+export function redirectToSignature(raw: unknown): string {
+  return parseRedirectTarget(raw) ?? "";
 }
 
 /**
- * Reads normalized frontmatter aliases from a file's metadata cache.
+ * Reads normalized redirect target from a file's metadata cache.
  */
-export function getYamlAliasSignature(app: App, filePath: string): string {
+export function getYamlRedirectSignature(app: App, filePath: string): string {
   try {
     const file = app.vault.getAbstractFileByPath(filePath);
     if (!(file instanceof TFile)) return "";
 
     const cache = app.metadataCache.getFileCache(file);
-    return aliasesToSignature(cache?.frontmatter?.aliases);
+    return redirectToSignature(cache?.frontmatter?.[REDIRECT_FM_KEY]);
   } catch (error) {
-    console.error("Error reading YAML aliases:", error);
+    console.error("Error reading YAML redirect:", error);
     return "";
   }
 }

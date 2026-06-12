@@ -64,6 +64,25 @@ function syncHiddenIcon(row: HTMLElement, isHidden: boolean): void {
   }
 }
 
+function syncSelectionHighlight(
+  row: HTMLElement,
+  item: RowItem,
+  isSelected: boolean,
+  selectedActivePart?: 'title' | 'stub-icon',
+): void {
+  const titleEl = row.querySelector('.dotn_tree-item-title');
+  const stubIconEl = row.querySelector('.dotn_alias-icon');
+  const stubIconActive = isSelected && item.isRedirect && selectedActivePart === 'stub-icon';
+  const titleActive = isSelected && !stubIconActive;
+
+  if (titleEl) {
+    titleEl.classList.toggle('is-active', titleActive);
+  }
+  if (stubIconEl instanceof HTMLElement) {
+    stubIconEl.classList.toggle('is-active', stubIconActive);
+  }
+}
+
 export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, itemIndex: number, app: App, startPx?: number): void {
   const isFocused = itemIndex === vt.focusedIndex;
   const isSelected = itemIndex === vt.selectedIndex;
@@ -86,14 +105,10 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     if (hasChildren && !isExpanded) row.classList.add('collapsed'); else row.classList.remove('collapsed');
 
     syncToggleSlot(row, item, hasChildren, isExpanded);
-    const titleEl = row.querySelector('.dotn_tree-item-title');
-    if (titleEl) {
-      if (isSelected) titleEl.classList.add('is-active'); else titleEl.classList.remove('is-active');
-    }
+    syncSelectionHighlight(row, item, isSelected, vt.selectedActivePart);
     row.dataset.index = String(itemIndex);
     if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
-    if (item.aliasPath) row.dataset.aliasPath = item.aliasPath; else delete row.dataset.aliasPath;
-    if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
+    if (item.isRedirect) row.dataset.redirect = 'true'; else delete row.dataset.redirect;
     row.classList.toggle('dotn_hidden', !!item.isHidden);
     syncHiddenIcon(row, !!item.isHidden);
     syncChildCountBadge(row, item);
@@ -106,7 +121,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   // Full (re)build for a new or dirty item
   row.classList.remove('row');
   row.classList.add('tree-row');
-  if (item.isAlias) row.classList.add('dotn_alias-row'); else row.classList.remove('dotn_alias-row');
+  if (item.isRedirect) row.classList.add('dotn_redirect-row'); else row.classList.remove('dotn_redirect-row');
   row.classList.toggle('dotn_hidden', !!item.isHidden);
   setRowIndentation(row, item.level);
 
@@ -132,15 +147,11 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   row.appendChild(createActionButtons(item, app));
   syncChildCountBadge(row, item);
 
-  const titleEl = row.querySelector('.dotn_tree-item-title');
-  if (titleEl) {
-    if (isSelected) titleEl.classList.add('is-active'); else titleEl.classList.remove('is-active');
-  }
+  syncSelectionHighlight(row, item, isSelected, vt.selectedActivePart);
 
   row.dataset.id = item.id;
   if (item.targetPath) row.dataset.targetPath = item.targetPath; else delete row.dataset.targetPath;
-  if (item.aliasPath) row.dataset.aliasPath = item.aliasPath; else delete row.dataset.aliasPath;
-  if (item.isAlias) row.dataset.alias = 'true'; else delete row.dataset.alias;
+  if (item.isRedirect) row.dataset.redirect = 'true'; else delete row.dataset.redirect;
   row.dataset.index = String(itemIndex);
   row.setAttribute('role', 'treeitem');
   row.setAttribute('aria-level', String(item.level + 1));

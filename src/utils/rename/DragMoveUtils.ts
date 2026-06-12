@@ -1,4 +1,3 @@
-import { resolveAliasPathForTarget } from '../../core/aliasVirtualData';
 import type { MenuItemKind } from '../../types';
 
 export type DraggableKind = 'file' | 'folder' | 'virtual';
@@ -144,93 +143,8 @@ export function isValidDrop(params: MoveParams): boolean {
 }
 
 /**
- * True when a drag source can store a shortcut via frontmatter aliases.
+ * True when a drag source can create a redirect stub file.
  */
 export function isMarkdownShortcutEligible(path: string, kind: DraggableKind): boolean {
     return kind === 'file' && /\.md$/iu.test(path);
-}
-
-/**
- * Compute the frontmatter alias string for a shortcut at the drop location, or null when invalid.
- * The alias must resolve (via resolveAliasPathForTarget) to the same path as a physical move would.
- */
-export function computeShortcutAlias(params: MoveParams): string | null {
-    const { draggedPath, draggedKind } = params;
-
-    if (!isMarkdownShortcutEligible(draggedPath, draggedKind)) {
-        return null;
-    }
-
-    const destination = computeMoveDestination(params);
-    if (!destination || destination === draggedPath) {
-        return null;
-    }
-
-    const alias = stripFileExtension(destination);
-    const resolved = resolveAliasPathForTarget(alias, draggedPath);
-    if (resolved === destination) {
-        return alias;
-    }
-
-    // Directory-qualified aliases (path contains /) are kept as-is by resolveAliasPathForTarget.
-    if (destination.includes('/')) {
-        return alias;
-    }
-
-    // Root-level destination from a nested source cannot be expressed as a relative alias.
-    return null;
-}
-
-export interface MoveShortcutAliasParams {
-    aliasPath: string;
-    noteTargetPath: string;
-    dropTargetPath: string;
-    dropTargetKind: DropTargetKind;
-}
-
-/**
- * Compute the new frontmatter alias string when repositioning an existing shortcut.
- */
-export function computeMovedShortcutAlias(params: MoveShortcutAliasParams): string | null {
-    const { aliasPath, noteTargetPath, dropTargetPath, dropTargetKind } = params;
-
-    const destination = computeMoveDestination({
-        draggedPath: aliasPath,
-        draggedKind: 'file',
-        targetPath: dropTargetPath,
-        targetKind: dropTargetKind,
-    });
-
-    if (!destination || destination === aliasPath) {
-        return null;
-    }
-
-    const alias = stripFileExtension(destination);
-    const resolved = resolveAliasPathForTarget(alias, noteTargetPath);
-    if (resolved === destination) {
-        return alias;
-    }
-
-    if (destination.includes('/')) {
-        return alias;
-    }
-
-    return null;
-}
-
-/**
- * Find the frontmatter alias string that resolves to a given alias path for a note.
- */
-export function findAliasStringForPath(
-    aliases: string[],
-    noteTargetPath: string,
-    aliasPath: string,
-): string | undefined {
-    for (const alias of aliases) {
-        const resolved = resolveAliasPathForTarget(alias, noteTargetPath);
-        if (resolved === aliasPath) {
-            return alias;
-        }
-    }
-    return undefined;
 }

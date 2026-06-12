@@ -105,11 +105,11 @@ export function createHiddenIcon(): HTMLElement {
 }
 
 export function createAliasIcon(item: RowItem): HTMLElement | null {
-  if (!item.isAlias) return null;
+  if (!item.isRedirect) return null;
   const icon = document.createElement('div');
   icon.className = 'dotn_button-icon dotn_alias-icon';
   icon.setAttribute('data-action', 'open-target');
-  icon.title = item.targetPath ? `Open original: ${item.targetPath}` : 'Open original';
+  icon.title = `Open stub: ${item.id}`;
   setIcon(icon, 'file-symlink');
   return icon;
 }
@@ -142,13 +142,13 @@ export function createTitleElement(item: RowItem): HTMLElement {
       : 'dotn_tree-item-title';
   const title = document.createElement('div');
   title.className = titleClass;
-  title.title = item.targetPath ? `${item.aliasPath ?? item.id} -> ${item.targetPath}` : item.id;
+  title.title = item.targetPath ? `${item.id} -> ${item.targetPath}` : item.id;
   title.setAttribute('data-node-kind', item.kind);
   title.setAttribute('data-path', item.id);
-  if (item.isAlias) title.setAttribute('data-alias', 'true');
+  if (item.isRedirect) title.setAttribute('data-redirect', 'true');
   if (item.targetPath) title.setAttribute('data-target-path', item.targetPath);
 
-  if (item.isAlias) {
+  if (item.isRedirect) {
     // Shortcut node: show the alias's own name as the primary label and always
     // point to the destination's actual node name (not its title), even when the
     // alias's leaf name happens to match the destination.

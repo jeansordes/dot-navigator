@@ -7,7 +7,12 @@ import { TreeBuilder, TreeNode, TreeNodeType } from '../domain/tree/index.js';
 import type { VaultPort } from '../ports/VaultPort.js';
 import type { MetadataPort } from '../ports/MetadataPort.js';
 import { basename } from '../domain/file/PathUtils.js';
-import { applyAliasesToVirtualizedData, normalizeAliases, type AliasEntry } from '../core/aliasVirtualData.js';
+import {
+  REDIRECT_FM_KEY,
+  enrichRedirectStubs,
+  parseRedirectTarget,
+  type RedirectEntry,
+} from '../core/redirectStub.js';
 
 /**
  * Options for display name transformation
@@ -28,10 +33,10 @@ export interface VItem {
   title?: string;
   kind: 'folder' | 'file' | 'virtual' | 'suggestion';
   extension?: string;
-  isAlias?: boolean;
-  aliasPath?: string;
+  isRedirect?: boolean;
   targetPath?: string;
   targetKind?: VItem['kind'];
+  targetName?: string;
   children?: VItem[];
 }
 
@@ -167,18 +172,22 @@ export class TreeService {
       .sort(([, aNode], [, bNode]) => getSortKey(aNode).localeCompare(getSortKey(bNode)))
       .forEach(([, child]) => data.push(build(child, root.path)));
 
-    applyAliasesToVirtualizedData(data, parentMap, this.collectAliasEntries(), {
+    enrichRedirectStubs(data, parentMap, this.collectRedirectEntries(), {
       transformName,
       getSortKey: (item) => item.title ?? item.name,
-    });
+    }, (path) => this.vault.getFileByPath(path) !== null);
 
     return { data, parentMap };
   }
 
-  private collectAliasEntries(): AliasEntry[] {
+  private collectRedirectEntries(): RedirectEntry[] {
     return this.vault.getFiles().flatMap(file => {
-      const aliases = normalizeAliases(this.metadata.getFrontmatterField(file.path, 'aliases'));
-      return aliases.map(alias => ({ alias, targetPath: file.path }));
+      const raw = this.metadata.getFrontmatterField(file.path, REDIRECT_FM_KEY);
+      const targetPath = parseRedirectTarget(raw);
+      if (!targetPath) {
+        return [];
+      }
+      return [{ stubPath: file.path, targetPath }];
     });
   }
 
@@ -196,4 +205,3 @@ export class TreeService {
     return this.treeBuilder.getNodeType(path);
   }
 }
-

@@ -251,7 +251,6 @@ export class RowDragController {
                 path: drag.path,
                 kind: drag.kind,
                 isShortcut: drag.isShortcut,
-                noteTargetPath: drag.noteTargetPath,
                 rowId: drag.row.dataset.id ?? '',
                 shortcutModifierActive: drag.shortcutModifierActive,
                 shortcutEligible: drag.shortcutEligible,

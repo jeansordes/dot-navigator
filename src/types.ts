@@ -10,7 +10,6 @@ export enum DashTransformation {
     SENTENCE_CASE = 'sentence-case' // Transform dashes to spaces and capitalize first letter of the string
 }
 
-export type AliasVirtualMode = 'off' | 'dotted' | 'all';
 export type ChildCountDisplayMode = 'off' | 'hover' | 'always';
 export type ChildCountMode = 'direct' | 'total' | 'both';
 
@@ -37,7 +36,6 @@ export interface PluginSettings {
     /** @deprecated Legacy file path — used only for one-time migration to schemaRules */
     dendronConfigFilePath?: string;
     schemaRules?: SchemaRule[]; // Managed suggestion rules (primary source)
-    aliasVirtualMode?: AliasVirtualMode; // How frontmatter aliases become virtual tree nodes
     hiddenNodes?: string[]; // Paths of explicitly hidden files/folders
     showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
     /** @deprecated Migrated to childCountDisplay === 'off' */
@@ -59,7 +57,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     transformDashesToSpaces: DashTransformation.NONE, // Transform dashes to spaces and capitalize first letter of note names for better readability
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Legacy — migration only
-    aliasVirtualMode: 'dotted', // Only dotted aliases become virtual nodes by default
     hiddenNodes: [],
     showHiddenNodes: false,
     childCountDisplay: 'off',
@@ -92,8 +89,7 @@ export interface VirtualTreeBaseItem {
     kind: 'file' | 'folder' | 'virtual' | 'suggestion';
     // Optional file extension (present for files when available)
     extension?: string;
-    isAlias?: boolean;
-    aliasPath?: string;
+    isRedirect?: boolean;
     targetPath?: string;
     targetKind?: 'file' | 'folder' | 'virtual' | 'suggestion';
     targetName?: string;
@@ -275,10 +271,10 @@ export interface VItem {
     title?: string;
     kind: Kind;
     extension?: string;
-    isAlias?: boolean;
-    aliasPath?: string;
+    isRedirect?: boolean;
     targetPath?: string;
     targetKind?: Kind;
+    targetName?: string;
     children?: VItem[];
     isHidden?: boolean;
 }

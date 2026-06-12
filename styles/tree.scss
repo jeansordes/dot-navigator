@@ -260,6 +260,7 @@
             height: 12px;
         }
 
+        &.is-active,
         &:active {
             color: var(--dotn_text-on-accent);
             background-color: var(--dotn_accent-color);
@@ -279,7 +280,7 @@
         }
     }
 
-    .dotn_alias-row .dotn_tree-item-title {
+    .dotn_redirect-row .dotn_tree-item-title {
         font-style: normal;
     }
 

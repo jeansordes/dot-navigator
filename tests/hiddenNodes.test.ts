@@ -41,10 +41,10 @@ describe('markHiddenItems', () => {
       ],
     },
     {
-      id: 'alias:foo->folder/child.md',
-      name: 'Alias',
+      id: 'notes/foo.bar.md',
+      name: 'bar',
       kind: 'file',
-      isAlias: true,
+      isRedirect: true,
       targetPath: 'folder/child.md',
     },
   ];

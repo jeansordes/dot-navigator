@@ -1,9 +1,6 @@
-import { createAliasId, resolveAliasPathForTarget } from '../../core/aliasVirtualData';
 import type { RenameManager } from '../../utils/rename/RenameManager';
 import {
     computeMoveDestination,
-    computeMovedShortcutAlias,
-    computeShortcutAlias,
     isValidDrop,
     type DraggableKind,
     type MoveParams,
@@ -13,33 +10,10 @@ import createDebug from 'debug';
 
 const debug = createDebug('dot-navigator:views:row-drag-drop');
 
-function computeShortcutRevealId(
-    alias: string | null,
-    noteTargetPath: string,
-): string | undefined {
-    if (!alias) return undefined;
-    const aliasPath = resolveAliasPathForTarget(alias, noteTargetPath);
-    return aliasPath ? createAliasId(aliasPath, noteTargetPath) : undefined;
-}
-
-function revealShortcutAfterUpdate(
-    params: MoveParams,
-    noteTargetPath: string,
-    onMoveComplete?: (newPath: string) => void,
-): string | undefined {
-    const revealId = computeShortcutRevealId(
-        computeShortcutAlias(params),
-        noteTargetPath,
-    );
-    if (revealId) onMoveComplete?.(revealId);
-    return revealId;
-}
-
 export interface DragCompleteContext {
     path: string;
     kind: DraggableKind;
     isShortcut: boolean;
-    noteTargetPath?: string;
     rowId: string;
     shortcutModifierActive: boolean;
     shortcutEligible: boolean;
@@ -53,7 +27,7 @@ export async function executeDragDropComplete(
 ): Promise<void> {
     if (drag.isShortcut && drop.rowId === drag.rowId) return;
 
-    const params = {
+    const params: MoveParams = {
         draggedPath: drag.path,
         draggedKind: drag.kind,
         targetPath: drop.targetPath,
@@ -65,35 +39,25 @@ export async function executeDragDropComplete(
     const shortcutMode = drag.shortcutModifierActive && drag.shortcutEligible;
 
     if (drag.isShortcut) {
-        debug('Executing shortcut move', params);
-        const noteTargetPath = drag.noteTargetPath!;
-        const revealId = computeShortcutRevealId(
-            computeMovedShortcutAlias({
-                aliasPath: drag.path,
-                noteTargetPath,
-                dropTargetPath: drop.targetPath,
-                dropTargetKind: drop.targetKind,
-            }),
-            noteTargetPath,
-        );
-        if (revealId) onMoveComplete?.(revealId);
-        const success = await renameManager.moveShortcutByDragAndDrop(
+        debug('Executing redirect stub move', params);
+        onMoveComplete?.(newPath);
+        const success = await renameManager.moveByDragAndDrop(
             drag.path,
-            noteTargetPath,
+            drag.kind,
             drop.targetPath,
             drop.targetKind,
         );
-        if (!success && revealId) onMoveComplete?.('');
+        if (!success) onMoveComplete?.('');
         return;
     }
 
     if (shortcutMode) {
-        debug('Executing drag shortcut', params);
-        const revealId = revealShortcutAfterUpdate(params, drag.path, onMoveComplete);
+        debug('Executing stub creation', params);
+        onMoveComplete?.(newPath);
         const success = await renameManager.createShortcutByDragAndDrop(
             drag.path, drag.kind, drop.targetPath, drop.targetKind,
         );
-        if (!success && revealId) onMoveComplete?.('');
+        if (!success) onMoveComplete?.('');
         return;
     }
 

@@ -135,14 +135,15 @@ describe('Tree Navigation Specs', () => {
     });
   });
 
-  describe('Scénario 6: Alias YAML comme raccourcis', () => {
-    it('devrait afficher un alias dans sa position de chemin pointé avec le sous-arbre cible', () => {
-      // Given le vault contient une cible et un enfant
+  describe('Scénario 6: Fichiers stub redirect comme raccourcis', () => {
+    it('devrait afficher un stub redirect dans sa position physique avec le sous-arbre cible', () => {
+      // Given le vault contient une cible, un enfant et un stub
       vault.addFile('target.md');
       vault.addFile('target.child.md');
+      vault.addFile('foo.bar.md');
 
-      // And le fichier cible a un alias
-      metadata.setFrontmatter('target.md', { aliases: ['foo.bar'] });
+      // And le stub pointe vers la cible
+      metadata.setFrontmatter('foo.bar.md', { redirect: 'target.md' });
 
       // When je construis l'arbre
       const { data } = treeService.buildVirtualizedData();
@@ -152,12 +153,12 @@ describe('Tree Navigation Specs', () => {
       expect(foo?.kind).toBe('virtual');
 
       // And "foo.bar" devrait être un raccourci vers target.md
-      const alias = foo?.children?.find(item => item.aliasPath === 'foo.bar.md');
-      expect(alias?.isAlias).toBe(true);
-      expect(alias?.targetPath).toBe('target.md');
+      const stub = foo?.children?.find(item => item.id === 'foo.bar.md');
+      expect(stub?.isRedirect).toBe(true);
+      expect(stub?.targetPath).toBe('target.md');
 
       // And le raccourci devrait afficher les enfants de la cible
-      expect(alias?.children?.[0].targetPath).toBe('target.child.md');
+      expect(stub?.children?.[0].targetPath).toBe('target.child.md');
     });
   });
 });

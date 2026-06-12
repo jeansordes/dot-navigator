@@ -1,39 +1,23 @@
-import { aliasesToSignature } from "../src/utils/misc/YamlTitleUtils";
+import { redirectToSignature } from "../src/utils/misc/YamlTitleUtils";
 
-describe("aliasesToSignature", () => {
-  it("returns empty string when aliases are missing or empty", () => {
-    expect(aliasesToSignature(undefined)).toBe("");
-    expect(aliasesToSignature(null)).toBe("");
-    expect(aliasesToSignature([])).toBe("");
-    expect(aliasesToSignature("")).toBe("");
-    expect(aliasesToSignature("   ")).toBe("");
+describe("redirectToSignature", () => {
+  it("returns empty string when redirect is missing or empty", () => {
+    expect(redirectToSignature(undefined)).toBe("");
+    expect(redirectToSignature(null)).toBe("");
+    expect(redirectToSignature("")).toBe("");
+    expect(redirectToSignature("   ")).toBe("");
   });
 
-  it("normalizes a single string alias", () => {
-    expect(aliasesToSignature("foo.bar")).toBe("foo.bar");
-    expect(aliasesToSignature("  foo.bar  ")).toBe("foo.bar");
+  it("normalizes a redirect path", () => {
+    expect(redirectToSignature("notes/target.md")).toBe("notes/target.md");
+    expect(redirectToSignature("  notes/foo  ")).toBe("notes/foo.md");
+    expect(redirectToSignature("[[notes/bar]]")).toBe("notes/bar.md");
   });
 
-  it("detects when an alias is added or removed", () => {
-    const one = aliasesToSignature(["alpha"]);
-    const two = aliasesToSignature(["alpha", "beta"]);
-    const none = aliasesToSignature([]);
-
-    expect(one).not.toBe(two);
-    expect(one).not.toBe(none);
-    expect(two).toBe("alpha\nbeta");
-  });
-
-  it("detects when alias order changes", () => {
-    const first = aliasesToSignature(["alpha", "beta"]);
-    const second = aliasesToSignature(["beta", "alpha"]);
+  it("detects when redirect target changes", () => {
+    const first = redirectToSignature("notes/a.md");
+    const second = redirectToSignature("notes/b.md");
 
     expect(first).not.toBe(second);
-    expect(first).toBe("alpha\nbeta");
-    expect(second).toBe("beta\nalpha");
-  });
-
-  it("ignores non-string entries in alias arrays", () => {
-    expect(aliasesToSignature(["valid", 1, null, "other"])).toBe("valid\nother");
   });
 });

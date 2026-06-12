@@ -35,4 +35,6 @@ export interface VirtualTreeLike {
   // When set, rows at this visible index and below are shifted down by one
   // rowHeight to open a gap for the drag-and-drop insertion preview.
   dragInsertIndex?: number | null;
+  /** Which part of a redirect stub row is highlighted when selected */
+  selectedActivePart?: 'title' | 'stub-icon';
 }
