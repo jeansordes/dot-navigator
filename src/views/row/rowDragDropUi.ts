@@ -16,8 +16,37 @@ export function isShortcutModifier(e: {
     shiftKey: boolean;
 }): boolean {
     return Platform.isMacOS
-        ? (e.altKey && e.metaKey)
+        ? (e.shiftKey || (e.altKey && e.metaKey))
         : (e.ctrlKey && e.shiftKey);
+}
+
+export interface DragSourceResolution {
+    path: string;
+    isShortcut: boolean;
+    noteTargetPath?: string;
+}
+
+/**
+ * Resolve the vault path and shortcut semantics for a dragged tree row.
+ * Redirect stubs and alias shortcuts move as themselves; projected children drag their target file.
+ */
+export function resolveDragSource(row: HTMLElement): DragSourceResolution {
+    const rowPath = row.dataset.id ?? '';
+    const isRedirectStub = row.dataset.redirect === 'true';
+    const aliasPath = row.dataset.aliasPath;
+    const targetPath = row.dataset.targetPath;
+    const hasDistinctTarget = Boolean(targetPath && targetPath !== rowPath);
+
+    if (isRedirectStub) {
+        return { path: rowPath, isShortcut: true, noteTargetPath: targetPath };
+    }
+    if (aliasPath && hasDistinctTarget) {
+        return { path: aliasPath, isShortcut: true, noteTargetPath: targetPath };
+    }
+    if (hasDistinctTarget && targetPath) {
+        return { path: targetPath, isShortcut: false };
+    }
+    return { path: rowPath, isShortcut: false };
 }
 
 function getDragGhostHost(row: HTMLElement): HTMLElement {

@@ -9,6 +9,7 @@ import {
     computeGhostGrabOffset,
     isShortcutModifier,
     positionDragGhost,
+    resolveDragSource,
     resolveDropTarget,
 } from './rowDragDropUi';
 import { executeDragDropComplete } from './rowDragDropComplete';
@@ -141,24 +142,19 @@ export class RowDragController {
 
         const row = title.closest('.tree-row');
         if (!(row instanceof HTMLElement) || !row.dataset.id) return;
-
-        const isShortcut = Boolean(
-            row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id
-        );
-        const aliasPath = row.dataset.aliasPath;
-        if (isShortcut && !aliasPath) return;
+        const { path, isShortcut, noteTargetPath } = resolveDragSource(row);
 
         const isTouch = e.pointerType === 'touch' || (Platform.isMobile && e.pointerType !== 'mouse');
         this.pending = {
             pointerId: e.pointerId,
-            path: isShortcut ? aliasPath! : row.dataset.id,
+            path,
             kind: kindAttr,
             startX: e.clientX,
             startY: e.clientY,
             row,
             isTouch,
             isShortcut,
-            noteTargetPath: isShortcut ? row.dataset.targetPath : undefined,
+            noteTargetPath,
         };
 
         if (isTouch) {
