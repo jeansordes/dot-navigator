@@ -360,7 +360,7 @@
     }
 
     @media (hover: hover) {
-        .dotn_toggle-folder:hover {
+        .tree-row:has(.dotn_toggle-folder):hover .dotn_toggle-folder {
             .dotn_toggle-folder-icon {
                 display: none;
             }

@@ -4,6 +4,10 @@
 
 * **shortcuts:** YAML `aliases` no longer create virtual shortcut nodes. Use stub markdown files with `redirect` frontmatter instead. Existing alias-based shortcuts disappear from the tree until recreated as stubs.
 
+### Features
+
+* **tree:** folder title clicks now toggle expand/collapse; double-clicking the title expands or collapses all descendants (rename folders from the context menu instead of double-click)
+
 ## [1.28.3](https://github.com/jeansordes/dot-navigator/compare/1.28.2...1.28.3) (2026-06-12)
 
 ## [1.28.2](https://github.com/jeansordes/dot-navigator/compare/1.28.1...1.28.2) (2026-06-10)

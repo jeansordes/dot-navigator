@@ -33,7 +33,8 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 
 <img width="430" alt="Dragging a node to a new position in the tree" src="docs/images/drag-and-drop.png" />
 
-- **Expand or collapse all descendants at once** by double-clicking a node's chevron, or via the context menu
+- **Folder rows behave like expand/collapse controls** — hover a folder row to reveal its chevron; click the title to toggle, or double-click the title to expand or collapse all descendants (same as double-clicking the chevron). Rename folders from the context menu.
+- **Expand or collapse all descendants at once** by double-clicking a node's chevron or folder title, or via the context menu
 
 <img width="480" alt="Expand all descendants of a node" src="docs/images/expand-all.png" />
 <img width="480" alt="Collapse all descendants of a node" src="docs/images/collapse-all.png" />

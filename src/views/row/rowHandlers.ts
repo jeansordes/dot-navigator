@@ -110,6 +110,31 @@ function resolveTouchInteraction(id: string, e: MouseEvent): TouchInteraction | 
     ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 } as TouchInteraction) : undefined);
 }
 
+function invokeFolderToggle(
+  app: App,
+  vt: VirtualTreeLike,
+  id: string,
+  kind: MenuItemKind,
+  toggleBtn: HTMLElement,
+  e: MouseEvent,
+  renameManager?: RenameManager,
+  revealCanonicalPath?: (path: string) => void,
+  setSelectedId?: (id: string) => void
+): void {
+  if (e.detail < 2) {
+    const interaction = resolveTouchInteraction(id, e);
+    if (interaction && isTouchDoubleTapFor(lastToggleTouchTap, id, interaction)) {
+      handleActionButtonClick(
+        app, 'toggle', id, kind, vt, toggleBtn,
+        new MouseEvent('click', { detail: 2 }),
+        renameManager, revealCanonicalPath, setSelectedId
+      );
+      return;
+    }
+  }
+  handleActionButtonClick(app, 'toggle', id, kind, vt, toggleBtn, e, renameManager, revealCanonicalPath, setSelectedId);
+}
+
 export function bindRowHandlers(
   vt: VirtualTreeLike,
   onRowClick: (ev: MouseEvent, row: HTMLElement) => void,
@@ -170,15 +195,9 @@ export function onRowClick(
   if (buttonEl) {
     const action = buttonEl.getAttribute('data-action');
     if (action && buttonEl instanceof HTMLElement) {
-      // Touch devices don't reliably increment MouseEvent.detail on a double tap,
-      // so detect the chevron double tap ourselves and synthesize a double-click.
-      if (action === 'toggle' && e.detail < 2) {
-        const interaction = resolveTouchInteraction(id, e);
-        if (interaction && isTouchDoubleTapFor(lastToggleTouchTap, id, interaction)) {
-          const syntheticDouble = new MouseEvent('click', { detail: 2 });
-          handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, syntheticDouble, renameManager, revealCanonicalPath, setSelectedId);
-          return;
-        }
+      if (action === 'toggle') {
+        invokeFolderToggle(app, vt, id, item.kind, buttonEl, e, renameManager, revealCanonicalPath, setSelectedId);
+        return;
       }
       handleActionButtonClick(app, action, id, item.kind, vt, buttonEl, e, renameManager, revealCanonicalPath, setSelectedId);
     }
@@ -266,6 +285,16 @@ export function onRowClick(
     }
 
     // Single click on suggestion focuses it
+    handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
+    return;
+  }
+
+  if (kind === 'folder') {
+    const toggleBtn = row.querySelector('[data-action="toggle"]');
+    if (toggleBtn instanceof HTMLElement) {
+      invokeFolderToggle(app, vt, id, kind, toggleBtn, e, renameManager, revealCanonicalPath, setSelectedId);
+      return;
+    }
     handleTitleClick(app, kind, id, idx, vt, setSelectedId, e);
     return;
   }
