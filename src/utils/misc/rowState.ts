@@ -118,7 +118,7 @@ export function scrollIntoView(options: UnifiedScrollOptions): void {
     const visibleTop = viewTop + paddingPx;
     const visibleBottom = viewBottom - paddingPx;
     
-    if (rowTop >= visibleTop && rowBottom <= visibleBottom) {
+    if (blockAlign === 'auto' && rowTop >= visibleTop && rowBottom <= visibleBottom) {
       // Row is already visible, no need to scroll
       return;
     }

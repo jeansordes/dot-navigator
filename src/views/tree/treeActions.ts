@@ -45,7 +45,8 @@ export async function revealPath(vt: VirtualTreeLike, parentMap: Map<string, str
       totalRows: vt.total,
       container: vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container,
       padding: 'var(--dotn_view-padding, 16px)',
-      smooth: true
+      smooth: true,
+      blockAlign: 'center',
     });
     
     vt._render();
