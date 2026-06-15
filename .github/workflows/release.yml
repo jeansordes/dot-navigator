@@ -9,6 +9,8 @@ on:
 
 permissions:
     contents: write # This is required for creating releases
+    id-token: write # OIDC token for Sigstore signing
+    attestations: write # Publish attestations to GitHub
 
 jobs:
     build:
@@ -87,6 +89,14 @@ jobs:
                   # Display the content of the release notes for debugging
                   echo "Generated release notes:"
                   cat $TEMP_FILE
+
+            - name: Generate artifact attestation
+              uses: actions/attest@v4
+              with:
+                  subject-path: |
+                      main.js
+                      manifest.json
+                      styles.css
 
             - name: Create release
               env:
