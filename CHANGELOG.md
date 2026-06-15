@@ -1,3 +1,10 @@
+## [1.28.5](https://github.com/jeansordes/dot-navigator/compare/1.28.4...1.28.5) (2026-06-15)
+
+### Bug Fixes
+
+* **hidden:** avoid full rebuild when toggling hidden settings ([c33e2f3](https://github.com/jeansordes/dot-navigator/commit/c33e2f3e82ee6a4568001b2a112f86eb7b4d29ac))
+* **lint:** align ESLint with Obsidian community scanner ([f3b691a](https://github.com/jeansordes/dot-navigator/commit/f3b691ae194c33ae4a2a97f5a3b3cc72f0831782))
+
 ## [1.28.4](https://github.com/jeansordes/dot-navigator/compare/1.28.3...1.28.4) (2026-06-15)
 
 ### Bug Fixes
