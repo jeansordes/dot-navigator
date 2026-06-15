@@ -1,4 +1,29 @@
+## [1.28.4](https://github.com/jeansordes/dot-navigator/compare/1.28.3...1.28.4) (2026-06-15)
+
+### Bug Fixes
+
+* **drag:** restore shift-drag shortcut preview on macOS ([b175d93](https://github.com/jeansordes/dot-navigator/commit/b175d939f57ca83efbe991c568ba767c53c30f35))
+* **review:** address Obsidian community plugin review blocking errors ([250c05d](https://github.com/jeansordes/dot-navigator/commit/250c05da488106957b2f273e602a5f31e1fab6c1))
+
+### Features
+
+* **shortcuts:** replace alias virtual nodes with redirect stub files ([938e9ce](https://github.com/jeansordes/dot-navigator/commit/938e9ceed203ce47963b863bb3afbefb648a75d0))
+* **shortcuts:** resolve redirects by path, name, or wikilink ([c233990](https://github.com/jeansordes/dot-navigator/commit/c23399014c15f10084ebb6464622debbc077fcd6))
+* **tree:** include dot-prefixed filesystem entries with pattern hiding ([3673ad2](https://github.com/jeansordes/dot-navigator/commit/3673ad27baf0e0d5a935a1e95bcc23af3bcc7cbc))
+* **tree:** make folder rows act as expand/collapse controls ([f2a68f7](https://github.com/jeansordes/dot-navigator/commit/f2a68f7b0e47d06c25b0d6eb62e1db9b4c74e253))
+
+### BREAKING CHANGES
+
+* **shortcuts:** alias-based virtual shortcuts are removed; recreate shortcuts
+as stub files and remove the aliasVirtualMode setting.
+
+Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## [Unreleased]
+
+### Changed
+
+* **compatibility:** raised `minAppVersion` to 1.7.2 (requires Obsidian 1.7.2+)
 
 ### BREAKING CHANGES
 
