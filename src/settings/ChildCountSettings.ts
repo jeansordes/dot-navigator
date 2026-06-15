@@ -2,6 +2,22 @@ import { t } from '../i18n';
 import type { ChildCountMode, PluginSettings } from '../types';
 import type { SettingsSection } from './settingsGroup';
 
+/** Legacy persisted keys removed from the public settings shape. */
+interface ChildCountLegacyPersisted {
+  showChildCount?: boolean;
+  hideChildCountWhenExpanded?: boolean;
+}
+
+function childCountLegacy(settings: PluginSettings): ChildCountLegacyPersisted {
+  return settings as unknown as ChildCountLegacyPersisted;
+}
+
+function clearChildCountLegacyKeys(settings: PluginSettings): void {
+  const legacy = settings as unknown as ChildCountLegacyPersisted;
+  delete legacy.showChildCount;
+  delete legacy.hideChildCountWhenExpanded;
+}
+
 export interface ChildCountSettingsCallbacks {
   updateTreeView: () => Promise<void>;
   saveSettings: () => Promise<void>;
@@ -10,23 +26,24 @@ export interface ChildCountSettingsCallbacks {
 
 export function migrateChildCountSettings(settings: PluginSettings): boolean {
   let migrated = false;
+  const legacy = childCountLegacy(settings);
 
-  if (settings.showChildCount === false) {
+  if (legacy.showChildCount === false) {
     settings.childCountDisplay = 'off';
-    delete settings.showChildCount;
+    delete legacy.showChildCount;
     migrated = true;
-  } else if (settings.showChildCount === true) {
+  } else if (legacy.showChildCount === true) {
     settings.childCountDisplay = 'always';
     settings.childCountMode = 'direct';
-    delete settings.showChildCount;
+    delete legacy.showChildCount;
     migrated = true;
   }
   if (settings.childCountDisplay === 'hover') {
     settings.childCountDisplay = 'always';
     migrated = true;
   }
-  if (settings.hideChildCountWhenExpanded !== undefined) {
-    delete settings.hideChildCountWhenExpanded;
+  if (legacy.hideChildCountWhenExpanded !== undefined) {
+    delete legacy.hideChildCountWhenExpanded;
     migrated = true;
   }
 
@@ -61,8 +78,7 @@ export function addChildCountSetting(
             } else {
               settings.childCountDisplay = 'off';
             }
-            delete settings.showChildCount;
-            delete settings.hideChildCountWhenExpanded;
+            clearChildCountLegacyKeys(settings);
             await callbacks.saveSettings();
             await callbacks.updateTreeView();
             callbacks.refreshDisplay();

@@ -92,17 +92,20 @@ function addHiddenNodesAdvancedSettings(
     setting.addText((text) => {
       input = text;
       text.setPlaceholder(t('settingsHiddenPatternsPlaceholder'));
-      text.inputEl.addEventListener('keydown', async (e) => {
+      text.inputEl.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' || !input) return;
-        const value = input.getValue().trim();
-        if (!value) return;
-        if (!(settings.hiddenPatterns ?? []).includes(value)) {
-          settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
-          await callbacks.saveSettings();
-          callbacks.updateHiddenSettings();
-          callbacks.refreshDisplay();
-        }
-        input.setValue('');
+        const patternInput = input;
+        void (async () => {
+          const value = patternInput.getValue().trim();
+          if (!value) return;
+          if (!(settings.hiddenPatterns ?? []).includes(value)) {
+            settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
+            await callbacks.saveSettings();
+            callbacks.updateHiddenSettings();
+            callbacks.refreshDisplay();
+          }
+          patternInput.setValue('');
+        })();
       });
     });
     setting.addExtraButton((btn) => {

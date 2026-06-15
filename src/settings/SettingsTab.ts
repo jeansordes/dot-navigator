@@ -1,13 +1,17 @@
-import { App, PluginSettingTab, Notice } from 'obsidian';
+import { App, PluginSettingTab, Notice, requireApiVersion, type SettingDefinitionItem } from 'obsidian';
 import DotNavigatorPlugin from '../main';
-import { DEFAULT_MORE_MENU, MoreMenuItem, MoreMenuItemCommand, MoreMenuItemBuiltin, FILE_TREE_VIEW_TYPE } from '../types';
-import { addFileCreationSection } from './FileCreationSettings';
-import { addHiddenNodesSettings } from './HiddenNodesSettings';
-import { addChildCountSetting } from './ChildCountSettings';
-import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
-import { addMoreMenuEditorSection } from './MoreMenuEditor';
-import { addTipsSection } from './TipsSettings';
-import { addSettingsGroup, createGroupHeading } from './settingsGroup';
+import { MoreMenuItemCommand, FILE_TREE_VIEW_TYPE } from '../types';
+import type { BuiltinItemsSettingsCallbacks } from './BuiltinItemsSettings';
+import type { CustomCommandsSettingsCallbacks } from './CustomCommandsSettings';
+import { buildSettingDefinitions, renderLegacySettings } from './settingsTabContent';
+import {
+  describeMoreMenuItem,
+  getBuiltinDisplayName,
+  getBuiltinItems,
+  getBuiltinOrder,
+  getUserMenuItems,
+  newCommandMenuItem,
+} from './settingsTabMoreMenu';
 import PluginMainPanel from '../views/components/PluginMainPanel';
 import { t } from '../i18n';
 
@@ -39,19 +43,48 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     }
   }
 
-  private get settingsCallbacks() {
+  private getSettingsCallbacks(): {
+    updateTreeView: () => Promise<void>;
+    saveSettings: () => Promise<void>;
+  } {
     return {
-      updateTreeView: this.updateTreeView.bind(this),
-      saveSettings: this.plugin.saveSettings.bind(this.plugin)
+      updateTreeView: () => this.updateTreeView(),
+      saveSettings: () => this.plugin.saveSettings(),
     };
   }
 
-  private get customCommandsCallbacks() {
+  private getCustomCommandsCallbacks(): CustomCommandsSettingsCallbacks {
     return {
-      getUserItems: this.getUserItems.bind(this),
-      updateUserItems: this.updateUserItems.bind(this),
-      describeItem: (item: MoreMenuItemCommand) => item.label || item.commandId || t('settingsUnnamedCommand'),
-      newCommandItem: this.newCommandItem.bind(this)
+      getUserItems: () => getUserMenuItems(this.plugin),
+      updateUserItems: (list, refreshView) => this.updateUserItems(list, refreshView),
+      describeItem: (item) => item.label || item.commandId || t('settingsUnnamedCommand'),
+      newCommandItem: () => newCommandMenuItem(),
+    };
+  }
+
+  private getBuiltinCallbacks(): BuiltinItemsSettingsCallbacks {
+    return {
+      getBuiltinItems: () => getBuiltinItems(),
+      getBuiltinOrder: () => getBuiltinOrder(this.plugin),
+      updateBuiltinOrder: (order) => this.updateBuiltinOrder(order),
+      getBuiltinDisplayName: (item) => getBuiltinDisplayName(item),
+      describeItem: (item) => describeMoreMenuItem(item),
+    };
+  }
+
+  private getSectionCallbacks() {
+    return {
+      settings: this.plugin.settings,
+      app: this.app,
+      getSettingsCallbacks: () => this.getSettingsCallbacks(),
+      getBuiltinCallbacks: () => this.getBuiltinCallbacks(),
+      getCustomCommandsCallbacks: () => this.getCustomCommandsCallbacks(),
+      updateHiddenSettings: () => this.updateHiddenSettings(),
+      refreshSettingsTab: () => this.refreshSettingsTab(),
+      redisplayPreservingScroll: () => this.redisplayPreservingScroll(),
+      reloadRulesSilently: () => this.reloadRulesSilently(),
+      updateBuiltinOrder: (order: string[]) => this.updateBuiltinOrder(order),
+      updateUserItems: (list: MoreMenuItemCommand[]) => this.updateUserItems(list),
     };
   }
 
@@ -72,142 +105,38 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     return this.containerEl;
   }
 
+  private refreshSettingsTab(): void {
+    if (requireApiVersion('1.13.0')) {
+      this.update();
+    } else {
+      this.redisplayLegacy();
+    }
+  }
+
   private redisplayPreservingScroll(): void {
     const scrollContainer = this.findSettingsScrollContainer();
     const scrollTop = scrollContainer.scrollTop;
-    this.display();
+    this.refreshSettingsTab();
     window.requestAnimationFrame(() => {
       const maxScroll = Math.max(0, scrollContainer.scrollHeight - scrollContainer.clientHeight);
       scrollContainer.scrollTop = Math.min(scrollTop, maxScroll);
     });
   }
 
-  display(): void {
+  private redisplayLegacy(): void {
     const { containerEl } = this;
     containerEl.empty();
-
-    addFileCreationSection(
-      addSettingsGroup(
-        containerEl,
-        createGroupHeading(t('settingsFileCreationHeader'), t('settingsFileCreationDescription'))
-      ),
-      this.plugin.settings,
-      this.settingsCallbacks
-    );
-
-    const treeDisplayGroup = addSettingsGroup(
-      containerEl,
-      createGroupHeading(t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription'))
-    );
-    addChildCountSetting(treeDisplayGroup, this.plugin.settings, {
-      ...this.settingsCallbacks,
-      refreshDisplay: this.display.bind(this),
-    });
-
-    const hiddenCount = this.plugin.settings.hiddenNodes?.length ?? 0;
-    const hiddenNodesGroup = addSettingsGroup(
-      containerEl,
-      createGroupHeading(
-        t('settingsHiddenNodesHeader'),
-        t('settingsHiddenNodesDescription'),
-        hiddenCount
-      )
-    );
-    hiddenNodesGroup.groupEl.addClass('dotnav-hidden-nodes');
-    addHiddenNodesSettings(
-      hiddenNodesGroup,
-      this.plugin.settings,
-      {
-        ...this.settingsCallbacks,
-        updateHiddenSettings: this.updateHiddenSettings.bind(this),
-        refreshDisplay: this.redisplayPreservingScroll.bind(this),
-      }
-    );
-
-    const schemaGroup = addSettingsGroup(
-      containerEl,
-      createGroupHeading(t('settingsSchemaConfigurationHeader'), t('settingsSchemaConfigurationDescription'))
-    );
-    addSchemaSuggestionsToggle(schemaGroup, this.plugin.settings, {
-      ...this.settingsCallbacks,
-      refreshDisplay: this.redisplayPreservingScroll.bind(this),
-    });
-    addSchemaConfigurationSection(
-      schemaGroup,
-      this.plugin.settings,
-      {
-        ...this.settingsCallbacks,
-        refreshDisplay: this.redisplayPreservingScroll.bind(this),
-        reloadRules: this.reloadRulesSilently.bind(this),
-      },
-      this.app
-    );
-
-    const moreMenuGroup = addSettingsGroup(
-      containerEl,
-      createGroupHeading(
-        t('settingsMoreMenuHeader'),
-        t('settingsMoreMenuDescription')
-      )
-    );
-    moreMenuGroup.groupEl.id = 'dotnav-more-menu';
-
-    addMoreMenuEditorSection(moreMenuGroup, this.app, {
-      builtin: {
-        getBuiltinItems: this.getBuiltinItems.bind(this),
-        getBuiltinOrder: this.getBuiltinOrder.bind(this),
-        updateBuiltinOrder: this.updateBuiltinOrder.bind(this),
-        getBuiltinDisplayName: this.getBuiltinDisplayName.bind(this),
-        describeItem: this.describeItem.bind(this),
-      },
-      custom: this.customCommandsCallbacks,
-      onRestoreDefaults: async () => {
-        await this.updateBuiltinOrder(DEFAULT_MORE_MENU.filter(i => i.type === 'builtin').map(i => i.id));
-        await this.updateUserItems([]);
-        this.redisplayPreservingScroll();
-      },
-    });
-
-    addTipsSection(
-      addSettingsGroup(
-        containerEl,
-        createGroupHeading(t('settingsTipsHeader'), t('settingsTipsDescription'))
-      )
-    );
+    renderLegacySettings(containerEl, this.getSectionCallbacks());
   }
 
-  private describeItem(item: MoreMenuItem): string {
-    if (item.type === 'builtin') {
-      return this.getBuiltinDisplayName(item);
-    }
-    return item.label || item.commandId || t('settingsUnnamedCommand');
+  display(): void {
+    if (requireApiVersion('1.13.0')) return;
+    this.redisplayLegacy();
   }
 
-  private getBuiltinDisplayName(item: MoreMenuItemBuiltin): string {
-    if (item.builtin === 'create-child') return t('settingsBuiltinAddChildNote');
-    if (item.builtin === 'rename') return t('settingsBuiltinRename');
-    if (item.builtin === 'delete') return t('settingsBuiltinDelete');
-    if (item.builtin === 'open-closest-parent') return t('settingsBuiltinOpenClosestParent');
-    if (item.builtin === 'show-in-explorer') return t('settingsBuiltinShowInExplorer');
-    if (item.builtin === 'expand-children') return t('settingsBuiltinExpandChildren');
-    if (item.builtin === 'collapse-children') return t('settingsBuiltinCollapseChildren');
-    if (item.builtin === 'hide') return t('settingsBuiltinHide');
-    return t('settingsBuiltinUnknown');
-  }
-
-  private getBuiltinItems(): MoreMenuItem[] {
-    return DEFAULT_MORE_MENU.filter(i => i.type === 'builtin');
-  }
-
-  private getBuiltinOrder(): string[] {
-    const allIds = this.getBuiltinItems().map(i => i.id);
-    const order = this.plugin?.settings?.builtinMenuOrder;
-    if (Array.isArray(order) && order.length > 0) {
-      const known = order.filter(id => allIds.includes(id));
-      const missing = allIds.filter(id => !known.includes(id));
-      return [...known, ...missing];
-    }
-    return allIds;
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    if (!requireApiVersion('1.13.0')) return [];
+    return buildSettingDefinitions(this.getSectionCallbacks());
   }
 
   private async updateBuiltinOrder(order: string[]): Promise<void> {
@@ -216,32 +145,10 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     this.redisplayPreservingScroll();
   }
 
-  private getUserItems(): MoreMenuItemCommand[] {
-    const list = this.plugin?.settings?.userMenuItems;
-    if (Array.isArray(list)) return list.slice();
-    const legacy = this.plugin?.settings?.moreMenuItems;
-    if (Array.isArray(legacy) && legacy.length > 0) {
-      return legacy.filter((x): x is MoreMenuItemCommand => x.type === 'command');
-    }
-    return [];
-  }
-
   private async updateUserItems(list: MoreMenuItemCommand[], refreshView: boolean = true): Promise<void> {
     this.plugin.settings.userMenuItems = list;
     await this.plugin.saveSettings();
     if (refreshView) this.redisplayPreservingScroll();
-  }
-
-  private newCommandItem(): MoreMenuItemCommand {
-    return {
-      id: `cmd-${Date.now()}`,
-      type: 'command',
-      label: 'Custom command',
-      commandId: '',
-      openBeforeExecute: true,
-      icon: 'dot',
-      showFor: ['file']
-    };
   }
 
   private async reloadRulesSilently(): Promise<void> {

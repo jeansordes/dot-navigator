@@ -14,8 +14,15 @@ export function getYamlTitle(app: App, filePath: string): string | null {
 
     const cache = app.metadataCache.getFileCache(file);
     const frontmatter = cache?.frontmatter;
+    if (!frontmatter || typeof frontmatter !== 'object') {
+      return null;
+    }
+    const title: unknown = Reflect.get(frontmatter, 'title');
 
-    return frontmatter?.title || null;
+    if (typeof title === 'string') {
+      return title;
+    }
+    return null;
   } catch (error) {
     console.error('Error reading YAML title:', error);
     return null;

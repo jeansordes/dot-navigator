@@ -14,6 +14,18 @@ export function createMoveNoticeHandlers(): MoveNoticeHandlers {
     let moveNoticeUndoTimeout: number | undefined;
     let undoHandler: (() => Promise<string | null>) | undefined;
 
+    const getNoticeContentEl = (notice: Notice): HTMLElement => {
+        const messageEl: unknown = Reflect.get(notice, 'messageEl');
+        if (messageEl instanceof HTMLElement) {
+            return messageEl;
+        }
+        const noticeEl: unknown = Reflect.get(notice, 'noticeEl');
+        if (noticeEl instanceof HTMLElement) {
+            return noticeEl;
+        }
+        throw new Error('Notice has no content element');
+    };
+
     const clearMoveNoticeUndoShortcut = (): void => {
         moveNoticeUndoActive = false;
         moveNoticeUndoNotice = undefined;
@@ -65,8 +77,9 @@ export function createMoveNoticeHandlers(): MoveNoticeHandlers {
             const noticeDurationMs = 8000;
             const notice = new Notice(message, noticeDurationMs);
             if (successCount > 0) {
-                notice.noticeEl.addClass('dotn_move-notice');
-                const undoBtn = notice.noticeEl.createEl('button', { cls: 'dotn_move-notice-undo' });
+                const contentEl = getNoticeContentEl(notice);
+                contentEl.addClass('dotn_move-notice');
+                const undoBtn = contentEl.createEl('button', { cls: 'dotn_move-notice-undo' });
                 setIcon(undoBtn.createSpan({ cls: 'dotn_move-notice-undo-icon' }), 'undo-2');
                 undoBtn.createSpan({ text: t('renameNotificationUndo') });
                 enableMoveNoticeUndoShortcut(notice, noticeDurationMs);

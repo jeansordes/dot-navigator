@@ -51,7 +51,7 @@ export class VirtualTreeManager {
 
     if (shouldUseCache && cachedData) {
       await this.loadFromCache(cachedData, rootContainer, expanded);
-      this.buildAndCacheTreeInBackground(expanded); // Rebuild in background
+      void this.buildAndCacheTreeInBackground(expanded); // Rebuild in background
     } else {
       await this.buildAndRenderFreshTree(rootContainer, expanded);
     }
@@ -207,7 +207,7 @@ export class VirtualTreeManager {
     }
   }
 
-  revealPath(path: string): void { this.vt?.revealPath(path); }
+  revealPath(path: string): void { void this.vt?.revealPath(path); }
 
   revealPathForActiveFile(filePath: string): void {
     this.vt?.revealPathForActiveFile(filePath);

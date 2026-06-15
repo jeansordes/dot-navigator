@@ -47,8 +47,9 @@ export function createModeSelection(
 
     // Make the entire container clickable
     modeContainer.addEventListener('click', (e) => {
+        const clickTarget = e.target;
         // Don't trigger if clicking directly on the toggle
-        if (e.target instanceof HTMLElement && !e.target.closest('.checkbox-container')) {
+        if (clickTarget instanceof HTMLElement && !clickTarget.closest('.checkbox-container')) {
             toggleComponent.setValue(!toggleComponent.getValue());
             callbacks.onModeChange(toggleComponent.getValue());
         }
@@ -144,13 +145,15 @@ export function createFileItem(
             }
         };
 
-        copyButton.addEventListener('click', copyAction);
+        copyButton.addEventListener('click', () => {
+            void copyAction();
+        });
 
         // Add keyboard support for accessibility
         copyButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                copyAction();
+                void copyAction();
             }
         });
     }

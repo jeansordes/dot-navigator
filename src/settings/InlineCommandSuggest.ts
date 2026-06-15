@@ -21,7 +21,7 @@ export class InlineCommandSuggest {
 
   private static hasCommands(app: unknown): app is { commands?: { listCommands?: () => Array<{ id?: string; name?: string }>; commands?: Record<string, { id?: string; name?: string }> } } {
     if (typeof app !== 'object' || app === null) return false;
-    const maybe = Reflect.get(app, 'commands');
+    const maybe: unknown = Reflect.get(app, 'commands');
     return typeof maybe === 'object' && maybe !== null;
   }
 

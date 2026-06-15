@@ -35,10 +35,12 @@ npm run build
 
 ## Linting
 
-- To use eslint install eslint from terminal: `npm install -g eslint`
-- To use eslint to analyze this project use this command: `eslint main.ts`
-- eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder: `eslint ./src/`
+- **Local quality gate:** `npm run ci` (lint, build, test).
+- **Lint config** matches the Obsidian community scanner: `eslint-plugin-obsidianmd` recommended + `typescript-eslint` `recommendedTypeChecked` (see `eslint.config.js`).
+- **`minAppVersion`** in `manifest.json` drives `obsidianmd/no-unsupported-api` (currently `1.13.0`).
+- **`npm run lint`** — `eslint . --max-warnings 0` (warnings fail the gate).
+- **`npm run lint:fix`** — project fix scripts, then `eslint . --fix`.
+- Historical community-review baseline: [specs/COMMUNITY_REVIEW_ISSUES.md](specs/COMMUNITY_REVIEW_ISSUES.md).
 
 ## File & folder conventions
 

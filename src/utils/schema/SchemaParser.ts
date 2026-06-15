@@ -243,7 +243,14 @@ export function parseSchemaFile(contents: string, filePath: string): SchemaParse
         doc = parse(structuredContent);
         debug('Parsed YAML content from file %s', filePath);
       } catch (yamlError) {
-        errors.push({ file: filePath, message: 'Failed to parse extracted content as JSON or YAML', details: { jsonError: jsonError instanceof Error ? jsonError.message : jsonError, yamlError: yamlError instanceof Error ? yamlError.message : yamlError } });
+        errors.push({
+          file: filePath,
+          message: 'Failed to parse extracted content as JSON or YAML',
+          details: {
+            jsonError: jsonError instanceof Error ? jsonError.message : String(jsonError),
+            yamlError: yamlError instanceof Error ? yamlError.message : String(yamlError),
+          },
+        });
         // Continue to try parsing the entire content as YAML
       }
     }

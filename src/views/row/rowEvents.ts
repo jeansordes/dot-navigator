@@ -80,7 +80,7 @@ export function handleActionButtonClick(
       vt._render();
     }
   } else if (action === 'create-note') {
-    FileUtils.createAndOpenNote(app, actionPath);
+    void FileUtils.createAndOpenNote(app, actionPath);
   } else if (action === 'unhide') {
     if (plugin) void persistHideConfigAndRefresh(app, plugin, actionPath);
   } else if (action === 'open-target') {
@@ -98,7 +98,7 @@ export function handleActionButtonClick(
     vt._render();
   } else if (action === 'create-child') {
     if (isShortcut) return;
-    FileUtils.createChildNote(app, actionPath, plugin?.settings);
+    void FileUtils.createChildNote(app, actionPath, plugin?.settings);
   } else if (action === 'more') {
     const menu = new Menu();
 
@@ -301,7 +301,7 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
     const file = app.vault.getAbstractFileByPath(openPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey;
-      FileUtils.openFile(app, file, openInNewTab);
+      void FileUtils.openFile(app, file, openInNewTab);
     } else if (Platform.isDesktopApp) {
       void openVaultPathInDefaultApp(app, openPath, desktopShellOpenPath).then((opened) => {
         if (!opened) revealPathInSystemExplorer(app, openPath);

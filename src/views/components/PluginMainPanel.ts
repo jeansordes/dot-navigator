@@ -67,7 +67,7 @@ export default class PluginMainPanel extends ItemView {
         this.persistenceManager = new PersistenceManager(
             this.app,
             this.settings,
-            this.getExpandedNodesForSettings.bind(this)
+            () => this.getExpandedNodesForSettings()
         );
 
         // Initialize tree operations
@@ -81,11 +81,11 @@ export default class PluginMainPanel extends ItemView {
         // Lower debounce to make updates feel snappier; structural ops still coalesce
         this.eventHandler = new DendronEventHandler(
             this.app,
-            this.refresh.bind(this),
+            () => { void this.refresh(); },
             120,
             '',
-            this.reloadSchemaConfig.bind(this),
-            this.handleSchemaConfigRename.bind(this)
+            () => this.reloadSchemaConfig(),
+            (newPath) => this.handleSchemaConfigRename(newPath)
         );
         // Controls will be initialized in onOpen when container is available
     }
@@ -174,17 +174,17 @@ export default class PluginMainPanel extends ItemView {
 
         // Create buttons
         this.layout.onCreateFileClick(() => {
-            this.fileOperations.createNewFile().then(() => {
-                this.refresh();
+            void this.fileOperations.createNewFile().then(() => {
+                void this.refresh();
             });
         });
         this.layout.onCreateFolderClick(() => {
-            this.fileOperations.createNewFolder().then(() => {
-                this.refresh();
+            void this.fileOperations.createNewFolder().then(() => {
+                void this.refresh();
             });
         });
-        this.layout.onSettingsClick(async () => {
-            await this.openSettings();
+        this.layout.onSettingsClick(() => {
+            void this.openSettings();
         });
 
         // Highlight current file once initial render is ready
@@ -258,8 +258,8 @@ export default class PluginMainPanel extends ItemView {
     }
 
     async handleSchemaConfigRename(newPath: string): Promise<void> {
-        // Update the setting
-        this.settings.dendronConfigFilePath = newPath;
+        // Update legacy vault rules file path (pre-migration installs only)
+        Object.assign(this.settings, { ['dendronConfigFilePath']: newPath });
         await this.plugin.saveSettings();
 
         // Update the main plugin's rule manager with the new path

@@ -2,6 +2,47 @@ import { App, TFile, TFolder } from 'obsidian';
 import { Notice } from 'obsidian';
 import { t } from "../../i18n";
 import { PluginSettings } from "../../types";
+
+type FileExplorerViewApi = {
+    revealFile?: (file: TFile) => Promise<void> | void;
+    setSelection?: (files: TFile[], reveal?: boolean, silent?: boolean) => void;
+    setSelectedFile?: (file: TFile) => void;
+    selectFile?: (file: TFile) => void;
+};
+
+type CommandExecutorApi = {
+    executeCommand?: (id: string) => unknown;
+    executeCommandById?: (id: string) => unknown;
+};
+
+function asFileExplorerView(view: unknown): FileExplorerViewApi | null {
+    if (typeof view !== 'object' || view === null) {
+        return null;
+    }
+    return view as FileExplorerViewApi;
+}
+
+function getCommandExecutor(app: App): CommandExecutorApi | null {
+    const commands: unknown = Reflect.get(app, 'commands');
+    if (typeof commands !== 'object' || commands === null) {
+        return null;
+    }
+    return commands as CommandExecutorApi;
+}
+
+async function runAppCommand(
+    executor: CommandExecutorApi,
+    method: 'executeCommand' | 'executeCommandById',
+    cmdId: string
+): Promise<boolean> {
+    const fn = executor[method];
+    if (typeof fn !== 'function') {
+        return false;
+    }
+    const commandFn = fn as (this: CommandExecutorApi, id: string) => unknown;
+    const res: unknown = await commandFn.call(executor, cmdId);
+    return Boolean(res);
+}
 export class FileUtils {
     public static basename(path: string): string {
         const normalizedPath = path.replace(/\\/g, '/');
@@ -155,17 +196,20 @@ export class FileUtils {
             if (!leaves || leaves.length === 0) return false;
             const view = leaves[0].view;
             if (!view) return false;
+            const explorer = asFileExplorerView(view);
+            if (!explorer) return false;
             // Reveal in tree if API available
-            // Use safe optional calls across versions
-            // @ts-expect-error - historical APIs may be present at runtime
-            if (typeof view.revealFile === 'function') await view.revealFile(file);
+            if (typeof explorer.revealFile === 'function') {
+                await explorer.revealFile(file);
+            }
             // Try various selection APIs used across Obsidian versions
-            // @ts-expect-error - historical APIs may be present at runtime
-            if (typeof view.setSelection === 'function') view.setSelection([file], true, true);
-            // @ts-expect-error - historical APIs may be present at runtime
-            else if (typeof view.setSelectedFile === 'function') view.setSelectedFile(file);
-            // @ts-expect-error - historical APIs may be present at runtime
-            else if (typeof view.selectFile === 'function') view.selectFile(file);
+            if (typeof explorer.setSelection === 'function') {
+                explorer.setSelection([file], true, true);
+            } else if (typeof explorer.setSelectedFile === 'function') {
+                explorer.setSelectedFile(file);
+            } else if (typeof explorer.selectFile === 'function') {
+                explorer.selectFile(file);
+            }
             return true;
         } catch {
             return false;
@@ -176,16 +220,15 @@ export class FileUtils {
     public static async executeExplorerCommand(app: App, cmdId: string, file?: TFile): Promise<boolean> {
         if (file) await this.selectInFileExplorer(app, file);
         try {
-            // Prefer official API name if available; fallback to ById
-            const cmdsUnknown = Reflect.get(app, 'commands');
-            if (typeof cmdsUnknown === 'object' && cmdsUnknown !== null && typeof Reflect.get(cmdsUnknown, 'executeCommand') === 'function') {
-                const fn = Reflect.get(cmdsUnknown, 'executeCommand');
-                const res = await Reflect.apply(fn, cmdsUnknown, [cmdId]);
-                return !!res;
+            const executor = getCommandExecutor(app);
+            if (!executor) {
+                return false;
             }
-            if (typeof cmdsUnknown === 'object' && cmdsUnknown !== null && typeof Reflect.get(cmdsUnknown, 'executeCommandById') === 'function') {
-                const fn = Reflect.get(cmdsUnknown, 'executeCommandById');
-                return !!Reflect.apply(fn, cmdsUnknown, [cmdId]);
+            if (typeof executor.executeCommand === 'function') {
+                return await runAppCommand(executor, 'executeCommand', cmdId);
+            }
+            if (typeof executor.executeCommandById === 'function') {
+                return await runAppCommand(executor, 'executeCommandById', cmdId);
             }
             return false;
         } catch {
@@ -196,15 +239,15 @@ export class FileUtils {
     /** Execute an app command by id without changing focus/selection (better for editor commands). */
     public static async executeAppCommand(app: App, cmdId: string): Promise<boolean> {
         try {
-            const cmdsUnknown = Reflect.get(app, 'commands');
-            if (typeof cmdsUnknown === 'object' && cmdsUnknown !== null && typeof Reflect.get(cmdsUnknown, 'executeCommandById') === 'function') {
-                const fn = Reflect.get(cmdsUnknown, 'executeCommandById');
-                return !!Reflect.apply(fn, cmdsUnknown, [cmdId]);
+            const executor = getCommandExecutor(app);
+            if (!executor) {
+                return false;
             }
-            if (typeof cmdsUnknown === 'object' && cmdsUnknown !== null && typeof Reflect.get(cmdsUnknown, 'executeCommand') === 'function') {
-                const fn = Reflect.get(cmdsUnknown, 'executeCommand');
-                const res = await Reflect.apply(fn, cmdsUnknown, [cmdId]);
-                return !!res;
+            if (typeof executor.executeCommandById === 'function') {
+                return await runAppCommand(executor, 'executeCommandById', cmdId);
+            }
+            if (typeof executor.executeCommand === 'function') {
+                return await runAppCommand(executor, 'executeCommand', cmdId);
             }
             return false;
         } catch {

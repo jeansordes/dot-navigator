@@ -127,7 +127,7 @@ export function setupPathAutocomplete(
             });
             const iconContainer = header.createEl('span', { cls: 'rename-suggestions-icon' });
             setIcon(iconContainer, 'folder');
-            const _textSpan = header.createEl('span', {
+            header.createEl('span', {
                 text: t('renameDialogPathSuggestions')
             });
 
@@ -135,7 +135,7 @@ export function setupPathAutocomplete(
             const listContainer = state.suggestionsContainer.createEl('div', {
                 cls: 'rename-path-suggestions-list'
             });
-            const _emptyMsg = listContainer.createEl('div', {
+            listContainer.createEl('div', {
                 cls: 'rename-path-suggestions-no-results',
                 text: 'Type to search for paths...'
             });
@@ -182,7 +182,7 @@ export function setupPathAutocomplete(
         setIcon(iconContainer, 'folder');
 
         const resultCount = matches.length === 100 ? '100+' : matches.length.toString();
-        const _textSpan = header.createEl('span', {
+        header.createEl('span', {
             text: `${t('renameDialogPathSuggestions')} (${resultCount})`
         });
 
@@ -193,7 +193,7 @@ export function setupPathAutocomplete(
 
         if (matches.length === 0) {
             // Show "no results" message in the list container
-            const _noResultsMsg = listContainer.createEl('div', {
+            listContainer.createEl('div', {
                 cls: 'rename-path-suggestions-no-results',
                 text: 'No matching paths found'
             });

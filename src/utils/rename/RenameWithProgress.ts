@@ -156,9 +156,10 @@ export async function renameWithProgress(
                 createdDirectories.push(dirPath);
                 debug("Created directory:", dirPath);
                 return { success: true, path: dirPath };
-            } catch (error) {
+            } catch (error: unknown) {
                 debug("Failed to create directory:", dirPath, error);
-                return { success: false, path: dirPath, error };
+                const message = error instanceof Error ? error.message : String(error);
+                return { success: false, path: dirPath, error: message };
             }
         });
 

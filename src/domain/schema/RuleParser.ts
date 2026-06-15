@@ -190,7 +190,7 @@ export function parseRulesJsonDocument(content: string, filePath: string): { doc
       return { doc: null, errors };
     }
 
-    const doc = JSON.parse(json);
+    const doc: unknown = JSON.parse(json);
 
     if (!Array.isArray(doc)) {
       errors.push({

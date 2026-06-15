@@ -65,7 +65,7 @@ export class RenameDialog extends Modal {
 
         // Initialize progress component
         this.renameProgress = new RenameProgress({
-            onRevert: (trigger) => this.handleRevert(trigger),
+            onRevert: (trigger) => { void this.handleRevert(trigger); },
             onClose: () => this.close()
         });
     }
@@ -77,7 +77,7 @@ export class RenameDialog extends Modal {
 
     private attemptSubmit(): void {
         if (this.shouldProceedWithRename()) {
-            this.handleRename();
+            void this.handleRename();
         } else {
             this.showNoChangesMessage();
         }
@@ -113,7 +113,7 @@ export class RenameDialog extends Modal {
             renameProgress: this.renameProgress,
             handlePostOperationInteraction: (force) => this.handlePostOperationInteraction(force),
             shouldProceedWithRename: () => this.shouldProceedWithRename(),
-            handleRename: () => this.handleRename(),
+            handleRename: () => { void this.handleRename(); },
             showNoChangesMessage: () => this.showNoChangesMessage(),
             updateModeSelection: (mode) => { this.modeSelection = mode; },
             getModeSelection: () => this.modeSelection,

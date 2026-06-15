@@ -43,7 +43,7 @@ export function validatePath(
         hintEl.empty();
 
         // Add intro text
-        const _introText = hintEl.createEl('span', {
+        hintEl.createEl('span', {
             text: 'The following folders will be created: ',
             cls: 'rename-path-hint-text'
         });

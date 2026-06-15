@@ -274,7 +274,7 @@ export async function updateRedirectTargetsOnRename(
   const stubsToUpdate: TFile[] = [];
   for (const file of app.vault.getFiles()) {
     const cache = app.metadataCache.getFileCache(file);
-    const raw = cache?.frontmatter?.[REDIRECT_FM_KEY];
+    const raw: unknown = cache?.frontmatter?.[REDIRECT_FM_KEY];
     const linkpath = parseRedirectTarget(raw);
     if (!linkpath || !shouldRewriteRedirectOnRename(raw)) {
       continue;
@@ -287,7 +287,7 @@ export async function updateRedirectTargetsOnRename(
   }
 
   for (const stub of stubsToUpdate) {
-    await app.fileManager.processFrontMatter(stub, (frontmatter) => {
+    await app.fileManager.processFrontMatter(stub, (frontmatter: Record<string, unknown>) => {
       frontmatter[REDIRECT_FM_KEY] = newPath;
     });
   }

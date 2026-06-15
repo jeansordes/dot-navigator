@@ -88,7 +88,8 @@ export class TreeCacheManager {
       const request = store.get(vaultPath);
 
       request.onsuccess = () => {
-        resolve(request.result || null);
+        const result = request.result as CachedTreeData | undefined;
+        resolve(result ?? null);
       };
       request.onerror = () => reject(idbRequestError(request));
     });
