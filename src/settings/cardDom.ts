@@ -1,5 +1,4 @@
 import { setIcon } from 'obsidian';
-
 export function createIconButton(
   parent: HTMLElement,
   icon: string,

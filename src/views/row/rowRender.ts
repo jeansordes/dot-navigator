@@ -1,3 +1,4 @@
+
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { createActionButtons, createFolderPlaceholder, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon, createHiddenIcon, insertChildCountBadge } from './rowDom';
@@ -22,7 +23,7 @@ function syncToggleSlot(row: HTMLElement, item: RowItem, hasChildren: boolean, i
   removeStandaloneFolderIcon(row);
 
   if (hasChildren) {
-    if (existingPlaceholder instanceof HTMLElement) existingPlaceholder.remove();
+    if (existingPlaceholder?.instanceOf(HTMLElement)) existingPlaceholder.remove();
 
     const needsFolderToggle = item.kind === 'folder';
     const toggleIsFolder = existingToggle?.classList.contains('dotn_toggle-folder') ?? false;
@@ -35,12 +36,12 @@ function syncToggleSlot(row: HTMLElement, item: RowItem, hasChildren: boolean, i
 
     row.setAttribute('aria-expanded', String(isExpanded));
   } else {
-    if (existingToggle instanceof HTMLElement) existingToggle.remove();
+    if (existingToggle?.instanceOf(HTMLElement)) existingToggle.remove();
     row.removeAttribute('aria-expanded');
 
     if (item.kind === 'folder') {
       if (!existingPlaceholder) insertToggleSlot(row, createFolderPlaceholder());
-    } else if (existingPlaceholder instanceof HTMLElement) {
+    } else if (existingPlaceholder?.instanceOf(HTMLElement)) {
       existingPlaceholder.remove();
     }
   }
@@ -59,7 +60,7 @@ function syncHiddenIcon(row: HTMLElement, isHidden: boolean): void {
       if (titleEl) row.insertBefore(icon, titleEl);
       else row.appendChild(icon);
     }
-  } else if (existing instanceof HTMLElement) {
+  } else if (existing?.instanceOf(HTMLElement)) {
     existing.remove();
   }
 }
@@ -78,7 +79,7 @@ function syncSelectionHighlight(
   if (titleEl) {
     titleEl.classList.toggle('is-active', titleActive);
   }
-  if (stubIconEl instanceof HTMLElement) {
+  if (stubIconEl?.instanceOf(HTMLElement)) {
     stubIconEl.classList.toggle('is-active', stubIconActive);
   }
 }

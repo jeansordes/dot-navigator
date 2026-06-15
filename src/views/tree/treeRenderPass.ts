@@ -1,3 +1,4 @@
+
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { scheduleWidthAdjust } from '../utils/renderUtils';
 
@@ -13,10 +14,10 @@ export function growRowPool(
 ): void {
     if (targetSize <= vt.poolSize) return;
     const host = vt.virtualizer;
-    if (!(host instanceof HTMLElement)) return;
+    if (!(host.instanceOf(HTMLElement))) return;
 
     for (let i = vt.poolSize; i < targetSize; i++) {
-        const row = document.createElement('div');
+        const row = activeDocument.createElement('div');
         row.className = 'tree-row';
         row.dataset.poolIndex = String(i);
         onRowInit(row);

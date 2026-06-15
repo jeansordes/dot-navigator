@@ -6,9 +6,6 @@ import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:schema-utils');
 const debugError = debug.extend('error');
 
-// Module-level storage for rule suggesters (not currently used but kept for future extensibility)
-const _ruleSuggesterMap = new WeakMap<TreeNode, RuleSuggester>();
-
 /**
  * Utility functions for handling schema suggestions in the virtual tree
  */
@@ -56,7 +53,7 @@ export class SchemaUtils {
         suggester.apply(root, isExpandedOrRoot);
 
         // Process remaining nodes in the background after initial render
-        setTimeout(() => {
+        window.setTimeout(() => {
           this.applySuggestionsToRemainingNodes(root, suggester);
         }, 100); // Small delay to ensure initial render is complete
       }
@@ -96,7 +93,6 @@ export class SchemaUtils {
     debug(`Found ${nodesToProcess.length} nodes to process in background`);
 
     // Process nodes in batches to avoid blocking the UI
-    let _processedCount = 0;
     const batchSize = 50; // Process 50 nodes at a time
 
     const processBatch = () => {
@@ -123,15 +119,14 @@ export class SchemaUtils {
           }
         }
         node._suggestionsLoaded = true;
-        _processedCount++;
       }
 
       // Continue processing in next animation frame
-      requestAnimationFrame(processBatch);
+      window.requestAnimationFrame(processBatch);
     };
 
     // Start background processing
-    requestAnimationFrame(processBatch);
+    window.requestAnimationFrame(processBatch);
   }
 
   /**
@@ -187,7 +182,7 @@ export class SchemaUtils {
 
       // Add children of expanded nodes to processing queue
       if (currentNode.children) {
-        for (const [_key, child] of currentNode.children) {
+        for (const child of currentNode.children.values()) {
           if (visiblePaths.has(child.path)) {
             nodesToProcess.push(child);
           }

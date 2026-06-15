@@ -1,5 +1,4 @@
-import { requireApiVersion, Setting, SettingGroup } from 'obsidian';
-
+import { Setting, SettingGroup, requireApiVersion } from 'obsidian';
 export interface SettingsSection {
   addSetting(cb: (setting: Setting) => void): void;
   /** The `.setting-items` container inside the group. */
@@ -17,7 +16,7 @@ export function createGroupHeading(
     return name;
   }
 
-  const heading = document.createDocumentFragment();
+  const heading = activeDocument.createDocumentFragment();
   const nameEl = heading.createDiv({ cls: 'setting-item-name', text: name });
   if (count !== undefined) {
     nameEl.createSpan({ cls: 'dotnav-count-badge', text: String(count) });

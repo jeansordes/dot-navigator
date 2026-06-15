@@ -1,5 +1,4 @@
 import { App } from 'obsidian';
-
 export interface CommandEntry { id: string; name: string }
 
 export class InlineCommandSuggest {
@@ -55,7 +54,7 @@ export class InlineCommandSuggest {
     this.input.addEventListener('focus', () => this.show());
     this.input.addEventListener('input', () => this.show());
     this.input.addEventListener('keydown', (ev) => this.onKey(ev));
-    this.input.addEventListener('blur', () => setTimeout(() => this.hide(), 150));
+    this.input.addEventListener('blur', () => window.setTimeout(() => this.hide(), 150));
   }
 
   private onKey(ev: KeyboardEvent): void {
@@ -81,7 +80,7 @@ export class InlineCommandSuggest {
 
   private ensureList(): HTMLElement {
     if (!this.listEl) {
-      const el = document.createElement('div');
+      const el = activeDocument.createElement('div');
       el.className = 'dotn_cmd-suggest';
       this.container.appendChild(el);
       this.listEl = el;
@@ -93,7 +92,7 @@ export class InlineCommandSuggest {
     const el = this.ensureList();
     el.empty();
     options.forEach((opt, idx) => {
-      const row = document.createElement('div');
+      const row = activeDocument.createElement('div');
       row.className = 'dotn_cmd-suggest-item' + (idx === this.selectedIndex ? ' is-selected' : '');
       row.textContent = `${opt.name} (${opt.id})`;
       row.addEventListener('mousedown', (e) => { e.preventDefault(); this.pick(opt); });

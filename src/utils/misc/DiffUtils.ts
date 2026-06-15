@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for computing and displaying text diffs
  */
@@ -58,13 +59,13 @@ export function computeInlineDiff(oldText: string, newText: string): DiffChange[
  * Create an inline diff element for display
  */
 export function createInlineDiff(oldText: string, newText: string): HTMLElement {
-    const container = document.createElement('div');
+    const container = activeDocument.createElement('div');
     container.className = 'rename-inline-diff';
 
     const changes = computeInlineDiff(oldText, newText);
 
     changes.forEach(change => {
-        const span = document.createElement('span');
+        const span = activeDocument.createElement('span');
         span.textContent = change.text;
 
         if (change.type === 'removed') {

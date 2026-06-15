@@ -14,13 +14,13 @@ export function startDragAutoScroll(
         } else if (y > rect.bottom - AUTO_SCROLL_EDGE_PX) {
             scrollContainer.scrollTop += AUTO_SCROLL_SPEED_PX;
         }
-        frameId = requestAnimationFrame(tick);
+        frameId = window.requestAnimationFrame(tick);
     };
-    let frameId = requestAnimationFrame(tick);
+    let frameId = window.requestAnimationFrame(tick);
     return frameId;
 }
 
 export function stopDragAutoScroll(frameId: number | null): void {
     if (frameId === null) return;
-    cancelAnimationFrame(frameId);
+    window.cancelAnimationFrame(frameId);
 }

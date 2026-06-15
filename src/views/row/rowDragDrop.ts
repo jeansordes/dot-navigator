@@ -88,7 +88,7 @@ export class RowDragController {
         window.removeEventListener('keyup', this.onKeyUp, true);
         this.clearPending();
         this.endDrag(false);
-        document.body.classList.remove('dotn_dragging-active');
+        activeDocument.body.classList.remove('dotn_dragging-active');
     }
 
     shouldSuppressClick(): boolean {
@@ -136,14 +136,14 @@ export class RowDragController {
         if (this.active) return;
 
         const title = (e.target as Element).closest('.dotn_tree-item-title');
-        if (!(title instanceof HTMLElement)) return;
+        if (!(title?.instanceOf(HTMLElement))) return;
         if ((e.target as Element).closest('.dotn_button-icon')) return;
 
         const kindAttr = title.getAttribute('data-node-kind');
         if (kindAttr !== 'file' && kindAttr !== 'folder' && kindAttr !== 'virtual') return;
 
         const row = title.closest('.tree-row');
-        if (!(row instanceof HTMLElement) || !row.dataset.id) return;
+        if (!(row?.instanceOf(HTMLElement)) || !row.dataset.id) return;
         const { path, isShortcut, noteTargetPath } = resolveDragSource(row);
         if (!isVaultIndexedPath(this.opts.app, path)) return;
 
@@ -165,7 +165,7 @@ export class RowDragController {
                 if (this.pending?.pointerId === e.pointerId) this.beginDrag(false);
             }, LONG_PRESS_MS);
             this.boundTouchMovePrevent = (ev) => { if (this.active) ev.preventDefault(); };
-            document.addEventListener('touchmove', this.boundTouchMovePrevent, { passive: false });
+            activeDocument.addEventListener('touchmove', this.boundTouchMovePrevent, { passive: false });
         }
     };
 
@@ -210,7 +210,7 @@ export class RowDragController {
         if (!this.pending) return;
         const ghost = createDragGhost(this.pending.row);
         this.pending.row.classList.add('dotn_dragging');
-        document.body.classList.add('dotn_dragging-active');
+        activeDocument.body.classList.add('dotn_dragging-active');
 
         const shortcutEligible = !this.pending.isShortcut
             && isMarkdownShortcutEligible(this.pending.path, this.pending.kind);
@@ -267,7 +267,7 @@ export class RowDragController {
     private endDrag(suppressClick: boolean): void {
         this.stopAutoScroll();
         this.removeTouchMovePrevent();
-        document.body.classList.remove('dotn_dragging-active');
+        activeDocument.body.classList.remove('dotn_dragging-active');
         this.opts.viewBody.classList.remove('dotn_drag-shortcut-mode');
         if (this.active) {
             this.active.row.classList.remove('dotn_dragging');
@@ -288,7 +288,7 @@ export class RowDragController {
 
     private removeTouchMovePrevent(): void {
         if (!this.boundTouchMovePrevent) return;
-        document.removeEventListener('touchmove', this.boundTouchMovePrevent);
+        activeDocument.removeEventListener('touchmove', this.boundTouchMovePrevent);
         this.boundTouchMovePrevent = undefined;
     }
 

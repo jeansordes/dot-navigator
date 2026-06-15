@@ -13,6 +13,25 @@ jest.mock('obsidian', () => {
     };
 }, { virtual: true });
 
+// Obsidian DOM nodes expose instanceOf(); polyfill for the Jest node environment.
+beforeAll(() => {
+    const ctors = [
+        globalThis.Element,
+        globalThis.HTMLElement,
+        globalThis.UIEvent,
+        globalThis.MouseEvent,
+        globalThis.Event,
+    ];
+    for (const ctor of ctors) {
+        if (!ctor) continue;
+        const prototype = ctor.prototype as { instanceOf?: unknown };
+        if (typeof prototype.instanceOf === 'function') continue;
+        prototype.instanceOf = function <T>(this: unknown, type: { new (): T }): this is T {
+            return this instanceof type;
+        };
+    }
+});
+
 // Create helper functions for tests
 export function createMockFile(path: string, name?: string, parent: TFolder | null = null): TFile {
     const file = new TFile();

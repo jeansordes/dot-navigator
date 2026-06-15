@@ -13,7 +13,7 @@ export function attachTreeDragController(opts: {
 }): RowDragController | undefined {
     const scrollContainer = opts.virtualTree.scrollContainer;
     const virtualizer = opts.virtualTree.virtualizer;
-    if (!(scrollContainer instanceof HTMLElement) || !(virtualizer instanceof HTMLElement)) {
+    if (!(scrollContainer?.instanceOf(HTMLElement)) || !(virtualizer.instanceOf(HTMLElement))) {
         return undefined;
     }
 

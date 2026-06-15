@@ -78,13 +78,13 @@ export function setupPathInput(
         setAutocompleteState(autocompleteState);
 
         if (!skipInitialFocus) {
-            setTimeout(() => {
+            window.setTimeout(() => {
                 const event = new Event('focus');
                 pathInput.dispatchEvent(event);
             }, 50);
         }
     } else {
-        pathInput = document.createElement('textarea');
+        pathInput = activeDocument.createElement('textarea');
         pathInput.setAttribute('rows', '1');
         pathInput.value = pathParts.directory;
         pathInput.classList.add('is-hidden');

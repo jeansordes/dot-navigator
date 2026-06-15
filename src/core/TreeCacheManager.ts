@@ -23,6 +23,14 @@ export interface CachedTreeData {
 // Type import needed for CachedTreeData
 import type { VItem } from './virtualData';
 
+function idbRequestError(request: IDBRequest): Error {
+  const err = request.error;
+  if (err instanceof Error) {
+    return err;
+  }
+  return new Error(err ? String(err) : 'IndexedDB request failed');
+}
+
 /**
  * Manages IndexedDB caching for virtual tree data to improve performance
  */
@@ -38,7 +46,7 @@ export class TreeCacheManager {
 
       request.onerror = () => {
         debugError('IndexedDB error:', request.error);
-        reject(request.error);
+        reject(idbRequestError(request));
       };
 
       request.onsuccess = () => {
@@ -67,7 +75,7 @@ export class TreeCacheManager {
       const request = store.put(data);
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(idbRequestError(request));
     });
   }
 
@@ -82,7 +90,7 @@ export class TreeCacheManager {
       request.onsuccess = () => {
         resolve(request.result || null);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(idbRequestError(request));
     });
   }
 
@@ -101,7 +109,7 @@ export class TreeCacheManager {
       }
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(idbRequestError(request));
     });
   }
 }

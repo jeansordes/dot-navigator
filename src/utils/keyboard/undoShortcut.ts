@@ -1,3 +1,4 @@
+
 /**
  * Keyboard helpers for Mod+Z undo when plugin undo UI is available.
  */
@@ -34,7 +35,7 @@ export function shouldHandleModZUndo(event: KeyboardEvent): boolean {
 export function attachModZUndoShortcut(
     canUndo: () => boolean,
     onUndo: () => void,
-    doc: Pick<Document, 'addEventListener' | 'removeEventListener'> = document
+    doc: Pick<Document, 'addEventListener' | 'removeEventListener'> = activeDocument
 ): () => void {
     const handler = (event: Event) => {
         if (!isKeyboardEvent(event)) {

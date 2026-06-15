@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for fuzzy search and text highlighting
  */
@@ -147,10 +148,10 @@ export function fuzzyCharMatch(item: string, word: string): FuzzyMatchResult {
  * Create highlighted text with fuzzy search matches
  */
 export function createHighlightedText(text: string, matches: Array<{ start: number, end: number }>): DocumentFragment {
-    const fragment = document.createDocumentFragment();
+    const fragment = activeDocument.createDocumentFragment();
 
     if (matches.length === 0) {
-        fragment.appendChild(document.createTextNode(text));
+        fragment.appendChild(activeDocument.createTextNode(text));
         return fragment;
     }
 
@@ -171,11 +172,11 @@ export function createHighlightedText(text: string, matches: Array<{ start: numb
     for (const match of mergedMatches) {
         // Add text before highlight
         if (match.start > lastIndex) {
-            fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.start)));
+            fragment.appendChild(activeDocument.createTextNode(text.substring(lastIndex, match.start)));
         }
 
         // Add highlighted text
-        const highlight = document.createElement('span');
+        const highlight = activeDocument.createElement('span');
         highlight.className = 'fuzzy-match-highlight';
         highlight.textContent = text.substring(match.start, match.end);
         fragment.appendChild(highlight);
@@ -185,7 +186,7 @@ export function createHighlightedText(text: string, matches: Array<{ start: numb
 
     // Add remaining text
     if (lastIndex < text.length) {
-        fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+        fragment.appendChild(activeDocument.createTextNode(text.substring(lastIndex)));
     }
 
     return fragment;

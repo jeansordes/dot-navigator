@@ -1,3 +1,4 @@
+
 import type { VItem } from '../../core/virtualData';
 import { getMaxScrollTop } from '../../utils/misc/measure';
 import type { VirtualTreeLike } from '../utils/viewTypes';
@@ -55,7 +56,7 @@ export function applyTreeDataUpdate(
     onExpansionChange?: () => void
 ): void {
     const scrollContainer = vt.scrollContainer;
-    const host = scrollContainer instanceof HTMLElement ? scrollContainer : vt.container;
+    const host = scrollContainer?.instanceOf(HTMLElement) ? scrollContainer : vt.container;
     const prevScrollTop = host.scrollTop;
 
     const oldData = vt.data;

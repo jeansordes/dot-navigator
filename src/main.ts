@@ -10,12 +10,12 @@ import { RenameManager } from './utils/rename/RenameManager';
 import { RuleManager } from './utils/schema/RuleManager';
 import { schemaRulesFromFileContent } from './utils/schema/schemaRulesMigration';
 import { resolveSchemaRulesOnLoad } from './utils/schema/schemaRulesOnLoad';
+import { getTreeView } from './utils/view/getTreeView';
 
 const debug = createDebug('dot-navigator:main');
 
 export default class DotNavigatorPlugin extends Plugin {
     settings: PluginSettings;
-    private pluginMainPanel: PluginMainPanel | null = null;
     private renameManager?: RenameManager;
     private ruleManager?: RuleManager;
 
@@ -24,7 +24,7 @@ export default class DotNavigatorPlugin extends Plugin {
     }
 
     getPluginMainPanel(): PluginMainPanel | null {
-        return this.pluginMainPanel;
+        return getTreeView(this.app);
     }
 
     updateRuleManager(): void {
@@ -32,9 +32,9 @@ export default class DotNavigatorPlugin extends Plugin {
     }
 
     async updateRuleConfigPath(): Promise<void> {
-        // The PluginMainPanel handles updating the RuleManager
-        if (this.pluginMainPanel) {
-            await this.pluginMainPanel.updateRuleConfigPath();
+        const panel = getTreeView(this.app);
+        if (panel) {
+            await panel.updateRuleConfigPath();
         }
     }
 
@@ -78,10 +78,7 @@ export default class DotNavigatorPlugin extends Plugin {
         // Register the file tree view
         this.registerView(
             FILE_TREE_VIEW_TYPE,
-            (leaf) => {
-                this.pluginMainPanel = new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.ruleManager);
-                return this.pluginMainPanel;
-            }
+            (leaf) => new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.ruleManager)
         );
 
         this.addRibbonIcon(TREE_VIEW_ICON, t('ribbonTooltip'), (/* evt: MouseEvent */) => {
@@ -141,8 +138,9 @@ export default class DotNavigatorPlugin extends Plugin {
             id: 'collapse-all-dendron-tree',
             name: t('commandCollapseAll'),
             callback: () => {
-                if (this.pluginMainPanel) {
-                    this.pluginMainPanel.collapseAllNodes();
+                const panel = getTreeView(this.app);
+                if (panel) {
+                    panel.collapseAllNodes();
                 }
             }
         });
@@ -152,8 +150,9 @@ export default class DotNavigatorPlugin extends Plugin {
             id: 'expand-all-dendron-tree',
             name: t('commandExpandAll'),
             callback: () => {
-                if (this.pluginMainPanel) {
-                    this.pluginMainPanel.expandAllNodes();
+                const panel = getTreeView(this.app);
+                if (panel) {
+                    panel.expandAllNodes();
                 }
             }
         });
@@ -161,11 +160,15 @@ export default class DotNavigatorPlugin extends Plugin {
         this.addCommand({
             id: 'toggle-hidden-nodes',
             name: t('commandToggleHiddenNodes'),
-            callback: () => {
-                if (this.pluginMainPanel) {
-                    void this.pluginMainPanel.toggleShowHiddenNodes();
+            checkCallback: (checking: boolean) => {
+                if (!this.settings.enableHiddenNodesReveal) return false;
+                const panel = getTreeView(this.app);
+                if (!panel) return false;
+                if (!checking) {
+                    void panel.toggleShowHiddenNodes();
                 }
-            }
+                return true;
+            },
         });
 
         // Add a command to create a child note to the current note
@@ -178,7 +181,7 @@ export default class DotNavigatorPlugin extends Plugin {
                 if (!activeFile) return false;
 
                 if (!checking) {
-                    FileUtils.createChildNote(this.app, activeFile.path, this.settings);
+                    void FileUtils.createChildNote(this.app, activeFile.path, this.settings);
                 }
 
                 return true;
@@ -194,7 +197,7 @@ export default class DotNavigatorPlugin extends Plugin {
                 if (!activeFile) return false;
 
                 if (!checking) {
-                    FileUtils.openClosestParentNote(this.app, activeFile);
+                    void FileUtils.openClosestParentNote(this.app, activeFile);
                 }
                 return true;
             }
@@ -210,7 +213,7 @@ export default class DotNavigatorPlugin extends Plugin {
 
                 if (!checking) {
                     if (this.renameManager) {
-                        this.renameManager.showRenameDialog(activeFile.path, 'file', { source: 'command' });
+                        void this.renameManager.showRenameDialog(activeFile.path, 'file', { source: 'command' });
                     }
                 }
                 return true;
@@ -238,7 +241,7 @@ export default class DotNavigatorPlugin extends Plugin {
             const existing = this.app.workspace.getLeavesOfType(FILE_TREE_VIEW_TYPE);
 
             if (existing.length > 0) {
-                this.app.workspace.revealLeaf(existing[0]);
+                void this.app.workspace.revealLeaf(existing[0]);
                 return;
             }
 
@@ -249,7 +252,7 @@ export default class DotNavigatorPlugin extends Plugin {
                     type: FILE_TREE_VIEW_TYPE,
                     active: true
                 });
-                this.app.workspace.revealLeaf(leaf);
+                void this.app.workspace.revealLeaf(leaf);
             }
         });
     }
@@ -328,8 +331,9 @@ export default class DotNavigatorPlugin extends Plugin {
         }
 
         // Restore expanded nodes if available
-        if (this.pluginMainPanel && this.settings.expandedNodes) {
-            this.pluginMainPanel.restoreExpandedNodesFromSettings(this.settings.expandedNodes);
+        const panel = getTreeView(this.app);
+        if (panel && this.settings.expandedNodes) {
+            panel.restoreExpandedNodesFromSettings(this.settings.expandedNodes);
         }
 
         await this.migrateSchemaRulesIfNeeded();
@@ -374,8 +378,9 @@ export default class DotNavigatorPlugin extends Plugin {
 
     async saveSettings() {
         // Save expanded nodes state if available
-        if (this.pluginMainPanel) {
-            this.settings.expandedNodes = this.pluginMainPanel.getExpandedNodesForSettings();
+        const panel = getTreeView(this.app);
+        if (panel) {
+            this.settings.expandedNodes = panel.getExpandedNodesForSettings();
         }
 
         // Persist whether the view is currently open, so we could optionally restore in the future
@@ -389,14 +394,6 @@ export default class DotNavigatorPlugin extends Plugin {
 
     onunload() {
         debug("Plugin unloading, cleaning up resources");
-        
-        // Save settings before unloading
-        this.saveSettings();
-        
-        // Clean up plugin panel resources
-        if (this.pluginMainPanel) {
-            debug("Cleaning up pluginMainPanel resources");
-            this.pluginMainPanel = null;
-        }
+        void this.saveSettings();
     }
 }

@@ -1,5 +1,4 @@
-import { App, Menu, TFile, TFolder, Platform, Notice } from 'obsidian';
-
+import { App, Menu, Notice, Platform, TFile, TFolder } from 'obsidian';
 interface ObsidianInternalApp extends App {
   setting?: {
     open(): Promise<void>;
@@ -18,18 +17,19 @@ import { isShortcutItem, resolveTargetPath } from '../../core/aliasVirtualData';
 import { addDeleteMenuItem } from './rowMenuDelete';
 import { isEffectivelyHidden, toggleHiddenConfig } from '../../core/virtualData';
 import { isVaultIndexedPath } from '../../core/dotFilesystem';
-import type DotNavigatorPlugin from '../../main';
+import { getDotNavigatorPlugin, type DotNavigatorPluginLike } from '../../utils/view/getDotNavigatorPlugin';
 import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
+import { openVaultPathInDefaultApp } from '../../utils/file/openExternalFile';
+import { desktopShellOpenPath } from '../../utils/file/desktopShellOpen';
 
-async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPlugin, path: string): Promise<void> {
+async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPluginLike, path: string): Promise<void> {
   toggleHiddenConfig(plugin.settings, path);
   await plugin.saveSettings();
   await plugin.getPluginMainPanel()?.refresh();
 }
 
-function getPlugin(app: App): DotNavigatorPlugin | undefined {
-  // @ts-expect-error - plugins registry exists at runtime
-  return app?.plugins?.getPlugin?.('dot-navigator') as DotNavigatorPlugin | undefined;
+function getPlugin(app: App): DotNavigatorPluginLike | undefined {
+  return getDotNavigatorPlugin(app);
 }
 
 function revealPathInSystemExplorer(app: App, path: string): void {
@@ -66,7 +66,7 @@ export function handleActionButtonClick(
   const plugin = getPlugin(app);
 
   if (action === 'toggle') {
-    if (ev instanceof MouseEvent && ev.detail >= 2) {
+    if (ev?.instanceOf(MouseEvent) && ev.detail >= 2) {
       const isExpanded = vt.expanded.get(id) ?? false;
       if (isExpanded) vt.expandChildren?.(id);
       else vt.collapseChildren?.(id);
@@ -219,8 +219,8 @@ export function handleActionButtonClick(
                 setting.openTabById('dot-navigator');
               }
 
-              setTimeout(() => {
-                const el = document.getElementById('dotnav-more-menu');
+              window.setTimeout(() => {
+                const el = activeDocument.getElementById('dotnav-more-menu');
                 if (el) {
                   scrollIntoView({
                     target: el,
@@ -235,8 +235,8 @@ export function handleActionButtonClick(
         });
     });
 
-    if (ev instanceof MouseEvent) menu.showAtMouseEvent(ev);
-    else if (anchorEl instanceof HTMLElement) {
+    if (ev?.instanceOf(MouseEvent)) menu.showAtMouseEvent(ev);
+    else if (anchorEl?.instanceOf(HTMLElement)) {
       const r = anchorEl.getBoundingClientRect();
       menu.showAtPosition({ x: r.left, y: r.bottom });
     }
@@ -303,7 +303,9 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
       const openInNewTab = ev?.metaKey || ev?.ctrlKey;
       FileUtils.openFile(app, file, openInNewTab);
     } else if (Platform.isDesktopApp) {
-      revealPathInSystemExplorer(app, openPath);
+      void openVaultPathInDefaultApp(app, openPath, desktopShellOpenPath).then((opened) => {
+        if (!opened) revealPathInSystemExplorer(app, openPath);
+      });
     } else {
       new Notice(t('noticeCannotOpenDotFile'));
     }

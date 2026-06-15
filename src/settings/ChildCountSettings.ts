@@ -37,8 +37,6 @@ export function isChildCountEnabled(settings: PluginSettings): boolean {
   const mode = settings.childCountDisplay;
   if (mode === 'off') return false;
   if (mode === 'always' || mode === 'hover') return true;
-  if (settings.showChildCount === false) return false;
-  if (settings.showChildCount === true) return true;
   return false;
 }
 

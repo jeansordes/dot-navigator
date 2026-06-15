@@ -83,7 +83,7 @@ export function scrollIntoView(options: UnifiedScrollOptions): void {
   if (!scrollContainer) {
     if (target) {
       let parent = target.offsetParent;
-      while (parent && parent instanceof HTMLElement) {
+      while (parent && parent.instanceOf(HTMLElement)) {
         const style = getComputedStyle(parent);
         if (style.overflow !== 'visible' || style.overflowY !== 'visible' || style.overflowX !== 'visible') {
           scrollContainer = parent;
@@ -91,14 +91,14 @@ export function scrollIntoView(options: UnifiedScrollOptions): void {
         }
         parent = parent.offsetParent;
       }
-      scrollContainer = scrollContainer || document.documentElement;
+      scrollContainer = scrollContainer || activeDocument.documentElement;
     } else {
       // No target element, can't determine container
       return;
     }
   }
 
-  if (!(scrollContainer instanceof HTMLElement)) return;
+  if (!(scrollContainer.instanceOf(HTMLElement))) return;
 
   const currentScrollTop = scrollContainer.scrollTop;
   const currentScrollLeft = scrollContainer.scrollLeft;

@@ -1,4 +1,4 @@
-import { App, TFile, TFolder } from "obsidian";
+import { App, TFile, TFolder } from 'obsidian';
 import createDebug from "debug";
 import { RenameMode, RenameOperation, RenameOptions, RenameProgress } from "src/types";
 import { t } from "../../i18n";
@@ -94,7 +94,11 @@ export async function renameWithProgress(
 
     const operations: RenameOperation[] = [];
     const createdDirectories: string[] = [];
-    const filesToRename = buildPlannedRenames(app, options, deps.findChildrenFiles);
+    const filesToRename = buildPlannedRenames(
+        app,
+        options,
+        (parentApp, parentPath) => deps.findChildrenFiles(parentApp, parentPath)
+    );
 
     const progress: RenameProgress = {
         total: filesToRename.length,
@@ -283,7 +287,7 @@ async function removeCreatedDirectories(
             const abstract = app.vault.getAbstractFileByPath(dirPath);
             if (abstract instanceof TFolder) {
                 if (abstract.children.length === 0) {
-                    await app.vault.delete(abstract, true);
+                    await app.fileManager.trashFile(abstract);
                     debug("Removed directory created during rename:", dirPath);
                 } else {
                     debug(

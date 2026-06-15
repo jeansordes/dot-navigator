@@ -35,7 +35,7 @@ export function createMoveNoticeHandlers(): MoveNoticeHandlers {
 
     return {
         registerMoveNoticeUndoShortcut(host: Plugin): void {
-            host.registerDomEvent(document, 'keydown', (event: KeyboardEvent) => {
+            host.registerDomEvent(activeDocument, 'keydown', (event: KeyboardEvent) => {
                 if (!moveNoticeUndoActive || !shouldHandleModZUndo(event)) {
                     return;
                 }
@@ -65,8 +65,8 @@ export function createMoveNoticeHandlers(): MoveNoticeHandlers {
             const noticeDurationMs = 8000;
             const notice = new Notice(message, noticeDurationMs);
             if (successCount > 0) {
-                notice.messageEl.addClass('dotn_move-notice');
-                const undoBtn = notice.messageEl.createEl('button', { cls: 'dotn_move-notice-undo' });
+                notice.noticeEl.addClass('dotn_move-notice');
+                const undoBtn = notice.noticeEl.createEl('button', { cls: 'dotn_move-notice-undo' });
                 setIcon(undoBtn.createSpan({ cls: 'dotn_move-notice-undo-icon' }), 'undo-2');
                 undoBtn.createSpan({ text: t('renameNotificationUndo') });
                 enableMoveNoticeUndoShortcut(notice, noticeDurationMs);

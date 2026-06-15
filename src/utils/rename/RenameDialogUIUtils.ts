@@ -6,7 +6,6 @@ import { Setting, ToggleComponent } from 'obsidian';
 import { RenameMode, RenameDialogData } from '../../types';
 import { t } from '../../i18n';
 import { setIcon } from 'obsidian';
-
 export interface ModeSelectionCallbacks {
     onModeChange: (value: boolean) => void;
     updateAllFileItems: (childrenList: HTMLElement) => void;
@@ -40,7 +39,7 @@ export function createModeSelection(
                     callbacks.onModeChange(value);
                     // Update all file diffs when mode changes
                     const childrenList = container.querySelector('.rename-children-list');
-                    if (childrenList instanceof HTMLElement) {
+                    if (childrenList?.instanceOf(HTMLElement)) {
                         callbacks.updateAllFileItems(childrenList);
                     }
                 });
@@ -136,7 +135,7 @@ export function createFileItem(
                     await navigator.clipboard.writeText(textToCopy);
                     // Show check icon for 1 second
                     setIcon(copyButton, 'check');
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                         setIcon(copyButton, 'copy');
                     }, 1000);
                 } catch (err) {
@@ -188,7 +187,7 @@ export function createHints(container: HTMLElement, data?: RenameDialogData): HT
 
     if (data?.kind === 'folder') {
         const firstInstruction = hintsContainer.querySelector('.prompt-instruction');
-        if (firstInstruction instanceof HTMLElement) {
+        if (firstInstruction?.instanceOf(HTMLElement)) {
             firstInstruction.addClass('is-hidden');
         }
     }

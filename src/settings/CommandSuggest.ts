@@ -1,5 +1,4 @@
 import { App, FuzzySuggestModal } from 'obsidian';
-
 export interface CommandOption {
   id: string;
   name: string;

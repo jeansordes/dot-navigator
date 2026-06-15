@@ -7,7 +7,7 @@ function styleDangerMenuItem(mi: object): void {
   try {
     if (Platform.isMobile) {
       const maybeDom = Reflect.get(mi, 'dom');
-      const el = maybeDom instanceof HTMLElement ? maybeDom : undefined;
+      const el = maybeDom.instanceOf(HTMLElement) ? maybeDom : undefined;
       if (el) el.classList.add('tappable', 'is-warning');
     }
   } catch { /* ignore */ }

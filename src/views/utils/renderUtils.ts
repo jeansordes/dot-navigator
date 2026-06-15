@@ -1,3 +1,4 @@
+
 import type { VirtualTreeLike } from './viewTypes';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:render-utils');
@@ -5,7 +6,7 @@ const debug = createDebug('dot-navigator:views:render-utils');
 export function ensurePoolCapacity(vt: VirtualTreeLike, onRowInit?: (row: HTMLElement) => void): void {
   const scrollContainer = vt.scrollContainer;
   const container = vt.container;
-  const sc = scrollContainer instanceof HTMLElement ? scrollContainer : container;
+  const sc = scrollContainer?.instanceOf(HTMLElement) ? scrollContainer : container;
   const rowHeight: number = vt.rowHeight;
   const buffer: number = vt.buffer;
   const pool: HTMLElement[] = vt.pool;
@@ -15,9 +16,9 @@ export function ensurePoolCapacity(vt: VirtualTreeLike, onRowInit?: (row: HTMLEl
   const desired = visibleCount + buffer * 2;
   if (desired > poolSize) {
     const virtualizer = vt.virtualizer;
-    if (virtualizer instanceof HTMLElement) {
+    if (virtualizer.instanceOf(HTMLElement)) {
       for (let i = poolSize; i < desired; i++) {
-        const row = document.createElement('div');
+        const row = activeDocument.createElement('div');
         row.className = 'tree-row';
         row.dataset.poolIndex = String(i);
         if (onRowInit) onRowInit(row);
@@ -91,25 +92,26 @@ export function scheduleWidthAdjust(
       const prevWidths: string[] = [];
       for (const row of rows) {
         prevWidths.push(row.style.width);
-        row.style.width = 'auto';
+        row.addClass('dotn-row-measure');
         const w = Math.ceil(row.scrollWidth);
         if (w > max) max = w;
       }
 
       const sc1 = vt.scrollContainer;
       const sc2 = vt.container;
-      const sc = sc1 instanceof HTMLElement ? sc1 : sc2;
-      const minPanelWidth = sc instanceof HTMLElement ? sc.clientWidth : 0;
+      const sc = sc1?.instanceOf(HTMLElement) ? sc1 : sc2;
+      const minPanelWidth = sc.instanceOf(HTMLElement) ? sc.clientWidth : 0;
       const finalWidth = Math.max(max, minPanelWidth);
       const widthPx = finalWidth > 0 ? `${finalWidth}px` : '';
       for (let i = 0; i < rows.length; i++) {
+        rows[i].removeClass('dotn-row-measure');
         rows[i].style.width = widthPx || prevWidths[i] || '';
       }
 
       if (finalWidth > 0) {
         state.setMaxWidth(finalWidth);
         const virtualizerEl = vt.virtualizer;
-        if (virtualizerEl instanceof HTMLElement && virtualizerEl.style.width !== widthPx) virtualizerEl.style.width = widthPx;
+        if (virtualizerEl.instanceOf(HTMLElement) && virtualizerEl.style.width !== widthPx) virtualizerEl.style.width = widthPx;
       }
     } catch { /* non-critical */ }
   }, 120);

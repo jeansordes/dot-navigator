@@ -3,7 +3,6 @@
  */
 
 import { App, TFile, TFolder } from 'obsidian';
-
 /**
  * Load all directories from the vault for autocomplete suggestions
  */

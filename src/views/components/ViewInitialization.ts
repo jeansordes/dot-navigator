@@ -1,5 +1,4 @@
 import { ItemView } from 'obsidian';
-
 export class ViewInitialization {
     /**
      * Wait for the container to be properly initialized
@@ -8,13 +7,13 @@ export class ViewInitialization {
         return new Promise((resolve) => {
             const checkContainer = () => {
                 // Check if containerEl exists and is an HTMLElement
-                if (view.containerEl && view.containerEl instanceof HTMLElement) {
+                if (view.containerEl && view.containerEl.instanceOf(HTMLElement)) {
                     resolve();
                     return;
                 }
 
                 // If not ready, check again in a short while
-                setTimeout(checkContainer, 10);
+                window.setTimeout(checkContainer, 10);
             };
             checkContainer();
         });
@@ -27,7 +26,6 @@ export class ViewInitialization {
     static waitForCSSLoad(view: ItemView): Promise<void> {
         return new Promise((resolve, _reject) => {
             let attempts = 0;
-            const _maxAttempts = 100; // Max ~500ms (increasing intervals)
             const maxTime = 1000; // Hard timeout of 1 second
             const startTime = Date.now();
 
@@ -55,7 +53,7 @@ export class ViewInitialization {
                 if (attempts > 10) delay = 10; // 10-20 attempts: 10ms
                 if (attempts > 20) delay = 20; // 20+ attempts: 20ms
 
-                setTimeout(checkCSS, delay);
+                window.setTimeout(checkCSS, delay);
             };
 
             // Start immediately (no initial delay)

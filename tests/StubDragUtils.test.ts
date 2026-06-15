@@ -21,6 +21,9 @@ function makeApp(vault: InMemoryVaultAdapter): App {
     },
     fileManager: {
       processFrontMatter: jest.fn(),
+      trashFile: async (file: TFile) => {
+        await vault.delete(file.path);
+      },
     },
   } as unknown as App;
 }

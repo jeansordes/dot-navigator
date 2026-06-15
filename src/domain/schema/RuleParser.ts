@@ -170,7 +170,7 @@ export function parseRuleArray(rules: unknown[], source: string): { rules: Rule[
 }
 
 /**
- * Extract and parse the JSON rules document from file content.
+ * Extract and parse the JSON rules activeDocument from file content.
  * Returns the raw array (preserving unknown fields) for settings migration.
  */
 export function parseRulesJsonDocument(content: string, filePath: string): { doc: unknown[] | null; errors: RuleError[] } {

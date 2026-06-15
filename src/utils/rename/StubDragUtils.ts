@@ -69,7 +69,7 @@ export async function deleteRedirectStub(app: App, stubPath: string): Promise<bo
     }
 
     try {
-        await app.vault.delete(file);
+        await app.fileManager.trashFile(file);
         new Notice(t('noticeShortcutDeleted', { alias: stubPath }));
         return true;
     } catch (error) {

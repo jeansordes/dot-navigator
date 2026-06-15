@@ -1,4 +1,3 @@
-import { Setting } from 'obsidian';
 import { DashTransformation } from '../types';
 import { t } from '../i18n';
 import type { SettingsSection } from './settingsGroup';

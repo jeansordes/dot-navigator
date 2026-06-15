@@ -5,9 +5,25 @@ jest.mock('../src/utils/misc/rowState', () => ({
   scrollIntoView: jest.fn(),
 }));
 
-class FakeHTMLElement {}
+class FakeHTMLElement {
+  querySelector(): null {
+    return null;
+  }
+}
 // @ts-expect-error test shim for instanceof HTMLElement in node
 globalThis.HTMLElement = FakeHTMLElement;
+
+Object.assign(globalThis, {
+  window: {
+    setTimeout: (fn: TimerHandler) => {
+      if (typeof fn === 'function') fn();
+      return 0;
+    },
+    clearTimeout: () => undefined,
+  },
+  CSS: { escape: (value: string) => value },
+  activeDocument: { querySelector: () => null },
+});
 
 function makeElement(): HTMLElement {
   return Object.create(FakeHTMLElement.prototype) as HTMLElement;

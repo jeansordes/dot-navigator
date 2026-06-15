@@ -145,7 +145,7 @@ export function bindRowHandlers(
   for (const row of vt.pool) {
     if (!set.has(row)) {
       row.addEventListener('contextmenu', (ev) => {
-        if (ev instanceof MouseEvent) onRowContextMenu(ev, row);
+        if (ev.instanceOf(MouseEvent)) onRowContextMenu(ev, row);
       });
       row.addEventListener('touchstart', (ev) => {
         trackRowTouchStart(row, ev);
@@ -194,7 +194,7 @@ export function onRowClick(
   const buttonEl = target.closest('.dotn_button-icon');
   if (buttonEl) {
     const action = buttonEl.getAttribute('data-action');
-    if (action && buttonEl instanceof HTMLElement) {
+    if (action && buttonEl.instanceOf(HTMLElement)) {
       if (action === 'toggle') {
         invokeFolderToggle(app, vt, id, item.kind, buttonEl, e, renameManager, revealCanonicalPath, setSelectedId);
         return;
@@ -291,7 +291,7 @@ export function onRowClick(
 
   if (kind === 'folder') {
     const toggleBtn = row.querySelector('[data-action="toggle"]');
-    if (toggleBtn instanceof HTMLElement) {
+    if (toggleBtn?.instanceOf(HTMLElement)) {
       invokeFolderToggle(app, vt, id, kind, toggleBtn, e, renameManager, revealCanonicalPath, setSelectedId);
       return;
     }

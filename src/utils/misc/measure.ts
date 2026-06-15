@@ -1,13 +1,14 @@
+
 import createDebug from 'debug';
 const debugError = createDebug('dot-navigator:utils:measure:error');
 
 export function computeRowHeight(rootContainer: HTMLElement): number | null {
   try {
     const viewBody = rootContainer.querySelector('.dotn_view-body');
-    const host = viewBody instanceof HTMLElement ? viewBody : rootContainer;
+    const host = viewBody?.instanceOf(HTMLElement) ? viewBody : rootContainer;
 
     const toPx = (cssVar: string): number => {
-      const probe = document.createElement('div');
+      const probe = activeDocument.createElement('div');
       probe.className = 'dotn_probe dotn_probe-row';
       // Allowed: height can be set directly; others come from CSS class
       probe.style.height = cssVar;
@@ -35,8 +36,8 @@ export function getMaxScrollTop(scrollEl: HTMLElement): number {
 export function computeTreeBottomPadding(rootContainer: HTMLElement): number {
   try {
     const viewTree = rootContainer.querySelector('.dotn_view-tree');
-    const host = viewTree instanceof HTMLElement ? viewTree : rootContainer;
-    const probe = document.createElement('div');
+    const host = viewTree?.instanceOf(HTMLElement) ? viewTree : rootContainer;
+    const probe = activeDocument.createElement('div');
     probe.className = 'dotn_probe dotn_probe-bottom-pad';
     host.appendChild(probe);
     const h = Math.round(probe.getBoundingClientRect().height);
@@ -51,11 +52,9 @@ export function computeTreeBottomPadding(rootContainer: HTMLElement): number {
 export function computeGap(rootContainer: HTMLElement): number | null {
   try {
     const viewBody = rootContainer.querySelector('.dotn_view-body');
-    const host = viewBody instanceof HTMLElement ? viewBody : rootContainer;
-    const probe = document.createElement('div');
+    const host = viewBody?.instanceOf(HTMLElement) ? viewBody : rootContainer;
+    const probe = activeDocument.createElement('div');
     probe.className = 'dotn_probe dotn_probe-gap';
-    // Height is allowed to be set directly
-    probe.style.height = 'var(--dotn_gap)';
     host.appendChild(probe);
     const h = Math.round(probe.getBoundingClientRect().height);
     probe.remove();

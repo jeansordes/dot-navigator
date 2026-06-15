@@ -2,6 +2,7 @@
  * Handles mobile-specific keyboard detection and scrolling behavior
  * for the rename dialog, with special support for iOS devices.
  */
+import { Platform } from 'obsidian';
 export class MobileKeyboardHandler {
     private contentEl: HTMLElement;
     private mobileBodyEl?: HTMLElement;
@@ -95,7 +96,7 @@ export class MobileKeyboardHandler {
                 if (!this.visualViewport) return;
 
                 // Only apply iOS-specific logic on iOS devices
-                if (!/iPhone|iPad|iPod/.test(window.navigator.userAgent)) {
+                if (!Platform.isIosApp) {
                     height = this.visualViewport.height;
                     return;
                 }
@@ -123,9 +124,9 @@ export class MobileKeyboardHandler {
 
         const handleFocus = () => {
             // Only apply on iOS devices
-            if (/iPhone|iPad|iPod/.test(window.navigator.userAgent)) {
+            if (Platform.isIosApp) {
                 // Small delay to let iOS keyboard animation complete
-                setTimeout(() => {
+                window.setTimeout(() => {
                     // Use a more generous offset for focus events to account for keyboard suggestions
                     // iOS keyboard can expand from ~260px to ~340px or more with suggestions
                     const baseKeyboardHeight = 260;
@@ -137,9 +138,9 @@ export class MobileKeyboardHandler {
 
         const handleBlur = () => {
             // Small delay before resetting to handle focus switching between inputs
-            setTimeout(() => {
+            window.setTimeout(() => {
                 // Check if any input still has focus
-                const focusedElement = document.activeElement;
+                const focusedElement = activeDocument.activeElement;
                 const isInputFocused = focusedElement && (focusedElement.tagName === 'INPUT' || focusedElement.tagName === 'TEXTAREA');
 
                 if (!isInputFocused) {
@@ -169,8 +170,7 @@ export class MobileKeyboardHandler {
 
         const modal = this.contentEl.closest('.modal') as HTMLElement;
         if (modal) {
-            modal.style.bottom = `${safeOffset}px`;
-            modal.style.position = 'fixed';
+            modal.setCssStyles({ bottom: `${safeOffset}px`, position: 'fixed' });
             modal.classList.add('ios-keyboard-active');
         }
 
@@ -178,8 +178,7 @@ export class MobileKeyboardHandler {
         // Use a more conservative height calculation
         const headerHeight = 60; // Account for modal header
         const availableHeight = `calc(100dvh - ${safeOffset + headerHeight}px)`;
-        this.mobileBodyEl.style.maxHeight = availableHeight;
-        this.mobileBodyEl.style.overflowY = 'auto';
+        this.mobileBodyEl.setCssStyles({ maxHeight: availableHeight, overflowY: 'auto' });
         this.mobileBodyEl.classList.add('ios-keyboard-body-active');
     }
 
@@ -189,14 +188,12 @@ export class MobileKeyboardHandler {
         // Reset modal position
         const modal = this.contentEl.closest('.modal') as HTMLElement;
         if (modal) {
-            modal.style.bottom = '';
-            modal.style.position = '';
+            modal.setCssStyles({ bottom: '', position: '' });
             modal.classList.remove('ios-keyboard-active');
         }
 
         // Reset body styles
-        this.mobileBodyEl.style.maxHeight = '';
-        this.mobileBodyEl.style.overflowY = '';
+        this.mobileBodyEl.setCssStyles({ maxHeight: '', overflowY: '' });
         this.mobileBodyEl.classList.remove('ios-keyboard-body-active');
     }
 

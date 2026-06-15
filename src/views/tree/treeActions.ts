@@ -1,3 +1,4 @@
+
 import type { VirtualTreeLike } from '../utils/viewTypes';
 import { scrollIntoView } from '../../utils/misc/rowState';
 
@@ -55,7 +56,7 @@ export async function revealPath(
       rowIndex: idx,
       rowHeight: vt.rowHeight,
       totalRows: vt.total,
-      container: vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container,
+      container: vt.scrollContainer?.instanceOf(HTMLElement) ? vt.scrollContainer : vt.container,
       padding: 'var(--dotn_view-padding, 16px)',
       smooth: true,
       blockAlign: 'center',
@@ -65,23 +66,23 @@ export async function revealPath(
     
     // Then, find the title element specifically and scroll it horizontally into view
     // We need to wait a moment for the render to complete
-    setTimeout(() => {
+    window.setTimeout(() => {
       // Try to find the row element first
       const escapedPath = CSS.escape(path);
       const rowElement = vt.virtualizer?.querySelector(`[data-id="${escapedPath}"]`) ||
                         vt.container.querySelector(`[data-id="${escapedPath}"]`) ||
-                        document.querySelector(`[data-id="${escapedPath}"]`);
+                        activeDocument.querySelector(`[data-id="${escapedPath}"]`);
       
-      if (rowElement instanceof HTMLElement) {
+      if (rowElement?.instanceOf(HTMLElement)) {
         // Find the title element within the row
         const titleElement = rowElement.querySelector('.dotn_tree-item-title.is-active') ||
                             rowElement.querySelector('.dotn_tree-item-title');
         
-        if (titleElement instanceof HTMLElement) {
+        if (titleElement?.instanceOf(HTMLElement)) {
           // Scroll the title element specifically into view
           scrollIntoView({
             target: titleElement,
-            container: vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container,
+            container: vt.scrollContainer?.instanceOf(HTMLElement) ? vt.scrollContainer : vt.container,
             padding: 'var(--dotn_view-padding, 16px)',
             smooth: true,
             blockAlign: 'auto', // Don't change vertical position
@@ -102,7 +103,7 @@ export function scrollToIndex(vt: VirtualTreeLike, index: number): void {
     rowIndex: index,
     rowHeight: vt.rowHeight,
     totalRows: vt.total,
-    container: vt.scrollContainer instanceof HTMLElement ? vt.scrollContainer : vt.container,
+    container: vt.scrollContainer?.instanceOf(HTMLElement) ? vt.scrollContainer : vt.container,
     padding: 'var(--dotn_view-padding, 16px)',
     smooth: true,
     bufferRows: 3

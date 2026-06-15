@@ -42,7 +42,7 @@ export class RenameManager {
     }
 
     /**
-     * Register a document-level Mod+Z handler for move notices with undo UI.
+     * Register a activeDocument-level Mod+Z handler for move notices with undo UI.
      */
     registerMoveNoticeUndoShortcut(host: Parameters<typeof this.moveNotice.registerMoveNoticeUndoShortcut>[0]): void {
         this.moveNotice.registerMoveNoticeUndoShortcut(host);
@@ -113,7 +113,6 @@ export class RenameManager {
             children
         };
     }
-
 
     /**
      * Perform the rename operation with progress tracking in modal

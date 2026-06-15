@@ -1,4 +1,4 @@
-import { App, TFile, TFolder } from "obsidian";
+import { App, TFile, TFolder } from 'obsidian';
 import { RenameOptions, RenameProgress, RenameOperation } from "src/types";
 import createDebug from 'debug';
 import { renameWithProgress } from "./RenameWithProgress";

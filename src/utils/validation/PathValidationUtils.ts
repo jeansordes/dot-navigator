@@ -26,7 +26,7 @@ export function validatePath(
     // Show hint only if we're creating folders
     const inputContainer = contentEl.querySelector('.rename-input-container');
     let hintEl = contentEl.querySelector('.rename-path-hint');
-    if (!(hintEl instanceof HTMLElement)) {
+    if (!(hintEl?.instanceOf(HTMLElement))) {
         hintEl = null;
     }
 
@@ -100,7 +100,7 @@ export function showWarning(contentEl: HTMLElement): HTMLElement {
  */
 export function hideWarning(contentEl: HTMLElement): void {
     const warningElement = contentEl.querySelector('.rename-warning-message');
-    if (warningElement instanceof HTMLElement) {
+    if (warningElement?.instanceOf(HTMLElement)) {
         warningElement.remove();
     }
 }
@@ -144,7 +144,7 @@ export function showExtensionChangeWarning(contentEl: HTMLElement): HTMLElement 
  */
 export function hideExtensionChangeWarning(contentEl: HTMLElement): void {
     const warningElement = contentEl.querySelector('.rename-extension-warning-message');
-    if (warningElement instanceof HTMLElement) {
+    if (warningElement?.instanceOf(HTMLElement)) {
         warningElement.remove();
     }
 }

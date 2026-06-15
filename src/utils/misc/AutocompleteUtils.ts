@@ -7,7 +7,6 @@ import { performFuzzySearch, createHighlightedText } from './FuzzySearchUtils';
 import { autoResize, updateSuggestionSelection } from '../ui/UIUtils';
 import { t } from '../../i18n';
 import { setIcon } from 'obsidian';
-
 /**
  * Get the parent path of a given path
  * For "Notes/prj/subdir", returns "Notes/prj"
@@ -233,7 +232,7 @@ export function setupPathAutocomplete(
 
                 // Update the diff sections when suggestion is selected
                 const childrenList = container.querySelector('.rename-children-list');
-                if (childrenList instanceof HTMLElement) {
+                if (childrenList?.instanceOf(HTMLElement)) {
                     callbacks.updateAllFileItems(childrenList);
                 }
 
@@ -332,7 +331,7 @@ export function navigateSuggestions(
 
     // Update the diff sections when suggestion is applied via navigation
     const childrenList = container.querySelector('.rename-children-list');
-    if (childrenList instanceof HTMLElement) {
+    if (childrenList?.instanceOf(HTMLElement)) {
         callbacks.updateAllFileItems(childrenList);
     }
 

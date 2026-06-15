@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TFile } from 'obsidian';
 import { parseRedirectTarget, REDIRECT_FM_KEY } from "../../core/redirectStub";
 
 /**

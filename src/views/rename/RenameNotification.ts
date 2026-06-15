@@ -27,15 +27,15 @@ export class RenameNotification {
         this.onClose = onClose;
 
         // Create notification element
-        this.notificationEl = document.createElement('div');
+        this.notificationEl = activeDocument.createElement('div');
         this.notificationEl.className = 'dotn_rename-notification';
 
         // Create content container
-        const contentEl = document.createElement('div');
+        const contentEl = activeDocument.createElement('div');
         contentEl.className = 'dotn_rename-notification-content';
 
         // Create message
-        const messageEl = document.createElement('div');
+        const messageEl = activeDocument.createElement('div');
         messageEl.className = 'dotn_rename-notification-message';
 
         if (failCount === 0) {
@@ -49,13 +49,12 @@ export class RenameNotification {
             });
         }
 
-
         // Close button (left side)
-        const closeBtn = document.createElement('div');
+        const closeBtn = activeDocument.createElement('div');
         closeBtn.className = 'dotn_rename-notification-btn dotn_rename-notification-close dotn_button-icon';
         closeBtn.setAttribute('title', t('commonClose'));
 
-        const closeIcon = document.createElement('div');
+        const closeIcon = activeDocument.createElement('div');
         closeIcon.className = 'dotn_rename-notification-icon';
         setIcon(closeIcon, 'check');
 
@@ -69,15 +68,15 @@ export class RenameNotification {
         // Undo button (right side, only show if there were successful operations and undo callback provided)
         let undoBtn: HTMLElement | null = null;
         if (successCount > 0 && onUndo) {
-            undoBtn = document.createElement('div');
+            undoBtn = activeDocument.createElement('div');
             undoBtn.className = 'dotn_rename-notification-btn dotn_rename-notification-undo dotn_button-icon';
             undoBtn.setAttribute('title', t('renameNotificationUndo'));
 
-            const undoIcon = document.createElement('div');
+            const undoIcon = activeDocument.createElement('div');
             undoIcon.className = 'dotn_rename-notification-icon';
             setIcon(undoIcon, 'undo-2');
 
-            const undoText = document.createElement('span');
+            const undoText = activeDocument.createElement('span');
             undoText.textContent = t('renameNotificationUndo');
             undoText.className = 'dotn_rename-notification-text';
 

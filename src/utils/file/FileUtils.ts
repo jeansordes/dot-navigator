@@ -1,5 +1,5 @@
-import { App, TFile, TFolder } from "obsidian";
-import { Notice } from "obsidian";
+import { App, TFile, TFolder } from 'obsidian';
+import { Notice } from 'obsidian';
 import { t } from "../../i18n";
 import { PluginSettings } from "../../types";
 export class FileUtils {

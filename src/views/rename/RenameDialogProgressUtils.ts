@@ -35,7 +35,7 @@ export function showNoChangesMessage(contentEl: HTMLElement): void {
 
 export function hideInfoMessage(contentEl: HTMLElement): void {
     const existing = contentEl.querySelector('.rename-info-message');
-    if (existing instanceof HTMLElement) {
+    if (existing?.instanceOf(HTMLElement)) {
         existing.remove();
     }
 }

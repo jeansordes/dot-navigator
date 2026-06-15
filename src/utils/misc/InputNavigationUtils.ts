@@ -127,7 +127,7 @@ export function setupInputNavigation(
                 context.setAutocompleteState(newState);
 
                 // Ensure input maintains focus after navigation
-                if (document.activeElement !== input) {
+                if (activeDocument.activeElement !== input) {
                     input.focus();
                 }
             }
@@ -158,7 +158,7 @@ export function setupInputNavigation(
                 context.setAutocompleteState(newState);
 
                 // Ensure input maintains focus after navigation
-                if (document.activeElement !== input) {
+                if (activeDocument.activeElement !== input) {
                     input.focus();
                 }
             }

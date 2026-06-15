@@ -3,7 +3,6 @@
  */
 
 import { App } from 'obsidian';
-
 export interface ParsedPath {
     directory: string;
     name: string;

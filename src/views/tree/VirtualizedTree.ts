@@ -318,8 +318,8 @@ export class ComplexVirtualTree extends VirtualTree {
     this._ensurePoolCapacity();
     const vItems = this.getVirtualItems?.() ?? [];
     growRowPool(this.virtualTree, vItems.length, (row) => {
-      row.addEventListener('click', (ev) => { if (ev instanceof MouseEvent) this._onRowClick(ev, row); });
-      row.addEventListener('contextmenu', (ev) => { if (ev instanceof MouseEvent) this._onRowContextMenu(ev, row); });
+      row.addEventListener('click', (ev) => { if (ev.instanceOf(MouseEvent)) this._onRowClick(ev, row); });
+      row.addEventListener('contextmenu', (ev) => { if (ev.instanceOf(MouseEvent)) this._onRowContextMenu(ev, row); });
     });
     renderVisibleRows(this.virtualTree, vItems, (row, item, idx, start) => this._renderRow(row, item, idx, start));
     this._syncVirtualizerHeight(this.virtualTree.total * this.virtualTree.rowHeight);
@@ -347,7 +347,7 @@ export class ComplexVirtualTree extends VirtualTree {
     this._dragController = undefined;
 
     const scrollContainer = this.virtualTree.scrollContainer;
-    if (scrollContainer instanceof HTMLElement && this._boundScroll) {
+    if (scrollContainer?.instanceOf(HTMLElement) && this._boundScroll) {
       scrollContainer.removeEventListener('scroll', this._boundScroll);
     }
     if (this._resizeObs) {

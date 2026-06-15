@@ -86,7 +86,7 @@ export function attachReorderHandle(
     if (!parent) return [];
     return Array.from(parent.children).filter(
       (el): el is HTMLElement =>
-        el instanceof HTMLElement &&
+        el.instanceOf(HTMLElement) &&
         el.classList.contains(ROW_CLASS) &&
         el.dataset.dotnavGroup === groupKey
     );
@@ -119,7 +119,7 @@ export function attachReorderHandle(
   const finish = (commit: boolean, clientY: number): void => {
     if (!dragging) return;
     dragging = false;
-    document.body.removeClass('dotnav-reordering');
+    activeDocument.body.removeClass('dotnav-reordering');
     rowEl.removeClass('is-dragging');
     if (pointerId !== -1 && handleEl.hasPointerCapture(pointerId)) {
       handleEl.releasePointerCapture(pointerId);
@@ -145,7 +145,7 @@ export function attachReorderHandle(
     pointerId = e.pointerId;
     rows = groupRows();
     handleEl.setPointerCapture(pointerId);
-    document.body.addClass('dotnav-reordering');
+    activeDocument.body.addClass('dotnav-reordering');
     rowEl.addClass('is-dragging');
   });
 

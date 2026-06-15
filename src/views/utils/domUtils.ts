@@ -1,12 +1,11 @@
 import { setIcon } from 'obsidian';
-
 export function createElement(tag: string, options?: {
   className?: string,
   textContent?: string,
   attributes?: Record<string, string>,
   title?: string
 }): HTMLElement {
-  const element = document.createElement(tag);
+  const element = activeDocument.createElement(tag);
   if (options?.className) element.className = options.className;
   if (options?.textContent) element.textContent = options.textContent;
   if (options?.title) element.setAttribute('title', options.title);

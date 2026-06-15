@@ -66,7 +66,7 @@ export class FileOperations {
             debug('Created folder:', fullPath);
 
             // Ensure the folder is properly registered in the vault before proceeding
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise(resolve => window.setTimeout(resolve, 50));
 
             // Verify the folder exists before proceeding
             const createdFolder = this.app.vault.getAbstractFileByPath(fullPath);

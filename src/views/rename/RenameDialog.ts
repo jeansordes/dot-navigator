@@ -26,7 +26,6 @@ import { refreshDialogState as refreshDialogStateHelper } from './RenameDialogSt
 import { MobileKeyboardHandler } from './MobileKeyboardHandler.js';
 import { attachModZUndoShortcut } from '../../utils/keyboard/undoShortcut';
 
-
 export class RenameDialog extends Modal {
     private data: RenameDialogData;
     private onRename: (options: RenameOptions) => Promise<void>;

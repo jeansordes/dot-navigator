@@ -39,48 +39,48 @@ export class RenameProgress {
      * Create the progress element
      */
     private createProgressElement(): HTMLElement {
-        const container = document.createElement('div');
+        const container = activeDocument.createElement('div');
         container.className = 'rename-progress-container';
 
         // Progress bar container (will be populated with individual blocks)
-        const progressBarContainer = document.createElement('div');
+        const progressBarContainer = activeDocument.createElement('div');
         progressBarContainer.className = 'rename-progress-bar-container';
 
         // Failed renames list (initially hidden)
-        const failedRenamesList = document.createElement('div');
+        const failedRenamesList = activeDocument.createElement('div');
         failedRenamesList.className = 'rename-progress-failed-list rename-progress-failed-list-hidden';
 
         // Action buttons container
-        const actionButtons = document.createElement('div');
+        const actionButtons = activeDocument.createElement('div');
         actionButtons.className = 'rename-progress-actions';
 
         // Progress text (moved inside actions container)
-        const progressText = document.createElement('div');
+        const progressText = activeDocument.createElement('div');
         progressText.className = 'rename-progress-text';
         progressText.textContent = this.DEFAULT_PROGRESS_TEXT;
         actionButtons.appendChild(progressText);
 
         // Cancel button (shown during operation)
-        const cancelButton = document.createElement('div');
+        const cancelButton = activeDocument.createElement('div');
         cancelButton.className = 'rename-progress-btn rename-progress-cancel';
         cancelButton.setAttribute('title', t('renameDialogCancel'));
-        const cancelIcon = document.createElement('div');
+        const cancelIcon = activeDocument.createElement('div');
         cancelIcon.className = 'rename-progress-icon';
         setIcon(cancelIcon, 'x');
-        const cancelText = document.createElement('span');
+        const cancelText = activeDocument.createElement('span');
         cancelText.className = 'rename-progress-btn-text';
         cancelText.textContent = t('renameDialogCancel');
         cancelButton.appendChild(cancelIcon);
         cancelButton.appendChild(cancelText);
 
         // Undo button (shown after completion, initially hidden)
-        const undoButton = document.createElement('div');
+        const undoButton = activeDocument.createElement('div');
         undoButton.className = 'rename-progress-btn rename-progress-undo dotn_button-icon is-hidden';
         undoButton.setAttribute('title', t('renameDialogUndo'));
-        const undoIcon = document.createElement('div');
+        const undoIcon = activeDocument.createElement('div');
         undoIcon.className = 'rename-progress-icon';
         setIcon(undoIcon, 'undo-2');
-        const undoText = document.createElement('span');
+        const undoText = activeDocument.createElement('span');
         undoText.className = 'rename-progress-btn-text';
         undoText.textContent = t('renameDialogUndo');
         undoButton.appendChild(undoIcon);
@@ -120,7 +120,7 @@ export class RenameProgress {
 
         // Create new blocks
         for (let i = 0; i < totalFiles; i++) {
-            const block = document.createElement('div');
+            const block = activeDocument.createElement('div');
             block.className = 'rename-progress-block rename-progress-block-pending';
             this.progressBlocks.push(block);
             this.progressBarContainerEl.appendChild(block);
@@ -137,7 +137,7 @@ export class RenameProgress {
             const block = this.progressBlocks[index];
 
             // Add a small delay to create a staggered animation effect
-            setTimeout(() => {
+            window.setTimeout(() => {
                 // Remove all state classes
                 block.classList.remove(
                     'rename-progress-block-pending',
@@ -242,25 +242,25 @@ export class RenameProgress {
         this.failedRenamesEl.removeClass('rename-progress-failed-list-hidden');
 
         // Create header
-        const header = document.createElement('div');
+        const header = activeDocument.createElement('div');
         header.className = 'rename-progress-failed-header';
         header.textContent = t('renameDialogProgressFailedFiles', { count: String(errors.length) });
         this.failedRenamesEl.appendChild(header);
 
         // Create list container
-        const listContainer = document.createElement('div');
+        const listContainer = activeDocument.createElement('div');
         listContainer.className = 'rename-progress-failed-items';
 
         // Add each failed rename item
         for (const error of errors) {
-            const item = document.createElement('div');
+            const item = activeDocument.createElement('div');
             item.className = 'rename-progress-failed-item';
 
-            const pathEl = document.createElement('div');
+            const pathEl = activeDocument.createElement('div');
             pathEl.className = 'rename-progress-failed-path';
             pathEl.textContent = error.path;
 
-            const errorEl = document.createElement('div');
+            const errorEl = activeDocument.createElement('div');
             errorEl.className = 'rename-progress-failed-error';
             errorEl.textContent = error.error;
 
@@ -350,7 +350,7 @@ export class RenameProgress {
                 block.classList.add('rename-progress-block-pending');
 
                 // Add animation delay
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => window.setTimeout(resolve, 100));
             }
         }
     }

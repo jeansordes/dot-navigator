@@ -1,3 +1,4 @@
+
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:attach');
 const debugError = debug.extend('error');
@@ -22,22 +23,22 @@ export function setupAttachment(opts: {
 
     if (container.classList.contains('view-content')) {
       const viewBody = container.querySelector('.dotn_view-body');
-      if (viewBody instanceof HTMLElement && !isAttached()) {
+      if (viewBody?.instanceOf(HTMLElement) && !isAttached()) {
         debug('View body found in view-content, attaching now');
         attachToViewBody(container, viewBody);
         safeRender('first render');
-        requestAnimationFrame(() => safeRender('deferred render'));
+        window.requestAnimationFrame(() => safeRender('deferred render'));
         if ('ResizeObserver' in window) observeResize(viewBody);
         return true;
       }
     }
 
     const viewBody = container.querySelector('.dotn_view-body');
-    if (viewBody instanceof HTMLElement && !isAttached()) {
+    if (viewBody?.instanceOf(HTMLElement) && !isAttached()) {
       debug('View body found, attaching now');
       attachToViewBody(container, viewBody);
       safeRender('first render');
-      requestAnimationFrame(() => safeRender('deferred render'));
+      window.requestAnimationFrame(() => safeRender('deferred render'));
       if ('ResizeObserver' in window) observeResize(viewBody);
       return true;
     }
@@ -61,9 +62,9 @@ export function setupAttachment(opts: {
         });
         return;
       }
-      if (!findAndAttachViewBody()) setTimeout(retry, retryInterval);
+      if (!findAndAttachViewBody()) window.setTimeout(retry, retryInterval);
     };
-    setTimeout(retry, retryInterval);
+    window.setTimeout(retry, retryInterval);
   }
 }
 
@@ -83,8 +84,8 @@ export function attachToViewBodyImpl(ctx: {
   debug('Attaching to view body, current structure:', {
     hostClass: host.className,
     viewBodyClass: viewBody.className,
-    hostChildren: Array.from(host.children).map(c => (c instanceof HTMLElement ? c.className : '')),
-    viewBodyChildren: Array.from(viewBody.children).map(c => (c instanceof HTMLElement ? c.className : '')),
+    hostChildren: Array.from(host.children).map(c => (c.instanceOf(HTMLElement) ? c.className : '')),
+    viewBodyChildren: Array.from(viewBody.children).map(c => (c.instanceOf(HTMLElement) ? c.className : '')),
     virtualizerExists: !!virtualTree.virtualizer
   });
 
@@ -104,7 +105,7 @@ export function attachToViewBodyImpl(ctx: {
   if (!isChildOfViewBody) {
     debug('Appending virtualizer to view body');
     const treeContainer = viewBody.querySelector('.dotn_view-tree');
-    if (treeContainer instanceof HTMLElement) {
+    if (treeContainer?.instanceOf(HTMLElement)) {
       debug('Found existing dotn_view-tree, using it as target');
       while (treeContainer.firstChild) treeContainer.removeChild(treeContainer.firstChild);
       treeContainer.appendChild(virtualTree.virtualizer);
@@ -119,11 +120,11 @@ export function attachToViewBodyImpl(ctx: {
   host.removeEventListener('scroll', virtualTree._onScroll);
   const isTanstack = (virtualTree as unknown as { usesTanstack?: () => boolean }).usesTanstack?.() === true;
   if (!isTanstack) {
-    const bound = () => requestAnimationFrame(() => {
+    const bound = () => window.requestAnimationFrame(() => {
       const sc1 = virtualTree.scrollContainer;
       const sc2 = virtualTree.container;
-      const sc = sc1 instanceof HTMLElement ? sc1 : sc2;
-      const st = sc instanceof HTMLElement ? sc.scrollTop : 0;
+      const sc = sc1?.instanceOf(HTMLElement) ? sc1 : sc2;
+      const st = sc.instanceOf(HTMLElement) ? sc.scrollTop : 0;
       if (st !== getLastScrollTop()) {
         setLastScrollTop(st);
         virtualTree._onScroll();
@@ -139,7 +140,7 @@ export function attachToViewBodyImpl(ctx: {
   try { (virtualTree as unknown as { syncScrollElement?: () => void }).syncScrollElement?.(); } catch { /* ignore */ }
   // Avoid forcing widths here to prevent reflow; CSS governs width.
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     debug('[DotNavigator] Forcing render after attachment');
     try { virtualTree._render(); } catch (error) { debugError('[DotNavigator] Error in post-attachment render:', error); }
   }, 100);

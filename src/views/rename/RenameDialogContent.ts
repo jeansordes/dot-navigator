@@ -42,7 +42,6 @@ export interface RenameDialogUISetupResult {
     autocompleteState: AutocompleteState | null;
 }
 
-
 export function setupRenameDialogContent({
     app,
     data,
@@ -125,7 +124,6 @@ export function setupRenameDialogContent({
     const extensionInput = setupExtensionInput(inputContainer, data, pathInput, nameInput, app, contentEl, handlePostOperationInteraction);
     setupNameInputListeners(nameInput, pathInput, extensionInput, data, app, contentEl, handlePostOperationInteraction);
 
-
     setupInputNavigationForAll(
         pathInput,
         nameInput,
@@ -153,7 +151,7 @@ export function setupRenameDialogContent({
     createHints(layoutContainer, data);
 
     if (!skipInitialFocus) {
-        setTimeout(() => {
+        window.setTimeout(() => {
             // Focus and select all text in the name input (second input) when opening the modal
             nameInput.focus();
             nameInput.select();

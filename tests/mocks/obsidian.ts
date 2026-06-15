@@ -75,6 +75,11 @@ export class Vault {
     private files: TFile[] = [];
     private folders: TFolder[] = [];
     private fileContents: Map<string, string> = new Map();
+    adapter: FileSystemAdapter | { getFullPath?: (path: string) => string };
+
+    constructor(adapter: FileSystemAdapter | { getFullPath?: (path: string) => string } = new FileSystemAdapter()) {
+        this.adapter = adapter;
+    }
 
     getFiles(): TFile[] {
         return this.files;
@@ -161,6 +166,16 @@ export class ItemView {
 
 export class Platform {
     static isMobile: boolean = false;
+    static isMacOS: boolean = false;
+    static isDesktopApp: boolean = true;
+}
+
+export class FileSystemAdapter {
+    constructor(private readonly basePath = '/vault') {}
+
+    getFullPath(normalizedPath: string): string {
+        return `${this.basePath}/${normalizedPath}`;
+    }
 }
 
 export function setIcon(__element: HTMLElement, __icon: string): void {

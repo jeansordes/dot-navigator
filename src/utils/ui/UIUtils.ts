@@ -17,11 +17,11 @@ export function autoResize(textarea: HTMLTextAreaElement): void {
     const singleLineHeight = fontSize * (isNaN(lineHeight) ? 1.2 : lineHeight / fontSize) + paddingTop + paddingBottom;
 
     // Reset height to auto to measure content
-    textarea.style.height = 'auto';
+    textarea.setCssStyles({ height: 'auto' });
     const scrollHeight = textarea.scrollHeight;
 
     // Use the larger of scrollHeight or single-line height
-    textarea.style.height = `${Math.max(scrollHeight, singleLineHeight)}px`;
+    textarea.setCssStyles({ height: `${Math.max(scrollHeight, singleLineHeight)}px` });
 }
 
 /**

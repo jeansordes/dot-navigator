@@ -84,7 +84,7 @@ export function updateAllFileItems(
     if (fileItems.length > 0) {
         const mainItem = fileItems[0];
         const diffContainer = mainItem.querySelector('.rename-file-diff');
-        if (diffContainer instanceof HTMLElement) {
+        if (diffContainer?.instanceOf(HTMLElement)) {
             updateFileDiff(diffContainer, data.path, true, { data, modeSelection, pathValue, nameValue, app });
         }
     }
@@ -93,7 +93,7 @@ export function updateAllFileItems(
     if (data.children) {
         for (let i = 1; i < fileItems.length && i - 1 < data.children.length; i++) {
             const childItem = fileItems[i];
-            if (!(childItem instanceof HTMLElement)) continue;
+            if (!(childItem?.instanceOf(HTMLElement))) continue;
 
             const diffContainer = childItem.querySelector('.rename-file-diff');
 
@@ -104,14 +104,14 @@ export function updateAllFileItems(
                 childItem.removeClass('is-hidden');
             }
 
-            if (diffContainer instanceof HTMLElement) {
+            if (diffContainer?.instanceOf(HTMLElement)) {
                 updateFileDiff(diffContainer, data.children[i - 1], false, { data, modeSelection, pathValue, nameValue, app });
             }
         }
     }
 
     const container = childrenList.closest('.rename-children-container');
-    if (container instanceof HTMLElement && data.kind === 'folder') {
+    if (container?.instanceOf(HTMLElement) && data.kind === 'folder') {
         const originalParts = parsePath(data.path, data.extension);
         const isNameUnchanged = nameValue === originalParts.name;
         const isPathUnchanged = pathValue === originalParts.directory;
@@ -128,7 +128,7 @@ export function updateAllFileItems(
         } else {
             container.addClass('is-hidden');
         }
-    } else if (container instanceof HTMLElement && !container.classList.contains('is-hidden')) {
+    } else if (container?.instanceOf(HTMLElement) && !container.classList.contains('is-hidden')) {
         // Ensure non-folder dialogs keep previous behaviour when diffs exist
         const diffContainers = Array.from(container.querySelectorAll('.rename-file-diff'));
         const hasVisibleDiff = diffContainers.some(diff => !diff.classList.contains('is-hidden'));

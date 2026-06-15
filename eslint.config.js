@@ -1,8 +1,25 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import obsidianmd from "eslint-plugin-obsidianmd";
+
+const obsidianmdTypedRules = {
+	"obsidianmd/no-unsupported-api": ["error", { minAppVersion: "1.7.2" }],
+	"obsidianmd/no-view-references-in-plugin": "error",
+	"obsidianmd/no-plugin-as-component": "error",
+	"obsidianmd/prefer-file-manager-trash-file": "warn",
+	"obsidianmd/prefer-instanceof": "error",
+};
+
+const obsidianmdRules = {
+	"obsidianmd/no-static-styles-assignment": "error",
+	"obsidianmd/platform": "error",
+	"obsidianmd/prefer-active-doc": "warn",
+	"obsidianmd/prefer-window-timers": "warn",
+	"obsidianmd/detach-leaves": "error",
+	"obsidianmd/vault/iterate": "warn",
+};
 
 export default [
-	// Global ignores - applies to all configurations
 	{
 		ignores: [
 			"node_modules/**",
@@ -13,12 +30,9 @@ export default [
 			"esbuild.config.mjs",
 			"jest.config.js",
 			"release.mjs",
-			"src/core/VirtualTreeCore.ts",
 		],
 	},
-	// Global settings
 	{
-		// Disallow inline ESLint config comments and error on unused disables
 		linterOptions: {
 			noInlineConfig: true,
 			reportUnusedDisableDirectives: "error",
@@ -36,7 +50,11 @@ export default [
 				project: "./tsconfig.json",
 			},
 		},
+		plugins: {
+			obsidianmd,
+		},
 		rules: {
+			...obsidianmdRules,
 			"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
 			"@typescript-eslint/no-explicit-any": "error",
 			"@typescript-eslint/ban-ts-comment": "error",
@@ -48,7 +66,6 @@ export default [
 				},
 			],
 			"@typescript-eslint/no-empty-function": "warn",
-			// Limit console usage to warn/error only
 			"no-console": [
 				"error",
 				{
@@ -56,7 +73,6 @@ export default [
 				},
 			],
 			"max-lines": ["error", { "max": 300, "skipBlankLines": true, "skipComments": true }],
-			// Security & themeability: avoid innerHTML/outerHTML and inline styles
 			"no-restricted-properties": [
 				"error",
 				{ "property": "innerHTML", "message": "Avoid innerHTML; use DOM APIs or Obsidian helpers." },
@@ -64,27 +80,14 @@ export default [
 			],
 			"no-restricted-syntax": [
 				"error",
-				// Using insertAdjacentHTML is similar risk to innerHTML
 				{
 					"selector": "CallExpression[callee.property.name='insertAdjacentHTML']",
 					"message": "Avoid insertAdjacentHTML; use DOM APIs or Obsidian helpers.",
 				},
-				// Disallow setting inline styles via setAttribute('style', ...)
 				{
 					"selector": "CallExpression[callee.property.name='setAttribute'][arguments.0.value='style']",
 					"message": "Avoid inline styles; prefer CSS classes and stylesheet rules.",
 				},
-				// Disallow assignments to element.style.* except transform, width, height, bottom, maxHeight (allow runtime translateY for virtualization and dynamic sizing)
-				{
-					"selector": "AssignmentExpression[left.type='MemberExpression'][left.object.type='MemberExpression'][left.object.property.name='style']:not([left.property.name='transform']):not([left.property.name='width']):not([left.property.name='height']):not([left.property.name='bottom']):not([left.property.name='maxHeight']):not([left.property.name='overflowY']):not([left.property.name='position'])",
-					"message": "Avoid setting styles via JavaScript; prefer CSS classes and stylesheet rules (transform, width, height, bottom, maxHeight, overflowY, position allowed).",
-				},
-				// Disallow el.style.setProperty(...) except when setting 'transform', 'width', 'height', 'bottom', 'maxHeight', 'overflowY', 'position', or CSS custom properties (--*)
-				{
-					"selector": "CallExpression[callee.property.name='setProperty'][callee.object.property.name='style']:not([arguments.0.value='transform']):not([arguments.0.value='width']):not([arguments.0.value='height']):not([arguments.0.value='bottom']):not([arguments.0.value='maxHeight']):not([arguments.0.value='overflowY']):not([arguments.0.value='position']):not([arguments.0.value=/^--/])",
-					"message": "Avoid setting styles via JavaScript; prefer CSS classes and stylesheet rules (transform, width, height, bottom, maxHeight, overflowY, position, and CSS custom properties allowed).",
-				},
-				// Optional (warn): discourage vault.trash in favor of app.fileManager.trashFile
 				{
 					"selector": "CallExpression[callee.property.name='trash'][callee.object.property.name='vault']",
 					"message": "Use app.fileManager.trashFile(file) to respect user preferences.",
@@ -92,7 +95,23 @@ export default [
 			],
 		},
 	},
-	// Test files: enable Jest globals and relax type-assertion rules
+	{
+		files: ["src/**/*.ts"],
+		languageOptions: {
+			parser: tseslint.parser,
+			parserOptions: {
+				sourceType: "module",
+				ecmaVersion: 2020,
+				project: "./tsconfig.json",
+			},
+		},
+		plugins: {
+			obsidianmd,
+		},
+		rules: {
+			...obsidianmdTypedRules,
+		},
+	},
 	{
 		files: [
 			"tests/**/*.ts",
@@ -119,21 +138,31 @@ export default [
 		rules: {
 			"@typescript-eslint/consistent-type-assertions": "off",
 			"@typescript-eslint/no-explicit-any": "error",
+			"obsidianmd/prefer-active-doc": "off",
+			"obsidianmd/prefer-instanceof": "off",
+			"obsidianmd/prefer-window-timers": "off",
 		},
 	},
-	// View/DOM-heavy code: soften innerHTML/style restrictions to allow performant rendering
 	{
 		files: [
-			"src/virtualTree.ts",
 			"src/views/**/*.ts",
-			"src/utils/measure.ts",
 			"src/settings/**/*.ts",
 		],
 		rules: {
-			"no-restricted-properties": "error",
-			"no-restricted-syntax": "error",
 			"@typescript-eslint/consistent-type-assertions": "off",
 			"@typescript-eslint/ban-ts-comment": "off",
+		},
+	},
+	{
+		files: ["src/core/VirtualTreeCore.ts"],
+		rules: {
+			"max-lines": "off",
+		},
+	},
+	{
+		files: ["src/utils/file/desktopShellOpen.ts"],
+		rules: {
+			"@typescript-eslint/no-require-imports": "off",
 		},
 	},
 	{
@@ -151,19 +180,6 @@ export default [
 				{
 					allow: ["warn", "error"],
 				},
-			],
-			"no-restricted-properties": [
-				"error",
-				{ "property": "innerHTML", "message": "Avoid innerHTML; use DOM APIs or Obsidian helpers." },
-				{ "property": "outerHTML", "message": "Avoid outerHTML; use DOM APIs or Obsidian helpers." }
-			],
-			"no-restricted-syntax": [
-				"error",
-				{ "selector": "CallExpression[callee.property.name='insertAdjacentHTML']", "message": "Avoid insertAdjacentHTML; use DOM APIs or Obsidian helpers." },
-				{ "selector": "CallExpression[callee.property.name='setAttribute'][arguments.0.value='style']", "message": "Avoid inline styles; prefer CSS classes and stylesheet rules." },
-				{ "selector": "AssignmentExpression[left.type='MemberExpression'][left.object.type='MemberExpression'][left.object.property.name='style']:not([left.property.name='transform']):not([left.property.name='width']):not([left.property.name='height'])", "message": "Avoid setting styles via JavaScript; prefer CSS classes and stylesheet rules (transform, width, height allowed)." },
-				{ "selector": "CallExpression[callee.property.name='setProperty'][callee.object.property.name='style']:not([arguments.0.value='transform']):not([arguments.0.value='width']):not([arguments.0.value='height']):not([arguments.0.value=/^--/])", "message": "Avoid setting styles via JavaScript; prefer CSS classes and stylesheet rules (transform, width, height, and CSS custom properties allowed)." },
-				{ "selector": "CallExpression[callee.property.name='trash'][callee.object.property.name='vault']", "message": "Use app.fileManager.trashFile(file) to respect user preferences." }
 			],
 		},
 	},

@@ -50,32 +50,32 @@ export function resolveDragSource(row: HTMLElement): DragSourceResolution {
 }
 
 function getDragGhostHost(row: HTMLElement): HTMLElement {
-    const existing = document.querySelector('.dotn_drag-ghost-host');
-    if (existing instanceof HTMLElement) {
+    const existing = activeDocument.querySelector('.dotn_drag-ghost-host');
+    if (existing?.instanceOf(HTMLElement)) {
         const view = row.closest('.dotn_view');
         existing.classList.toggle('dotn_view-mobile', view?.classList.contains('dotn_view-mobile') ?? false);
         return existing;
     }
 
-    const host = document.createElement('div');
+    const host = activeDocument.createElement('div');
     host.className = 'dotn_view dotn_drag-ghost-host';
-    document.body.appendChild(host);
+    activeDocument.body.appendChild(host);
     const view = row.closest('.dotn_view');
     host.classList.toggle('dotn_view-mobile', view?.classList.contains('dotn_view-mobile') ?? false);
     return host;
 }
 
 export function createDragGhost(row: HTMLElement): HTMLElement {
-    const ghost = document.createElement('div');
+    const ghost = activeDocument.createElement('div');
     ghost.className = 'dotn_drag-ghost';
 
     const icon = row.querySelector('.dotn_icon, .dotn_file-badge');
-    if (icon instanceof HTMLElement) {
+    if (icon?.instanceOf(HTMLElement)) {
         ghost.appendChild(icon.cloneNode(true));
     }
 
     const title = row.querySelector('.dotn_tree-item-title');
-    if (title instanceof HTMLElement) {
+    if (title?.instanceOf(HTMLElement)) {
         ghost.appendChild(title.cloneNode(true));
     }
 
@@ -92,7 +92,7 @@ export function computeGhostGrabOffset(
     clientY: number,
 ): { x: number; y: number } {
     const title = row.querySelector('.dotn_tree-item-title');
-    if (!(title instanceof HTMLElement)) {
+    if (!(title?.instanceOf(HTMLElement))) {
         const rowRect = row.getBoundingClientRect();
         return { x: clientX - rowRect.left, y: clientY - rowRect.top };
     }
@@ -107,8 +107,8 @@ export function positionDragGhost(
     grabOffset: { x: number; y: number },
 ): void {
     const ghostTitle = ghost.querySelector('.dotn_tree-item-title');
-    const anchorX = grabOffset.x + (ghostTitle instanceof HTMLElement ? ghostTitle.offsetLeft : 0);
-    const anchorY = grabOffset.y + (ghostTitle instanceof HTMLElement ? ghostTitle.offsetTop : 0);
+    const anchorX = grabOffset.x + (ghostTitle?.instanceOf(HTMLElement) ? ghostTitle.offsetLeft : 0);
+    const anchorY = grabOffset.y + (ghostTitle?.instanceOf(HTMLElement) ? ghostTitle.offsetTop : 0);
     ghost.style.transform = `translate(${clientX - anchorX}px, ${clientY - anchorY}px)`;
 }
 
@@ -118,10 +118,10 @@ export function createDropPlaceholder(
     level: number,
     topPx: number,
 ): HTMLElement {
-    const placeholder = document.createElement('div');
+    const placeholder = activeDocument.createElement('div');
     placeholder.className = 'dotn_drop-placeholder tree-row';
 
-    const title = document.createElement('div');
+    const title = activeDocument.createElement('div');
     title.className = 'dotn_tree-item-title dotn_drop-placeholder-title';
     placeholder.appendChild(title);
 
@@ -173,11 +173,11 @@ export function resolveDropTarget(
     clientY: number,
     viewBody: HTMLElement
 ): ResolvedDropTarget | null {
-    const el = document.elementFromPoint(clientX, clientY);
+    const el = activeDocument.elementFromPoint(clientX, clientY);
     if (!el) return null;
 
     const row = el.closest('.tree-row');
-    if (row instanceof HTMLElement && row.dataset.id) {
+    if (row?.instanceOf(HTMLElement) && row.dataset.id) {
         const isShortcut = Boolean(
             row.dataset.targetPath && row.dataset.targetPath !== row.dataset.id
         );
@@ -219,7 +219,7 @@ function isBelowLastRow(viewBody: HTMLElement, clientY: number): boolean {
 
 export function findTargetRow(virtualizer: HTMLElement, rowId: string): HTMLElement | null {
     const row = virtualizer.querySelector(`.tree-row[data-id="${CSS.escape(rowId)}"]`);
-    return row instanceof HTMLElement ? row : null;
+    return row?.instanceOf(HTMLElement) ? row : null;
 }
 
 export function isDropAllowed(
