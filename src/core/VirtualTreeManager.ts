@@ -1,6 +1,6 @@
 import { App } from 'obsidian';
 import { ComplexVirtualTree } from '../views/tree/VirtualizedTree';
-import { buildVirtualizedData } from './virtualData';
+import { buildVirtualizedData, markHiddenItems } from './virtualData';
 import { RenameManager } from '../utils/rename/RenameManager';
 import { PluginSettings, TreeNode, VirtualTreeBaseItem } from '../types';
 import { TreeCacheManager, type CachedTreeData } from './TreeCacheManager';
@@ -241,6 +241,20 @@ export class VirtualTreeManager {
 
   getData(): VirtualTreeBaseItem[] {
     return this.vt?.getData() ?? [];
+  }
+
+  /**
+   * Re-apply hidden flags and visibility from settings without rebuilding the tree.
+   */
+  applyHiddenSettings(newSettings: PluginSettings): void {
+    this.settings = newSettings;
+    if (!this.vt) return;
+
+    const data = this.vt.getData();
+    if (data.length > 0) {
+      markHiddenItems(data, newSettings);
+    }
+    this.syncHiddenVisibility();
   }
 
   /**

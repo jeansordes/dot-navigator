@@ -384,6 +384,17 @@ export default class PluginMainPanel extends ItemView {
     }
 
     /**
+     * Re-apply hidden-node settings without a full vault tree rebuild.
+     */
+    public applyHiddenSettings(newSettings: PluginSettings): void {
+        this.settings = newSettings;
+        this.vtManager?.applyHiddenSettings(newSettings);
+        this._syncHiddenToggle();
+        this._syncHiddenToggleVisibility();
+        this.persistenceManager.updateSettings(newSettings);
+    }
+
+    /**
      * Update settings and refresh the tree view
      */
     public async updateSettings(newSettings: PluginSettings): Promise<void> {

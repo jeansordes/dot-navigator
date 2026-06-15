@@ -29,6 +29,16 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     }
   }
 
+  private updateHiddenSettings(): void {
+    const leaves = this.app.workspace.getLeavesOfType(FILE_TREE_VIEW_TYPE);
+    if (leaves.length > 0) {
+      const view = leaves[0].view;
+      if (view instanceof PluginMainPanel) {
+        view.applyHiddenSettings(this.plugin.settings);
+      }
+    }
+  }
+
   private get settingsCallbacks() {
     return {
       updateTreeView: this.updateTreeView.bind(this),
@@ -109,6 +119,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       this.plugin.settings,
       {
         ...this.settingsCallbacks,
+        updateHiddenSettings: this.updateHiddenSettings.bind(this),
         refreshDisplay: this.redisplayPreservingScroll.bind(this),
       }
     );

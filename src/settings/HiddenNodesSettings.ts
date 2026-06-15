@@ -6,7 +6,7 @@ import { addEmptyState } from './settingsGroup';
 import type { SettingsSection } from './settingsGroup';
 
 export interface HiddenNodesSettingsCallbacks {
-  updateTreeView: () => Promise<void>;
+  updateHiddenSettings: () => void;
   saveSettings: () => Promise<void>;
   refreshDisplay: () => void;
 }
@@ -31,7 +31,7 @@ export function addHiddenNodesSettings(
               settings.showHiddenNodes = false;
             }
             await callbacks.saveSettings();
-            await callbacks.updateTreeView();
+            callbacks.updateHiddenSettings();
             callbacks.refreshDisplay();
           });
       });
@@ -57,7 +57,7 @@ function addHiddenNodesAdvancedSettings(
           .onChange(async (value) => {
             settings.hideDotPaths = value;
             await callbacks.saveSettings();
-            await callbacks.updateTreeView();
+            callbacks.updateHiddenSettings();
             callbacks.refreshDisplay();
           });
       });
@@ -77,7 +77,7 @@ function addHiddenNodesAdvancedSettings(
         .onChange(async (value) => {
           settings.revealDotFilesystem = value;
           await callbacks.saveSettings();
-          await callbacks.updateTreeView();
+          callbacks.updateHiddenSettings();
           callbacks.refreshDisplay();
         });
     });
@@ -99,7 +99,7 @@ function addHiddenNodesAdvancedSettings(
         if (!(settings.hiddenPatterns ?? []).includes(value)) {
           settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
           await callbacks.saveSettings();
-          await callbacks.updateTreeView();
+          callbacks.updateHiddenSettings();
           callbacks.refreshDisplay();
         }
         input.setValue('');
@@ -115,7 +115,7 @@ function addHiddenNodesAdvancedSettings(
           if (!(settings.hiddenPatterns ?? []).includes(value)) {
             settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
             await callbacks.saveSettings();
-            await callbacks.updateTreeView();
+            callbacks.updateHiddenSettings();
             callbacks.refreshDisplay();
           }
           input?.setValue('');
@@ -137,7 +137,7 @@ function addHiddenNodesAdvancedSettings(
             .onClick(async () => {
               settings.hiddenPatterns = (settings.hiddenPatterns ?? []).filter(p => p !== pattern);
               await callbacks.saveSettings();
-              await callbacks.updateTreeView();
+              callbacks.updateHiddenSettings();
               callbacks.refreshDisplay();
             });
         });
@@ -166,7 +166,7 @@ function addHiddenNodesAdvancedSettings(
             .onClick(async () => {
               settings.hiddenNodes = (settings.hiddenNodes ?? []).filter(p => p !== path);
               await callbacks.saveSettings();
-              await callbacks.updateTreeView();
+              callbacks.updateHiddenSettings();
               callbacks.refreshDisplay();
             });
         });
@@ -186,7 +186,7 @@ function addHiddenNodesAdvancedSettings(
           .onClick(async () => {
             settings.hiddenNodes = [];
             await callbacks.saveSettings();
-            await callbacks.updateTreeView();
+            callbacks.updateHiddenSettings();
             callbacks.refreshDisplay();
           });
       });
