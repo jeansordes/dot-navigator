@@ -4,11 +4,23 @@ Automated review findings for **Dot Navigator** from the [Obsidian community plu
 
 | Field | Value |
 |-------|-------|
-| Version | 1.28.3 |
-| Commit | `f6d2550` |
+| Version | 1.28.5 |
+| Commit | *(pending next release)* |
 | Review date | Jun 15, 2026 |
-| Status | **Failed** |
-| `minAppVersion` | `0.15.0` |
+| Status | **Failed** (prior scan); local `npm run ci` passes |
+| `minAppVersion` | `1.13.0` |
+
+## Local hygiene pass (Jun 15, 2026)
+
+Changes applied to align local lint with the community scanner:
+
+- **ESLint scope:** [`eslint.config.js`](../eslint.config.js) is now linted via [`tsconfig.eslint.json`](../tsconfig.eslint.json) with typed JSDoc for `sanitizeObsidianConfigs`.
+- **CI gate:** `npm run ci` runs `lint:hygiene` (checks `fix-obsidian-lint.mjs` and `fix-instanceof.mjs` patterns).
+- **Electron import:** [`desktopShellOpen.ts`](../src/utils/file/desktopShellOpen.ts) uses `import { shell } from 'electron'` with [`src/electron.d.ts`](../src/electron.d.ts); Jest maps `electron` to [`tests/mocks/electron.ts`](../tests/mocks/electron.ts).
+- **Type safety:** [`isInstanceOf`](../src/utils/dom/instanceOf.ts) helper for cross-window checks; [`readObjectField`](../src/utils/misc/readObjectField.ts) for frontmatter access; `normalizeChildren` in [`RuleParser.ts`](../src/domain/schema/RuleParser.ts) reuses `isStringOrStringArray`.
+- **Static styles:** [`measure.ts`](../src/utils/misc/measure.ts) probe height uses `setCssStyles` instead of direct `style` assignment.
+
+Re-submit to the community review to refresh counts below.
 
 ## Summary
 

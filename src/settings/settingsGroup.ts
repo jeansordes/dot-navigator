@@ -1,4 +1,5 @@
 import { Setting, SettingGroup, requireApiVersion } from 'obsidian';
+
 export interface SettingsSection {
   addSetting(cb: (setting: Setting) => void): void;
   /** The `.setting-items` container inside the group. */
@@ -25,28 +26,6 @@ export function createGroupHeading(
     heading.createDiv({ cls: 'setting-item-description', text: description });
   }
   return heading;
-}
-
-/** Plain-text heading for `getSettingDefinitions` (API accepts string only). */
-export function createSettingDefinitionHeading(name: string, count?: number): string {
-  if (count === undefined) {
-    return name;
-  }
-  return `${name} (${count})`;
-}
-
-export function settingGroupToSection(group: SettingGroup): SettingsSection {
-  if (requireApiVersion('1.11.0')) {
-    const groupEl = group.listEl.parentElement ?? group.listEl;
-    return {
-      addSetting(cb) {
-        group.addSetting(cb);
-      },
-      listEl: group.listEl,
-      groupEl,
-    };
-  }
-  throw new Error('SettingGroup requires Obsidian 1.11.0+');
 }
 
 export function addSettingsGroup(

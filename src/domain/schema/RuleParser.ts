@@ -87,14 +87,8 @@ function getProperty(obj: unknown, key: string): unknown {
 function normalizeChildren(value: unknown, errors: RuleError[]): string[] | undefined {
   if (!value) return undefined;
 
-  if (typeof value === 'string') {
-    return [value];
-  }
-
-  if (Array.isArray(value)) {
-    if (value.every(item => typeof item === 'string')) {
-      return value;
-    }
+  if (isStringOrStringArray(value)) {
+    return Array.isArray(value) ? value : [value];
   }
 
   errors.push({

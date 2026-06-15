@@ -1,5 +1,6 @@
 import { App, TFile } from 'obsidian';
 import { parseRedirectTarget, REDIRECT_FM_KEY } from "../../core/redirectStub";
+import { readObjectField } from './readObjectField';
 
 /**
  * Reads the YAML title from a file's frontmatter
@@ -17,7 +18,7 @@ export function getYamlTitle(app: App, filePath: string): string | null {
     if (!frontmatter || typeof frontmatter !== 'object') {
       return null;
     }
-    const title: unknown = Reflect.get(frontmatter, 'title');
+    const title = readObjectField(frontmatter, 'title');
 
     if (typeof title === 'string') {
       return title;

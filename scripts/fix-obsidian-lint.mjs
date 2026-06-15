@@ -15,8 +15,6 @@ const writeMode = process.argv.includes('--write');
 const checkMode = process.argv.includes('--check') || !writeMode;
 
 const OBSIDIAN_IMPORTS = new Set([
-	'activeDocument',
-	'activeWindow',
 	'Platform',
 ]);
 
@@ -52,11 +50,9 @@ function applyReplacements(content) {
 	replaceAll(/(?<!window\.)requestAnimationFrame\(/g, 'window.requestAnimationFrame(', null);
 	replaceAll(/(?<!window\.)cancelAnimationFrame\(/g, 'window.cancelAnimationFrame(', null);
 
-	// instanceof -> activeWindow.instanceOf
-	replaceAll(/\b(\w+)\s+instanceof\s+HTMLElement\b/g, 'activeWindow.instanceOf($1, HTMLElement)', 'activeWindow');
-	replaceAll(/\b(\w+)\s+instanceof\s+MouseEvent\b/g, 'activeWindow.instanceOf($1, MouseEvent)', 'activeWindow');
-	replaceAll(/\binstanceof\s+HTMLElement\b/g, 'activeWindow.instanceOf(HTMLElement)', 'activeWindow');
-	replaceAll(/\binstanceof\s+MouseEvent\b/g, 'activeWindow.instanceOf(MouseEvent)', 'activeWindow');
+	// instanceof -> element.instanceOf (Obsidian 1.13+ cross-window API)
+	replaceAll(/\b(\w+)\s+instanceof\s+HTMLElement\b/g, '$1.instanceOf(HTMLElement)', null);
+	replaceAll(/\b(\w+)\s+instanceof\s+MouseEvent\b/g, '$1.instanceOf(MouseEvent)', null);
 
 	// navigator OS detection
 	if (/\/iPhone\|iPad\|iPod\/.test\((?:window\.)?navigator\.userAgent\)/.test(next)) {
@@ -70,7 +66,6 @@ function applyReplacements(content) {
 	// Global document -> activeDocument (including document.createElement, etc.)
 	if (/(?<![.\w])document\./.test(next)) {
 		next = next.replace(/(?<![.\w])document\./g, 'activeDocument.');
-		neededImports.add('activeDocument');
 	}
 
 	return { content: next, neededImports };

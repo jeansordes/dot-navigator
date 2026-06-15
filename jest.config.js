@@ -3,6 +3,7 @@ export const testEnvironment = 'node';
 export const moduleNameMapper = {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^obsidian$': '<rootDir>/tests/mocks/obsidian.ts',
+    '^electron$': '<rootDir>/tests/mocks/electron.ts',
     // Handle ESM .js extensions in TypeScript imports
     '^(\\.{1,2}/.*)\\.js$': '$1'
 };

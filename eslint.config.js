@@ -8,34 +8,45 @@
  * - warn  — Hygiene surfaced locally; review may still flag: @typescript-eslint/no-unused-vars,
  *           obsidianmd/prefer-file-manager-trash-file.
  * - off   — Intentional overrides only: tests (Obsidian globals/timers), views/settings assertions,
- *           VirtualTreeCore length, desktopShellOpen dynamic require.
+ *           VirtualTreeCore length.
  */
 
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import manifest from "./manifest.json" with { type: "json" };
 
+/** @typedef {import('eslint').Linter.Config} Config */
+
 const typeCheckedFiles = ["src/**/*.ts", "tests/**/*.ts"];
 
 /** ESLint 8 lacks flat-config `language`; strip it from obsidianmd recommended. */
+/** @param {readonly Config[]} configs */
 function sanitizeObsidianConfigs(configs) {
 	return configs.map((config) => {
-		let next = config;
-		if ("language" in next) {
-			const { language: _language, ...rest } = next;
+		/** @type {Config} */
+		let next = { ...config };
+		if (Object.hasOwn(next, "language")) {
+			const { language: _unusedLanguage, ...rest } = next;
+			void _unusedLanguage;
 			next = rest;
 		}
+		const files = next.files;
 		if (
-			next.files &&
-			(Array.isArray(next.files)
-				? next.files.some((f) => String(f).includes(".ts"))
-				: String(next.files).includes(".ts"))
+			files &&
+			(Array.isArray(files)
+				? files.some((f) => String(f).includes(".ts"))
+				: String(files).includes(".ts"))
 		) {
 			next = { ...next, files: typeCheckedFiles };
 		}
 		return next;
 	});
 }
+
+/** @type {Config[]} */
+const obsidianRecommended = sanitizeObsidianConfigs(
+	/** @type {Config[]} */ (obsidianmd.configs.recommended),
+);
 
 const testFiles = [
 	"tests/**/*.ts",
@@ -57,9 +68,7 @@ export default [
 			"esbuild.config.mjs",
 			"jest.config.js",
 			"release.mjs",
-			"manifest.json",
 			"package.json",
-			"eslint.config.js",
 		],
 	},
 	{
@@ -87,7 +96,7 @@ export default [
 			},
 		},
 	},
-	...sanitizeObsidianConfigs(obsidianmd.configs.recommended),
+	...obsidianRecommended,
 	{
 		files: typeCheckedFiles,
 		rules: {
@@ -198,15 +207,27 @@ export default [
 		},
 	},
 	{
-		files: ["src/utils/file/desktopShellOpen.ts"],
+		files: ["eslint.config.js"],
 		languageOptions: {
-			globals: {
-				require: "readonly",
+			parser: tseslint.parser,
+			parserOptions: {
+				project: "./tsconfig.eslint.json",
+				sourceType: "module",
+				ecmaVersion: 2020,
+			},
+		},
+	},
+	{
+		files: ["manifest.json"],
+		languageOptions: {
+			parser: tseslint.parser,
+			parserOptions: {
+				project: "./tsconfig.eslint.json",
+				extraFileExtensions: [".json"],
 			},
 		},
 		rules: {
-			"@typescript-eslint/no-require-imports": "off",
-			"obsidianmd/no-nodejs-modules": "off",
+			"obsidianmd/validate-manifest": "error",
 		},
 	},
 	{

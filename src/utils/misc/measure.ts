@@ -11,7 +11,7 @@ export function computeRowHeight(rootContainer: HTMLElement): number | null {
       const probe = activeDocument.createElement('div');
       probe.className = 'dotn_probe dotn_probe-row';
       // Allowed: height can be set directly; others come from CSS class
-      probe.style.height = cssVar;
+      probe.setCssStyles({ height: cssVar });
       host.appendChild(probe);
       const h = Math.round(probe.getBoundingClientRect().height);
       probe.remove();

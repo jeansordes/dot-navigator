@@ -1,9 +1,9 @@
-import { App, PluginSettingTab, Notice, requireApiVersion, type SettingDefinitionItem } from 'obsidian';
+import { App, PluginSettingTab, Notice } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { MoreMenuItemCommand, FILE_TREE_VIEW_TYPE } from '../types';
 import type { BuiltinItemsSettingsCallbacks } from './BuiltinItemsSettings';
 import type { CustomCommandsSettingsCallbacks } from './CustomCommandsSettings';
-import { buildSettingDefinitions, renderLegacySettings } from './settingsTabContent';
+import { renderLegacySettings } from './settingsTabContent';
 import {
   describeMoreMenuItem,
   getBuiltinDisplayName,
@@ -106,11 +106,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   }
 
   private refreshSettingsTab(): void {
-    if (requireApiVersion('1.13.0')) {
-      this.update();
-    } else {
-      this.redisplayLegacy();
-    }
+    this.redisplayLegacy();
   }
 
   private redisplayPreservingScroll(): void {
@@ -130,13 +126,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    if (requireApiVersion('1.13.0')) return;
     this.redisplayLegacy();
-  }
-
-  getSettingDefinitions(): SettingDefinitionItem[] {
-    if (!requireApiVersion('1.13.0')) return [];
-    return buildSettingDefinitions(this.getSectionCallbacks());
   }
 
   private async updateBuiltinOrder(order: string[]): Promise<void> {

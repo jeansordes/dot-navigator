@@ -6,6 +6,7 @@ import { Setting, ToggleComponent } from 'obsidian';
 import { RenameMode, RenameDialogData } from '../../types';
 import { t } from '../../i18n';
 import { setIcon } from 'obsidian';
+import { isInstanceOf } from '../dom/instanceOf';
 export interface ModeSelectionCallbacks {
     onModeChange: (value: boolean) => void;
     updateAllFileItems: (childrenList: HTMLElement) => void;
@@ -49,7 +50,7 @@ export function createModeSelection(
     modeContainer.addEventListener('click', (e) => {
         const clickTarget = e.target;
         // Don't trigger if clicking directly on the toggle
-        if (clickTarget instanceof HTMLElement && !clickTarget.closest('.checkbox-container')) {
+        if (isInstanceOf(clickTarget, HTMLElement) && !clickTarget.closest('.checkbox-container')) {
             toggleComponent.setValue(!toggleComponent.getValue());
             callbacks.onModeChange(toggleComponent.getValue());
         }

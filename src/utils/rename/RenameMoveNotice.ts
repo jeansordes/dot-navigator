@@ -1,6 +1,7 @@
 import { Notice, Plugin, setIcon } from 'obsidian';
 import { t } from '../../i18n';
 import { shouldHandleModZUndo } from '../keyboard/undoShortcut';
+import { isInstanceOf } from '../dom/instanceOf';
 
 export interface MoveNoticeHandlers {
     registerMoveNoticeUndoShortcut(host: Plugin): void;
@@ -16,11 +17,11 @@ export function createMoveNoticeHandlers(): MoveNoticeHandlers {
 
     const getNoticeContentEl = (notice: Notice): HTMLElement => {
         const messageEl: unknown = Reflect.get(notice, 'messageEl');
-        if (messageEl instanceof HTMLElement) {
+        if (messageEl !== undefined && isInstanceOf(messageEl, HTMLElement)) {
             return messageEl;
         }
         const noticeEl: unknown = Reflect.get(notice, 'noticeEl');
-        if (noticeEl instanceof HTMLElement) {
+        if (noticeEl !== undefined && isInstanceOf(noticeEl, HTMLElement)) {
             return noticeEl;
         }
         throw new Error('Notice has no content element');

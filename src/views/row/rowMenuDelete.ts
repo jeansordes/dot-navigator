@@ -2,12 +2,13 @@ import { App, Menu, Platform, TFile, TFolder } from 'obsidian';
 import { t } from '../../i18n';
 import { deleteRedirectStub } from '../../utils/rename/StubDragUtils';
 import type { RowItem } from '../utils/viewTypes';
+import { isInstanceOf } from '../../utils/dom/instanceOf';
 
 function styleDangerMenuItem(mi: object): void {
   try {
     if (Platform.isMobile) {
       const maybeDom: unknown = Reflect.get(mi, 'dom');
-      const el = maybeDom instanceof HTMLElement ? maybeDom : undefined;
+      const el = isInstanceOf(maybeDom, HTMLElement) ? maybeDom : undefined;
       if (el) el.classList.add('tappable', 'is-warning');
     }
   } catch { /* ignore */ }
