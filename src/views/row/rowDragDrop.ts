@@ -1,4 +1,5 @@
-import { Platform } from 'obsidian';
+import { App, Platform } from 'obsidian';
+import { isVaultIndexedPath } from '../../core/dotFilesystem';
 import type { RenameManager } from '../../utils/rename/RenameManager';
 import { isMarkdownShortcutEligible, type DraggableKind } from '../../utils/rename/DragMoveUtils';
 import type { VirtualTreeLike } from '../utils/viewTypes';
@@ -44,6 +45,7 @@ interface ActiveDrag extends PendingDrag {
 }
 
 export interface RowDragControllerOptions {
+    app: App;
     virtualTree: VirtualTreeLike;
     scrollContainer: HTMLElement;
     virtualizer: HTMLElement;
@@ -143,6 +145,7 @@ export class RowDragController {
         const row = title.closest('.tree-row');
         if (!(row instanceof HTMLElement) || !row.dataset.id) return;
         const { path, isShortcut, noteTargetPath } = resolveDragSource(row);
+        if (!isVaultIndexedPath(this.opts.app, path)) return;
 
         const isTouch = e.pointerType === 'touch' || (Platform.isMobile && e.pointerType !== 'mouse');
         this.pending = {

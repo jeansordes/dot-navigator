@@ -37,6 +37,9 @@ export interface PluginSettings {
     dendronConfigFilePath?: string;
     schemaRules?: SchemaRule[]; // Managed suggestion rules (primary source)
     hiddenNodes?: string[]; // Paths of explicitly hidden files/folders
+    hiddenPatterns?: string[]; // Glob patterns for hidden paths (e.g. archive/**)
+    hideDotPaths?: boolean; // Hide dot-prefixed filesystem entries by default
+    hiddenExceptions?: string[]; // Paths unhidden despite patterns/dot rule
     showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
     /** @deprecated Migrated to childCountDisplay === 'off' */
     showChildCount?: boolean;
@@ -58,6 +61,9 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     enableSchemaSuggestions: true, // Show schema-based suggestions by default
     dendronConfigFilePath: 'dot-navigator-rules.json', // Legacy — migration only
     hiddenNodes: [],
+    hiddenPatterns: [],
+    hideDotPaths: true,
+    hiddenExceptions: [],
     showHiddenNodes: false,
     childCountDisplay: 'off',
     childCountMode: 'direct',

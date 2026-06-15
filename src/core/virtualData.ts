@@ -3,6 +3,15 @@ import { FileUtils } from '../utils/file/FileUtils';
 import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
 import { getYamlTitle } from '../utils/misc/YamlTitleUtils';
 import { collectRedirectEntries, enrichRedirectStubs } from './redirectStub';
+import {
+  hideConfigFromSettings,
+  isEffectivelyHidden as isPathEffectivelyHidden,
+  toggleHiddenPath as toggleHideConfig,
+  unhidePath as unhideHideConfig,
+  applyHideConfigToSettings,
+  type HideConfig,
+} from './hiddenPatterns';
+import { isDotPrefixedPath } from './dotFilesystem';
 
 export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
@@ -21,6 +30,7 @@ export interface VItem {
   isHidden?: boolean;
 }
 
+/** @deprecated Use hideConfigFromSettings + isPathEffectivelyHidden */
 export function isPathHidden(path: string, hiddenSet: Set<string>): boolean {
   if (hiddenSet.size === 0) return false;
   for (const h of hiddenSet) {
@@ -29,32 +39,54 @@ export function isPathHidden(path: string, hiddenSet: Set<string>): boolean {
   return false;
 }
 
-export function isEffectivelyHidden(hidden: string[], path: string): boolean {
-  return isPathHidden(path, new Set(hidden));
+export function isEffectivelyHidden(hidden: string[], path: string, settings?: PluginSettings): boolean {
+  const config = hideConfigFromSettings({
+    hiddenNodes: hidden,
+    hiddenPatterns: settings?.hiddenPatterns,
+    hideDotPaths: settings?.hideDotPaths,
+    hiddenExceptions: settings?.hiddenExceptions,
+  });
+  return isPathEffectivelyHidden(path, config);
 }
 
-export function unhidePath(hidden: string[], path: string): string[] {
-  if (hidden.includes(path)) return hidden.filter(h => h !== path);
-  for (const h of hidden) {
-    if (path === h || path.startsWith(h + '/')) return hidden.filter(x => x !== h);
-  }
-  return hidden;
+export function unhidePath(hidden: string[], path: string, settings?: PluginSettings): string[] {
+  const config = hideConfigFromSettings({
+    hiddenNodes: hidden,
+    hiddenPatterns: settings?.hiddenPatterns,
+    hideDotPaths: settings?.hideDotPaths,
+    hiddenExceptions: settings?.hiddenExceptions,
+  });
+  const next = unhideHideConfig(config, path);
+  if (settings) applyHideConfigToSettings(settings, next);
+  return next.paths;
 }
 
-export function toggleHiddenPath(hidden: string[], path: string): string[] {
-  if (isEffectivelyHidden(hidden, path)) return unhidePath(hidden, path);
-  if (hidden.includes(path)) return hidden;
-  return [...hidden, path];
+export function toggleHiddenPath(hidden: string[], path: string, settings?: PluginSettings): string[] {
+  const config = hideConfigFromSettings({
+    hiddenNodes: hidden,
+    hiddenPatterns: settings?.hiddenPatterns,
+    hideDotPaths: settings?.hideDotPaths,
+    hiddenExceptions: settings?.hiddenExceptions,
+  });
+  const next = toggleHideConfig(config, path);
+  if (settings) applyHideConfigToSettings(settings, next);
+  return next.paths;
 }
 
-export function markHiddenItems(data: VItem[], hidden: string[]): void {
-  if (!hidden.length) return;
-  const hiddenSet = new Set(hidden);
+export function toggleHiddenConfig(settings: PluginSettings, path: string): HideConfig {
+  const config = hideConfigFromSettings(settings);
+  const next = toggleHideConfig(config, path);
+  applyHideConfigToSettings(settings, next);
+  return next;
+}
+
+export function markHiddenItems(data: VItem[], settings?: PluginSettings): void {
+  const config = hideConfigFromSettings(settings);
   const walk = (items: VItem[]): void => {
     for (const item of items) {
       item.isHidden =
-        isPathHidden(item.id, hiddenSet) ||
-        (item.targetPath ? isPathHidden(item.targetPath, hiddenSet) : false);
+        isPathEffectivelyHidden(item.id, config) ||
+        (item.targetPath ? isPathEffectivelyHidden(item.targetPath, config) : false);
       if (item.children?.length) walk(item.children);
     }
   };
@@ -105,6 +137,8 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     let name: string;
 
     if (node.nodeType === TreeNodeType.FOLDER) {
+      name = base.replace(/ \(\d+\)$/u, '');
+    } else if (isDotPrefixedPath(node.path)) {
       name = base.replace(/ \(\d+\)$/u, '');
     } else if (node.nodeType === TreeNodeType.SUGGESTION) {
       let baseForName = base;
@@ -171,7 +205,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     getSortKey: (item) => item.title ?? item.name,
   }, (path) => app.vault.getAbstractFileByPath(path) instanceof TFile);
 
-  markHiddenItems(data, settings?.hiddenNodes ?? []);
+  markHiddenItems(data, settings);
 
   return { data, parentMap };
 }

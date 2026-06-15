@@ -7,6 +7,7 @@ import {
   toggleHiddenPath,
   type VItem,
 } from '../src/core/virtualData';
+import { DEFAULT_SETTINGS, type PluginSettings } from '../src/types';
 
 describe('isPathHidden', () => {
   const hidden = new Set(['folder', 'other/sub']);
@@ -47,29 +48,56 @@ describe('markHiddenItems', () => {
       isRedirect: true,
       targetPath: 'folder/child.md',
     },
+    {
+      id: '.gitignore',
+      name: '.gitignore',
+      kind: 'file',
+    },
   ];
 
   it('marks subtree and alias by target', () => {
-    markHiddenItems(data, ['folder']);
+    markHiddenItems(data, { ...DEFAULT_SETTINGS, hiddenNodes: ['folder'] });
     expect(data[0].isHidden).toBe(true);
     expect(data[0].children?.[0].isHidden).toBe(true);
     expect(data[1].isHidden).toBe(true);
   });
+
+  it('marks dot paths when hideDotPaths is enabled', () => {
+    markHiddenItems(data, { ...DEFAULT_SETTINGS, hideDotPaths: true });
+    expect(data[2].isHidden).toBe(true);
+    expect(data[0].isHidden).toBeFalsy();
+  });
+
+  it('respects hidden exceptions for dot paths', () => {
+    markHiddenItems(data, { ...DEFAULT_SETTINGS, hideDotPaths: true, hiddenExceptions: ['.gitignore'] });
+    expect(data[2].isHidden).toBe(false);
+  });
 });
 
 describe('unhidePath and toggleHiddenPath', () => {
+  const settings: PluginSettings = {
+    mySetting: 'default',
+    hideDotPaths: true,
+  };
+
   it('removes exact hidden entry', () => {
-    expect(unhidePath(['a', 'b'], 'a')).toEqual(['b']);
+    expect(unhidePath(['a', 'b'], 'a', settings)).toEqual(['b']);
   });
 
   it('removes ancestor when unhiding descendant', () => {
-    expect(unhidePath(['folder'], 'folder/child.md')).toEqual([]);
+    expect(unhidePath(['folder'], 'folder/child.md', settings)).toEqual([]);
   });
 
   it('toggle adds and removes paths', () => {
-    expect(toggleHiddenPath([], 'note.md')).toEqual(['note.md']);
-    expect(toggleHiddenPath(['note.md'], 'note.md')).toEqual([]);
-    expect(isEffectivelyHidden(['folder'], 'folder/x.md')).toBe(true);
+    expect(toggleHiddenPath([], 'note.md', settings)).toEqual(['note.md']);
+    expect(toggleHiddenPath(['note.md'], 'note.md', settings)).toEqual([]);
+    expect(isEffectivelyHidden(['folder'], 'folder/x.md', settings)).toBe(true);
+  });
+
+  it('toggle unhide adds dot-path exceptions', () => {
+    toggleHiddenPath([], '.gitignore', settings);
+    expect(settings.hiddenExceptions).toEqual(['.gitignore']);
+    expect(isEffectivelyHidden([], '.gitignore', settings)).toBe(false);
   });
 });
 

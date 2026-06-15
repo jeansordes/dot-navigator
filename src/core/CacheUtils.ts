@@ -131,6 +131,9 @@ export class CacheUtils {
       enableSchemaSuggestions: settings?.enableSchemaSuggestions,
       schemaRules: settings?.schemaRules,
       hiddenNodes: settings?.hiddenNodes,
+      hiddenPatterns: settings?.hiddenPatterns,
+      hideDotPaths: settings?.hideDotPaths,
+      hiddenExceptions: settings?.hiddenExceptions,
     };
     return JSON.stringify(relevantSettings);
   }

@@ -1,3 +1,4 @@
+import { TextComponent } from 'obsidian';
 import { t } from '../i18n';
 import type { PluginSettings } from '../types';
 import { FileUtils } from '../utils/file/FileUtils';
@@ -29,6 +30,84 @@ export function addHiddenNodesSettings(
           });
       });
   });
+
+  section.addSetting((setting) => {
+    setting
+      .setName(t('settingsHideDotPaths'))
+      .setDesc(t('settingsHideDotPathsDesc'))
+      .addToggle((toggle) => {
+        toggle
+          .setValue(settings.hideDotPaths !== false)
+          .onChange(async (value) => {
+            settings.hideDotPaths = value;
+            await callbacks.saveSettings();
+            await callbacks.updateTreeView();
+            callbacks.refreshDisplay();
+          });
+      });
+  });
+
+  const patterns = settings.hiddenPatterns ?? [];
+  section.addSetting((setting) => {
+    setting
+      .setName(t('settingsHiddenPatterns'))
+      .setDesc(t('settingsHiddenPatternsDesc'));
+    let input: TextComponent | undefined;
+    setting.addText((text) => {
+      input = text;
+      text.setPlaceholder(t('settingsHiddenPatternsPlaceholder'));
+      text.inputEl.addEventListener('keydown', async (e) => {
+        if (e.key !== 'Enter' || !input) return;
+        const value = input.getValue().trim();
+        if (!value) return;
+        if (!(settings.hiddenPatterns ?? []).includes(value)) {
+          settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
+          await callbacks.saveSettings();
+          await callbacks.updateTreeView();
+          callbacks.refreshDisplay();
+        }
+        input.setValue('');
+      });
+    });
+    setting.addExtraButton((btn) => {
+      btn
+        .setIcon('plus')
+        .setTooltip(t('settingsAddHiddenPattern'))
+        .onClick(async () => {
+          const value = input?.getValue().trim();
+          if (!value) return;
+          if (!(settings.hiddenPatterns ?? []).includes(value)) {
+            settings.hiddenPatterns = [...(settings.hiddenPatterns ?? []), value];
+            await callbacks.saveSettings();
+            await callbacks.updateTreeView();
+            callbacks.refreshDisplay();
+          }
+          input?.setValue('');
+        });
+    });
+  });
+
+  if (patterns.length === 0) {
+    addEmptyState(section, t('settingsNoHiddenPatterns'));
+  } else {
+    patterns.forEach((pattern) => {
+      section.addSetting((row) => {
+        row.settingEl.addClass('dotnav-hidden-pattern-item');
+        row.setName(pattern);
+        row.addExtraButton((btn) => {
+          btn
+            .setIcon('trash-2')
+            .setTooltip(t('settingsRemove'))
+            .onClick(async () => {
+              settings.hiddenPatterns = (settings.hiddenPatterns ?? []).filter(p => p !== pattern);
+              await callbacks.saveSettings();
+              await callbacks.updateTreeView();
+              callbacks.refreshDisplay();
+            });
+        });
+      });
+    });
+  }
 
   const hiddenPaths = settings.hiddenNodes ?? [];
 

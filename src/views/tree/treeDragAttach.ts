@@ -1,9 +1,11 @@
+import { App } from 'obsidian';
 import { RowDragController } from '../row/rowDragDrop';
 import type { MoveCompleteOptions } from '../row/rowDragDropComplete';
 import type { RenameManager } from '../../utils/rename/RenameManager';
 import type { VirtualTreeLike } from '../utils/viewTypes';
 
 export function attachTreeDragController(opts: {
+    app: App;
     virtualTree: VirtualTreeLike;
     viewBody: HTMLElement;
     renameManager?: RenameManager;
@@ -16,6 +18,7 @@ export function attachTreeDragController(opts: {
     }
 
     const controller = new RowDragController({
+        app: opts.app,
         virtualTree: opts.virtualTree,
         scrollContainer,
         virtualizer,

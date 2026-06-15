@@ -80,7 +80,7 @@ export class VirtualTreeManager {
 
 
   private async buildAndRenderFreshTree(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
-    const root = TreeUtils.buildTreeStructure(this.app);
+    const root = await TreeUtils.buildTreeStructure(this.app, this.settings);
     this.rootTreeNode = root; // Store reference for lazy loading
 
     // Pre-calculate schema suggestions only for root level initially (lazy loading for others)
@@ -126,7 +126,7 @@ export class VirtualTreeManager {
     try {
       debug('Starting background tree rebuild');
 
-      const root = TreeUtils.buildTreeStructure(this.app);
+      const root = await TreeUtils.buildTreeStructure(this.app, this.settings);
 
       // Pre-calculate ALL schema suggestions for the entire tree (for caching)
       await SchemaUtils.applyAllSchemaSuggestionsToTree(
@@ -175,7 +175,7 @@ export class VirtualTreeManager {
     this.usingCachedData = false;
 
     // Rebuild the tree with current vault state and ALL pre-calculated suggestions
-    const root = TreeUtils.buildTreeStructure(this.app);
+    const root = await TreeUtils.buildTreeStructure(this.app, this.settings);
     await SchemaUtils.applyAllSchemaSuggestionsToTree(
       root,
       this.ruleManager,

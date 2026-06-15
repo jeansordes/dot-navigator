@@ -96,6 +96,7 @@ export class ComplexVirtualTree extends VirtualTree {
 
     detachTreeDragController(this._dragController);
     this._dragController = attachTreeDragController({
+      app: this.app,
       virtualTree: this.virtualTree,
       viewBody,
       renameManager: this._renameManager,

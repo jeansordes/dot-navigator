@@ -40,7 +40,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 <img width="480" alt="Collapse all descendants of a node" src="docs/images/collapse-all.png" />
 
 - **CMD/Ctrl+click to open a file in a new tab**
-- **Hide files and folders from the tree** - hide any node from the context menu to declutter your tree. A header toggle lets you reveal hidden nodes (shown dimmed, with a crossed-eye icon that turns into an open eye on hover to reveal them again), and they can be managed or cleared from the settings.
+- **Hide files and folders from the tree** - hide any node from the context menu to declutter your tree. A header toggle lets you reveal hidden nodes (shown dimmed, with a crossed-eye icon that turns into an open eye on hover to reveal them again), and they can be managed or cleared from the settings. Dot-prefixed filesystem items (`.git/`, `.gitignore`, `.obsidian/`, etc.) are included in the tree and hidden by default; use the header eye toggle or **Settings → Dot Navigator → Hidden nodes** to reveal them. You can also define glob hide patterns (e.g. `archive/**`).
 
 <img width="430" alt="A hidden node shown dimmed with a crossed-eye icon" src="docs/images/hidden-node-row.png" />
 <img width="460" alt="Header toggle to show or hide hidden nodes" src="docs/images/hidden-nodes-toggle.png" />
