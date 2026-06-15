@@ -1,3 +1,9 @@
+## [1.28.6](https://github.com/jeansordes/dot-navigator/compare/1.28.5...1.28.6) (2026-06-15)
+
+### Bug Fixes
+
+* **settings:** restore imperative tab UI and align community lint gates ([53b0772](https://github.com/jeansordes/dot-navigator/commit/53b0772d86294ce71a7452ee0ff8269fde19ced8))
+
 ## [1.28.5](https://github.com/jeansordes/dot-navigator/compare/1.28.4...1.28.5) (2026-06-15)
 
 ### Bug Fixes
