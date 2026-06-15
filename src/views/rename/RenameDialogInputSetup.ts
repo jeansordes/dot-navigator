@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import { RenameDialogData, RenameMode } from '../../types';
 import { validateInputs } from '../../utils/validation/ValidationUtils';
-import { autoResize } from '../../utils/ui/UIUtils';
+import { autoResize, sanitizeSingleLineField } from '../../utils/ui/UIUtils';
 import { setupPathAutocomplete, AutocompleteState } from '../../utils/misc/AutocompleteUtils';
 import { validatePath, validateAndShowWarning, validateAndShowExtensionWarning } from '../../utils/validation/PathValidationUtils';
 import { updateAllFileItems } from '../../utils/file/FileDiffUtils';
@@ -39,6 +39,7 @@ export function setupPathInput(
         pathInput.value = pathParts.directory;
         autoResize(pathInput);
         pathInput.addEventListener('input', () => {
+            sanitizeSingleLineField(pathInput);
             handlePostOperationInteraction();
             validatePath(pathInput.value, app, contentEl);
             autoResize(pathInput);
@@ -47,20 +48,6 @@ export function setupPathInput(
         pathInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-            }
-        });
-        pathInput.addEventListener('paste', (e) => {
-            const paste = e.clipboardData?.getData('text') || '';
-            if (paste.includes('\n') || paste.includes('\r')) {
-                e.preventDefault();
-                const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-                const start = pathInput.selectionStart;
-                const end = pathInput.selectionEnd;
-                pathInput.value = pathInput.value.substring(0, start) + singleLine + pathInput.value.substring(end);
-                pathInput.selectionStart = pathInput.selectionEnd = start + singleLine.length;
-                autoResize(pathInput);
-                validatePath(pathInput.value, app, contentEl);
-                validateAndShowWarning(pathInput.value.trim(), getNameInput().value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
             }
         });
         const getState = setupPathAutocomplete(
@@ -118,32 +105,16 @@ export function setupExtensionInput(
         extensionInput?.select();
     });
 
-    // Handle input changes
     extensionInput.addEventListener('input', () => {
+        sanitizeSingleLineField(extensionInput);
         handlePostOperationInteraction();
         validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput.value.trim() || '', data.path, app, contentEl);
         validateAndShowExtensionWarning(extensionInput.value.trim(), data.extension, contentEl);
     });
 
-    // Handle keydown for extension input
     extensionInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-        }
-    });
-
-    // Handle paste events
-    extensionInput.addEventListener('paste', (e) => {
-        const paste = e.clipboardData?.getData('text') || '';
-        if (paste.includes('\n') || paste.includes('\r')) {
-            e.preventDefault();
-            const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-            const start = extensionInput.selectionStart || 0;
-            const end = extensionInput.selectionEnd || 0;
-            extensionInput.value = extensionInput.value.substring(0, start) + singleLine + extensionInput.value.substring(end);
-            extensionInput.selectionStart = extensionInput.selectionEnd = start + singleLine.length;
-            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput.value.trim() || '', data.path, app, contentEl);
-            validateAndShowExtensionWarning(extensionInput.value.trim(), data.extension, contentEl);
         }
     });
 
@@ -160,6 +131,7 @@ export function setupNameInputListeners(
     handlePostOperationInteraction: () => void
 ) {
     nameInput.addEventListener('input', () => {
+        sanitizeSingleLineField(nameInput);
         handlePostOperationInteraction();
         validateInputs(nameInput.value.trim());
         autoResize(nameInput);
@@ -168,20 +140,6 @@ export function setupNameInputListeners(
     nameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-        }
-    });
-    nameInput.addEventListener('paste', (e) => {
-        const paste = e.clipboardData?.getData('text') || '';
-        if (paste.includes('\n') || paste.includes('\r')) {
-            e.preventDefault();
-            const singleLine = paste.replace(/[\r\n]+/g, ' ').trim();
-            const start = nameInput.selectionStart;
-            const end = nameInput.selectionEnd;
-            nameInput.value = nameInput.value.substring(0, start) + singleLine + nameInput.value.substring(end);
-            nameInput.selectionStart = nameInput.selectionEnd = start + singleLine.length;
-            autoResize(nameInput);
-            validateInputs(nameInput.value.trim());
-            validateAndShowWarning(pathInput.value.trim(), nameInput.value.trim(), extensionInput?.value.trim() || '', data.path, app, contentEl);
         }
     });
 }

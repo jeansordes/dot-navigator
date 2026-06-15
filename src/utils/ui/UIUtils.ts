@@ -2,6 +2,36 @@
  * Utility functions for UI manipulation
  */
 
+const NEWLINE_RE = /[\r\n]/;
+
+/** Replace line breaks with spaces (does not trim the whole string). */
+export function collapseNewlines(value: string): string {
+    return value.replace(/[\r\n]+/g, ' ');
+}
+
+/**
+ * Collapse pasted or typed newlines in a single-line field and adjust the caret.
+ * Returns true when the value was modified.
+ */
+export function sanitizeSingleLineField(
+    field: HTMLInputElement | HTMLTextAreaElement
+): boolean {
+    const { value, selectionStart, selectionEnd } = field;
+    if (!NEWLINE_RE.test(value)) return false;
+
+    const collapsed = collapseNewlines(value);
+    field.value = collapsed;
+
+    const mapPos = (pos: number | null): number => {
+        if (pos === null) return collapsed.length;
+        return collapseNewlines(value.slice(0, pos)).length;
+    };
+
+    field.selectionStart = mapPos(selectionStart);
+    field.selectionEnd = mapPos(selectionEnd ?? selectionStart);
+    return true;
+}
+
 /**
  * Auto-resize a textarea element based on its content
  */
