@@ -29,16 +29,16 @@ export class ViewLayout {
     let headerEl: HTMLElement;
     let bodyEl: HTMLElement;
 
-    if (existingHeader instanceof HTMLElement && existingBody instanceof HTMLElement) {
+    if (existingHeader?.instanceOf(HTMLElement) && existingBody?.instanceOf(HTMLElement)) {
       headerEl = existingHeader;
       bodyEl = existingBody;
     } else {
       container.empty();
-      headerEl = document.createElement('div');
+      headerEl = activeDocument.createElement('div');
       headerEl.className = 'dotn_view-header';
       container.appendChild(headerEl);
 
-      bodyEl = document.createElement('div');
+      bodyEl = activeDocument.createElement('div');
       bodyEl.className = 'dotn_view-body';
       container.appendChild(bodyEl);
     }
@@ -49,10 +49,10 @@ export class ViewLayout {
     // Ensure tree container exists under body
     const existingTree = bodyEl.querySelector('.dotn_view-tree');
     let treeEl: HTMLElement;
-    if (existingTree instanceof HTMLElement) {
+    if (existingTree?.instanceOf(HTMLElement)) {
       treeEl = existingTree;
     } else {
-      treeEl = document.createElement('div');
+      treeEl = activeDocument.createElement('div');
       treeEl.className = 'dotn_view-tree';
       bodyEl.appendChild(treeEl);
     }
@@ -69,9 +69,9 @@ export class ViewLayout {
   onToggleClick(handler: () => void): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_tree-toggle-button');
-    if (btn instanceof HTMLElement) {
+    if (btn?.instanceOf(HTMLElement)) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => handler());
       }
@@ -81,9 +81,9 @@ export class ViewLayout {
   onToggleHiddenClick(handler: () => void): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_toggle-hidden');
-    if (btn instanceof HTMLElement) {
+    if (btn?.instanceOf(HTMLElement)) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => handler());
       }
@@ -93,9 +93,9 @@ export class ViewLayout {
   onRevealClick(handler: () => void): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_reveal-active');
-    if (btn instanceof HTMLElement) {
+    if (btn?.instanceOf(HTMLElement)) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => handler());
       }
@@ -120,9 +120,9 @@ export class ViewLayout {
   private _attachCreateFileHandler(): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_create-file');
-    if (btn instanceof HTMLElement && this.createHandlers.onCreateFile) {
+    if (btn?.instanceOf(HTMLElement) && this.createHandlers.onCreateFile) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => this.createHandlers.onCreateFile?.());
       }
@@ -132,9 +132,9 @@ export class ViewLayout {
   private _attachCreateFolderHandler(): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_create-folder');
-    if (btn instanceof HTMLElement && this.createHandlers.onCreateFolder) {
+    if (btn?.instanceOf(HTMLElement) && this.createHandlers.onCreateFolder) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => this.createHandlers.onCreateFolder?.());
       }
@@ -144,9 +144,9 @@ export class ViewLayout {
   private _attachSettingsHandler(): void {
     const header = this.headerEl;
     const btn = header?.querySelector('.dotn_settings-button');
-    if (btn instanceof HTMLElement && this.createHandlers.onSettingsClick) {
+    if (btn?.instanceOf(HTMLElement) && this.createHandlers.onSettingsClick) {
       const cloned = btn.cloneNode(true);
-      if (cloned instanceof HTMLElement) {
+      if (cloned?.instanceOf(HTMLElement)) {
         btn.replaceWith(cloned);
         cloned.addEventListener('click', () => this.createHandlers.onSettingsClick?.());
       }
@@ -166,7 +166,7 @@ export class ViewLayout {
       const existingAction = iconContainer.querySelector('.dotn_toggle-hidden-action');
       let stateEl: HTMLElement;
       let actionEl: HTMLElement;
-      if (existingState instanceof HTMLElement && existingAction instanceof HTMLElement) {
+      if (existingState?.instanceOf(HTMLElement) && existingAction?.instanceOf(HTMLElement)) {
         stateEl = existingState;
         actionEl = existingAction;
       } else {
@@ -183,6 +183,13 @@ export class ViewLayout {
     } catch (error) {
       debugError('Error updating hidden toggle icon:', error);
     }
+  }
+
+  setHiddenToggleVisible(visible: boolean): void {
+    const header = this.headerEl;
+    const toggleButton: HTMLElement | null = header?.querySelector('.dotn_toggle-hidden') || null;
+    if (!toggleButton) return;
+    toggleButton.classList.toggle('dotn_header-control-hidden', !visible);
   }
 
   updateToggleDisplay(anyExpanded: boolean): void {
@@ -214,7 +221,7 @@ export class ViewLayout {
   private ensureHeaderControls(header: HTMLElement): void {
     // Create file button
     if (!header.querySelector('.dotn_create-file')) {
-      const createFileBtn = document.createElement('div');
+      const createFileBtn = activeDocument.createElement('div');
       createFileBtn.className = 'dotn_button-icon dotn_create-file';
       setIcon(createFileBtn, 'file-plus');
       createFileBtn.setAttribute('title', t('tooltipCreateNewFile'));
@@ -223,7 +230,7 @@ export class ViewLayout {
 
     // Create folder button  
     if (!header.querySelector('.dotn_create-folder')) {
-      const createFolderBtn = document.createElement('div');
+      const createFolderBtn = activeDocument.createElement('div');
       createFolderBtn.className = 'dotn_button-icon dotn_create-folder';
       setIcon(createFolderBtn, 'folder-plus');
       createFolderBtn.setAttribute('title', t('tooltipCreateNewFolder'));
@@ -232,9 +239,9 @@ export class ViewLayout {
 
     // Toggle button
     if (!header.querySelector('.dotn_tree-toggle-button')) {
-      const toggleButton = document.createElement('div');
+      const toggleButton = activeDocument.createElement('div');
       toggleButton.className = 'dotn_tree-toggle-button';
-      const iconContainer = document.createElement('div');
+      const iconContainer = activeDocument.createElement('div');
       iconContainer.className = 'dotn_tree-toggle-icon dotn_button-icon';
       toggleButton.appendChild(iconContainer);
       header.appendChild(toggleButton);
@@ -245,9 +252,9 @@ export class ViewLayout {
 
     // Toggle hidden nodes button
     if (!header.querySelector('.dotn_toggle-hidden')) {
-      const hiddenToggle = document.createElement('div');
+      const hiddenToggle = activeDocument.createElement('div');
       hiddenToggle.className = 'dotn_toggle-hidden';
-      const hiddenIcon = document.createElement('div');
+      const hiddenIcon = activeDocument.createElement('div');
       hiddenIcon.className = 'dotn_toggle-hidden-icon dotn_button-icon';
       hiddenToggle.appendChild(hiddenIcon);
       header.appendChild(hiddenToggle);
@@ -257,7 +264,7 @@ export class ViewLayout {
 
     // Reveal active button
     if (!header.querySelector('.dotn_reveal-active')) {
-      const revealBtn = document.createElement('div');
+      const revealBtn = activeDocument.createElement('div');
       revealBtn.className = 'dotn_button-icon dotn_reveal-active';
       setIcon(revealBtn, 'locate-fixed');
       revealBtn.setAttribute('title', t('tooltipRevealActiveFile'));
@@ -265,14 +272,14 @@ export class ViewLayout {
     }
 
     if (!header.querySelector('.dotn_spacer')) {
-      const spacer = document.createElement('div');
+      const spacer = activeDocument.createElement('div');
       spacer.className = 'dotn_spacer';
       header.appendChild(spacer);
     }
 
     // Settings button
     if (!header.querySelector('.dotn_settings-button')) {
-      const settingsBtn = document.createElement('div');
+      const settingsBtn = activeDocument.createElement('div');
       settingsBtn.className = 'dotn_button-icon dotn_settings-button';
       setIcon(settingsBtn, 'settings');
       settingsBtn.setAttribute('title', t('tooltipOpenSettings'));

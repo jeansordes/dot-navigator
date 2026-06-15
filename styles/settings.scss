@@ -1,5 +1,33 @@
 /* Settings Page Styles */
 
+.dotnav-setting-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--size-4-2);
+    margin-top: var(--size-4-2);
+    padding: var(--size-4-2) var(--size-4-3);
+    border-radius: var(--radius-s);
+    background-color: var(--background-modifier-error-hover);
+    color: var(--text-warning);
+    font-size: var(--font-ui-smaller);
+    line-height: var(--line-height-normal);
+}
+
+.dotnav-setting-warning-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 1px;
+
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.dotnav-setting-warning-text {
+    flex: 1 1 auto;
+}
+
 /* Inline config path status — shown below the setting description when the file is missing */
 .dotnav-config-path-status {
     color: var(--text-error);

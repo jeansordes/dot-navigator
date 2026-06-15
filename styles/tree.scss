@@ -460,6 +460,10 @@
     }
 }
 
+.dotn_toggle-hidden.dotn_header-control-hidden {
+    display: none;
+}
+
 .dotn_toggle-hidden.dotn_active {
     color: var(--dotn_accent-color);
     border-radius: var(--dotn_border-radius);

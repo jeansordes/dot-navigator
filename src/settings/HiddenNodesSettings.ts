@@ -1,4 +1,4 @@
-import { TextComponent } from 'obsidian';
+import { setIcon, TextComponent } from 'obsidian';
 import { t } from '../i18n';
 import type { PluginSettings } from '../types';
 import { FileUtils } from '../utils/file/FileUtils';
@@ -16,21 +16,37 @@ export function addHiddenNodesSettings(
   settings: PluginSettings,
   callbacks: HiddenNodesSettingsCallbacks
 ): void {
+  const masterEnabled = settings.enableHiddenNodesReveal ?? false;
+
   section.addSetting((setting) => {
     setting
-      .setName(t('settingsShowHiddenNodes'))
-      .setDesc(t('settingsShowHiddenNodesDesc'))
+      .setName(t('settingsEnableHiddenNodesReveal'))
+      .setDesc(t('settingsEnableHiddenNodesRevealDesc'))
       .addToggle((toggle) => {
         toggle
-          .setValue(settings.showHiddenNodes ?? false)
+          .setValue(masterEnabled)
           .onChange(async (value) => {
-            settings.showHiddenNodes = value;
+            settings.enableHiddenNodesReveal = value;
+            if (!value) {
+              settings.showHiddenNodes = false;
+            }
             await callbacks.saveSettings();
             await callbacks.updateTreeView();
+            callbacks.refreshDisplay();
           });
       });
   });
 
+  if (!masterEnabled) return;
+
+  addHiddenNodesAdvancedSettings(section, settings, callbacks);
+}
+
+function addHiddenNodesAdvancedSettings(
+  section: SettingsSection,
+  settings: PluginSettings,
+  callbacks: HiddenNodesSettingsCallbacks
+): void {
   section.addSetting((setting) => {
     setting
       .setName(t('settingsHideDotPaths'))
@@ -45,6 +61,26 @@ export function addHiddenNodesSettings(
             callbacks.refreshDisplay();
           });
       });
+  });
+
+  section.addSetting((setting) => {
+    setting.settingEl.addClass('dotnav-reveal-dot-filesystem');
+    setting
+      .setName(t('settingsRevealDotFilesystem'))
+      .setDesc(t('settingsRevealDotFilesystemDesc'));
+    const warningEl = setting.descEl.createDiv({ cls: 'dotnav-setting-warning' });
+    setIcon(warningEl.createSpan({ cls: 'dotnav-setting-warning-icon' }), 'alert-triangle');
+    warningEl.createSpan({ cls: 'dotnav-setting-warning-text', text: t('settingsRevealDotFilesystemWarning') });
+    setting.addToggle((toggle) => {
+      toggle
+        .setValue(settings.revealDotFilesystem ?? false)
+        .onChange(async (value) => {
+          settings.revealDotFilesystem = value;
+          await callbacks.saveSettings();
+          await callbacks.updateTreeView();
+          callbacks.refreshDisplay();
+        });
+    });
   });
 
   const patterns = settings.hiddenPatterns ?? [];

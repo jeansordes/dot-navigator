@@ -66,8 +66,9 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     const scrollContainer = this.findSettingsScrollContainer();
     const scrollTop = scrollContainer.scrollTop;
     this.display();
-    requestAnimationFrame(() => {
-      scrollContainer.scrollTop = scrollTop;
+    window.requestAnimationFrame(() => {
+      const maxScroll = Math.max(0, scrollContainer.scrollHeight - scrollContainer.clientHeight);
+      scrollContainer.scrollTop = Math.min(scrollTop, maxScroll);
     });
   }
 
@@ -108,7 +109,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
       this.plugin.settings,
       {
         ...this.settingsCallbacks,
-        refreshDisplay: this.display.bind(this),
+        refreshDisplay: this.redisplayPreservingScroll.bind(this),
       }
     );
 

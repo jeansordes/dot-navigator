@@ -2,7 +2,7 @@ import { App } from 'obsidian';
 import { ComplexVirtualTree } from '../views/tree/VirtualizedTree';
 import { buildVirtualizedData } from './virtualData';
 import { RenameManager } from '../utils/rename/RenameManager';
-import { PluginSettings, TreeNode } from '../types';
+import { PluginSettings, TreeNode, VirtualTreeBaseItem } from '../types';
 import { TreeCacheManager, type CachedTreeData } from './TreeCacheManager';
 import { SchemaUtils } from './SchemaUtils';
 import { CacheUtils } from './CacheUtils';
@@ -12,6 +12,7 @@ import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:virtual-tree-manager');
 const debugError = debug.extend('error');
 import { RuleManager } from '../utils/schema/RuleManager';
+import { resolveHiddenVisibilityFromSettings } from './hiddenVisibility';
 
 export class VirtualTreeManager {
   private app: App;
@@ -40,9 +41,6 @@ export class VirtualTreeManager {
     // Schema suggestions are now processed in background, no need for lazy loading on expansion
     this.onExpansionChange = onExpansionChange;
   }
-
-
-
 
   async init(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     this.rootContainer = rootContainer;
@@ -74,10 +72,14 @@ export class VirtualTreeManager {
       this.onExpansionChange,
       expanded
     );
-    this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
+    this.syncHiddenVisibility();
     this.syncShowChildCountClass();
   }
 
+  private syncHiddenVisibility(): void {
+    const { showHidden, revealDotFilesystem } = resolveHiddenVisibilityFromSettings(this.settings);
+    this.vt?.setHiddenVisibility(showHidden, revealDotFilesystem);
+  }
 
   private async buildAndRenderFreshTree(rootContainer: HTMLElement, expanded?: string[]): Promise<void> {
     const root = await TreeUtils.buildTreeStructure(this.app, this.settings);
@@ -102,7 +104,7 @@ export class VirtualTreeManager {
       this.onExpansionChange,
       expanded
     );
-    this.vt.setShowHidden(this.settings?.showHiddenNodes ?? false);
+    this.syncHiddenVisibility();
     this.syncShowChildCountClass();
     await CacheUtils.saveTreeToCache(
       this.cacheManager,
@@ -160,7 +162,6 @@ export class VirtualTreeManager {
       debugError('Background tree rebuild failed:', error);
     }
   }
-
 
   // Schema suggestions are now pre-calculated for the entire tree during data layer building
   // No need to calculate them on-demand during expansion
@@ -228,7 +229,18 @@ export class VirtualTreeManager {
   getInstance(): ComplexVirtualTree | null { return this.vt; }
 
   setShowHidden(value: boolean): void {
-    this.vt?.setShowHidden(value);
+    const revealDotFilesystem = this.settings?.enableHiddenNodesReveal
+      ? (this.settings?.revealDotFilesystem ?? false)
+      : false;
+    this.setHiddenVisibility(value && (this.settings?.enableHiddenNodesReveal ?? false), revealDotFilesystem);
+  }
+
+  setHiddenVisibility(showHidden: boolean, revealDotFilesystem: boolean): void {
+    this.vt?.setHiddenVisibility(showHidden, revealDotFilesystem);
+  }
+
+  getData(): VirtualTreeBaseItem[] {
+    return this.vt?.getData() ?? [];
   }
 
   /**
@@ -240,7 +252,7 @@ export class VirtualTreeManager {
     this.usingCachedData = false; // Force rebuild to ensure settings are applied
 
     if (this.vt && this.rootContainer) {
-      this.vt.setShowHidden(newSettings.showHiddenNodes ?? false);
+      this.syncHiddenVisibility();
       this.syncShowChildCountClass();
       // Rebuild the tree data with new settings
       await this.updateOnVaultChange();
@@ -253,7 +265,7 @@ export class VirtualTreeManager {
 
     let mode = this.settings?.childCountDisplay;
     if (mode !== 'off' && mode !== 'hover' && mode !== 'always') {
-      mode = this.settings?.showChildCount === true ? 'always' : 'off';
+      mode = 'off';
     }
     if (mode === 'hover') mode = 'always';
     const enabled = mode !== 'off';

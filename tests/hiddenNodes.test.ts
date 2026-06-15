@@ -58,6 +58,8 @@ describe('markHiddenItems', () => {
   it('marks subtree and alias by target', () => {
     markHiddenItems(data, { ...DEFAULT_SETTINGS, hiddenNodes: ['folder'] });
     expect(data[0].isHidden).toBe(true);
+    expect(data[0].isUserHidden).toBe(true);
+    expect(data[0].isDotHidden).toBeFalsy();
     expect(data[0].children?.[0].isHidden).toBe(true);
     expect(data[1].isHidden).toBe(true);
   });
@@ -65,6 +67,8 @@ describe('markHiddenItems', () => {
   it('marks dot paths when hideDotPaths is enabled', () => {
     markHiddenItems(data, { ...DEFAULT_SETTINGS, hideDotPaths: true });
     expect(data[2].isHidden).toBe(true);
+    expect(data[2].isDotHidden).toBe(true);
+    expect(data[2].isUserHidden).toBeFalsy();
     expect(data[0].isHidden).toBeFalsy();
   });
 
@@ -112,15 +116,30 @@ describe('flattenTree with hidden nodes', () => {
       id: 'hidden.md',
       name: 'Hidden',
       kind: 'file' as const,
+      isUserHidden: true,
+      isHidden: true,
+    },
+    {
+      id: '.git',
+      name: '.git',
+      kind: 'folder' as const,
+      isDotHidden: true,
       isHidden: true,
     },
     {
       id: 'parent',
       name: 'Parent',
       kind: 'folder' as const,
+      isUserHidden: true,
       isHidden: true,
       children: [
-        { id: 'parent/child.md', name: 'Child', kind: 'file' as const, isHidden: true },
+        {
+          id: 'parent/child.md',
+          name: 'Child',
+          kind: 'file' as const,
+          isUserHidden: true,
+          isHidden: true,
+        },
       ],
     },
   ];
@@ -130,9 +149,9 @@ describe('flattenTree with hidden nodes', () => {
     expect(rows.map(r => r.id)).toEqual(['visible.md']);
   });
 
-  it('includes hidden nodes when showHidden is true', () => {
+  it('includes user-hidden nodes when showHidden is true', () => {
     const expanded = new Map([['parent', true]]);
-    const rows = flattenTree(tree, expanded, 0, [], true);
+    const rows = flattenTree(tree, expanded, 0, [], true, false);
     expect(rows.map(r => r.id)).toEqual([
       'visible.md',
       'hidden.md',
@@ -140,5 +159,13 @@ describe('flattenTree with hidden nodes', () => {
       'parent/child.md',
     ]);
     expect(rows.find(r => r.id === 'hidden.md')?.isHidden).toBe(true);
+  });
+
+  it('omits dot-hidden nodes unless revealDotFilesystem is enabled', () => {
+    const withoutDot = flattenTree(tree, new Map(), 0, [], true, false);
+    expect(withoutDot.map(r => r.id)).not.toContain('.git');
+
+    const withDot = flattenTree(tree, new Map(), 0, [], true, true);
+    expect(withDot.map(r => r.id)).toContain('.git');
   });
 });

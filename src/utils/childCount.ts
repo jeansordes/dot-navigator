@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import type { ChildCountMode, VirtualTreeBaseItem } from '../types';
+import { isNodeVisibleInTree } from '../core/hiddenVisibility';
 
 export interface SubtreeSizes {
   direct: number;
@@ -11,18 +12,26 @@ export interface ChildCountBadge {
   tooltip: string;
 }
 
-function visibleChildren(node: VirtualTreeBaseItem, showHidden: boolean): VirtualTreeBaseItem[] {
+function visibleChildren(
+  node: VirtualTreeBaseItem,
+  showHidden: boolean,
+  revealDotFilesystem: boolean,
+): VirtualTreeBaseItem[] {
   if (!Array.isArray(node.children)) return [];
-  return node.children.filter(c => showHidden || !c.isHidden);
+  return node.children.filter(c => isNodeVisibleInTree(c, showHidden, revealDotFilesystem));
 }
 
-export function countSubtreeSizes(node: VirtualTreeBaseItem, showHidden: boolean = true): SubtreeSizes {
-  const children = visibleChildren(node, showHidden);
+export function countSubtreeSizes(
+  node: VirtualTreeBaseItem,
+  showHidden: boolean = true,
+  revealDotFilesystem: boolean = false,
+): SubtreeSizes {
+  const children = visibleChildren(node, showHidden, revealDotFilesystem);
   const direct = children.length;
   let total = direct;
 
   for (const child of children) {
-    total += countSubtreeSizes(child, showHidden).total;
+    total += countSubtreeSizes(child, showHidden, revealDotFilesystem).total;
   }
 
   return { direct, total };

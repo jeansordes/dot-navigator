@@ -134,6 +134,8 @@ export class CacheUtils {
       hiddenPatterns: settings?.hiddenPatterns,
       hideDotPaths: settings?.hideDotPaths,
       hiddenExceptions: settings?.hiddenExceptions,
+      enableHiddenNodesReveal: settings?.enableHiddenNodesReveal,
+      revealDotFilesystem: settings?.revealDotFilesystem,
     };
     return JSON.stringify(relevantSettings);
   }

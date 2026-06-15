@@ -6,6 +6,7 @@ import { collectRedirectEntries, enrichRedirectStubs } from './redirectStub';
 import {
   hideConfigFromSettings,
   isEffectivelyHidden as isPathEffectivelyHidden,
+  resolveHiddenFlags,
   toggleHiddenPath as toggleHideConfig,
   unhidePath as unhideHideConfig,
   applyHideConfigToSettings,
@@ -27,6 +28,8 @@ export interface VItem {
   targetKind?: Kind;
   targetName?: string;
   children?: VItem[];
+  isUserHidden?: boolean;
+  isDotHidden?: boolean;
   isHidden?: boolean;
 }
 
@@ -80,13 +83,25 @@ export function toggleHiddenConfig(settings: PluginSettings, path: string): Hide
   return next;
 }
 
+function mergeHiddenFlags(a: { isUserHidden: boolean; isDotHidden: boolean; isHidden: boolean }, b: { isUserHidden: boolean; isDotHidden: boolean; isHidden: boolean }) {
+  return {
+    isUserHidden: a.isUserHidden || b.isUserHidden,
+    isDotHidden: a.isDotHidden || b.isDotHidden,
+    isHidden: a.isHidden || b.isHidden,
+  };
+}
+
 export function markHiddenItems(data: VItem[], settings?: PluginSettings): void {
   const config = hideConfigFromSettings(settings);
   const walk = (items: VItem[]): void => {
     for (const item of items) {
-      item.isHidden =
-        isPathEffectivelyHidden(item.id, config) ||
-        (item.targetPath ? isPathEffectivelyHidden(item.targetPath, config) : false);
+      let flags = resolveHiddenFlags(item.id, config);
+      if (item.targetPath) {
+        flags = mergeHiddenFlags(flags, resolveHiddenFlags(item.targetPath, config));
+      }
+      item.isUserHidden = flags.isUserHidden;
+      item.isDotHidden = flags.isDotHidden;
+      item.isHidden = flags.isHidden;
       if (item.children?.length) walk(item.children);
     }
   };

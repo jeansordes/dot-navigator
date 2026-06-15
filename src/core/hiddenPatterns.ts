@@ -85,14 +85,70 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function isEffectivelyHidden(path: string, config: HideConfig): boolean {
+export function isHiddenByUserRules(path: string, config: HideConfig): boolean {
   if (isPathExcepted(path, config.exceptions)) return false;
   if (isPathHiddenByPrefix(path, new Set(config.paths))) return true;
-  if (config.hideDotPaths && isDotPrefixedPath(path)) return true;
   for (const pattern of config.patterns) {
     if (matchGlobPattern(path, pattern)) return true;
   }
   return false;
+}
+
+export function isHiddenByDotRule(path: string, config: HideConfig): boolean {
+  if (isPathExcepted(path, config.exceptions)) return false;
+  return config.hideDotPaths && isDotPrefixedPath(path);
+}
+
+export function isEffectivelyHidden(path: string, config: HideConfig): boolean {
+  return isHiddenByUserRules(path, config) || isHiddenByDotRule(path, config);
+}
+
+export interface HiddenItemFlags {
+  isUserHidden: boolean;
+  isDotHidden: boolean;
+  isHidden: boolean;
+}
+
+export function resolveHiddenFlags(path: string, config: HideConfig): HiddenItemFlags {
+  const isUserHidden = isHiddenByUserRules(path, config);
+  const isDotHidden = !isUserHidden && isHiddenByDotRule(path, config);
+  return {
+    isUserHidden,
+    isDotHidden,
+    isHidden: isUserHidden || isDotHidden,
+  };
+}
+
+type HiddenTreeNode = {
+  isUserHidden?: boolean;
+  isDotHidden?: boolean;
+  children?: HiddenTreeNode[];
+};
+
+export function hasRevealableHiddenContent(
+  items: HiddenTreeNode[],
+  settings?: { revealDotFilesystem?: boolean },
+): boolean {
+  const revealDot = settings?.revealDotFilesystem === true;
+  let found = false;
+
+  const walk = (nodes: HiddenTreeNode[]): void => {
+    for (const item of nodes) {
+      if (item.isUserHidden) {
+        found = true;
+        return;
+      }
+      if (revealDot && item.isDotHidden) {
+        found = true;
+        return;
+      }
+      if (item.children?.length) walk(item.children);
+      if (found) return;
+    }
+  };
+
+  walk(items);
+  return found;
 }
 
 export function unhidePath(config: HideConfig, path: string): HideConfig {

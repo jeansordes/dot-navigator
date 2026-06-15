@@ -1,5 +1,4 @@
 import { TFile, TFolder } from 'obsidian';
-
 // Define the view type for our tree view
 export const FILE_TREE_VIEW_TYPE = 'dot-navigator-view';
 export const TREE_VIEW_ICON = 'folder-git-2';
@@ -41,6 +40,8 @@ export interface PluginSettings {
     hideDotPaths?: boolean; // Hide dot-prefixed filesystem entries by default
     hiddenExceptions?: string[]; // Paths unhidden despite patterns/dot rule
     showHiddenNodes?: boolean; // Whether hidden nodes are visible in the tree (dimmed with eye icon)
+    enableHiddenNodesReveal?: boolean; // Master opt-in: show header toggle and allow revealing hidden nodes
+    revealDotFilesystem?: boolean; // Sub opt-in: include dot/system folders when showing hidden nodes
     /** @deprecated Migrated to childCountDisplay === 'off' */
     showChildCount?: boolean;
     childCountDisplay?: ChildCountDisplayMode; // When to reveal the count badge
@@ -65,6 +66,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     hideDotPaths: true,
     hiddenExceptions: [],
     showHiddenNodes: false,
+    enableHiddenNodesReveal: false,
+    revealDotFilesystem: false,
     childCountDisplay: 'off',
     childCountMode: 'direct',
 }
@@ -101,6 +104,8 @@ export interface VirtualTreeBaseItem {
     targetName?: string;
     children?: VirtualTreeBaseItem[];
     expanded?: boolean;
+    isUserHidden?: boolean;
+    isDotHidden?: boolean;
     isHidden?: boolean;
 }
 

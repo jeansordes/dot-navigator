@@ -32,7 +32,7 @@ describe('countSubtreeSizes', () => {
       kind: 'folder',
       children: [
         { id: 'visible', name: 'visible', kind: 'file' },
-        { id: 'hidden', name: 'hidden', kind: 'file', isHidden: true },
+        { id: 'hidden', name: 'hidden', kind: 'file', isHidden: true, isUserHidden: true },
       ],
     };
 

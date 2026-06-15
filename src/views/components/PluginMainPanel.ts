@@ -1,5 +1,4 @@
-import { ItemView, TFile, WorkspaceLeaf, App, Notice } from 'obsidian';
-
+import { App, ItemView, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 interface ObsidianInternalApp extends App {
   setting?: {
     open(): Promise<void>;
@@ -24,6 +23,7 @@ import { PersistenceManager } from './PersistenceManager';
 import { ViewInitialization } from './ViewInitialization';
 import { TreeOperations } from '../tree/TreeOperations';
 import { RuleManager } from '../../utils/schema/RuleManager';
+import { resolveHiddenVisibilityFromSettings, shouldShowHiddenToggle } from '../../core/hiddenVisibility';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -122,7 +122,7 @@ export default class PluginMainPanel extends ItemView {
 
         // Use containerEl directly as the root container
         const viewRoot = this.containerEl;
-        if (!(viewRoot instanceof HTMLElement)) {
+        if (!(viewRoot.instanceOf(HTMLElement))) {
             debugError('Error: containerEl is not an HTMLElement:', { containerEl: this.containerEl });
             return;
         }
@@ -145,6 +145,7 @@ export default class PluginMainPanel extends ItemView {
         // Initialize virtualized tree
         this.vtManager = new VirtualTreeManager(this.app, () => {
             this._syncHeaderToggle();
+            this._syncHiddenToggleVisibility();
             this.persistenceManager.persistExpandedNodesDebounced();
         }, this.renameManager, this.settings, this.ruleManager);
         await this.vtManager.init(viewRoot, this.settings?.expandedNodes);
@@ -169,6 +170,7 @@ export default class PluginMainPanel extends ItemView {
             void this.toggleShowHiddenNodes();
         });
         this._syncHiddenToggle();
+        this._syncHiddenToggleVisibility();
 
         // Create buttons
         this.layout.onCreateFileClick(() => {
@@ -205,7 +207,7 @@ export default class PluginMainPanel extends ItemView {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) return;
         this.activeFile = activeFile;
-        setTimeout(() => this.highlightActiveFile(), 500);
+        window.setTimeout(() => this.highlightActiveFile(), 500);
     }
 
     /**
@@ -244,6 +246,7 @@ export default class PluginMainPanel extends ItemView {
             if (this.activeFile) {
                 this.vtManager.revealPathForActiveFile(this.activeFile.path);
             }
+            this._syncHiddenToggleVisibility();
         }
     }
 
@@ -289,13 +292,23 @@ export default class PluginMainPanel extends ItemView {
         this.layout.updateHiddenToggleDisplay(this.settings.showHiddenNodes ?? false);
     }
 
-    public async toggleShowHiddenNodes(): Promise<void> {
-        this.settings.showHiddenNodes = !(this.settings.showHiddenNodes ?? false);
-        await this.plugin.saveSettings();
-        this.vtManager?.setShowHidden(this.settings.showHiddenNodes);
-        this._syncHiddenToggle();
+    private _syncHiddenToggleVisibility(): void {
+        if (!this.layout || !this.vtManager) return;
+        const data = this.vtManager.getData();
+        const visible = shouldShowHiddenToggle(data, this.settings);
+        this.layout.setHiddenToggleVisible(visible);
     }
 
+    public async toggleShowHiddenNodes(): Promise<void> {
+        if (!this.settings.enableHiddenNodesReveal) return;
+
+        this.settings.showHiddenNodes = !(this.settings.showHiddenNodes ?? false);
+        await this.plugin.saveSettings();
+        const { showHidden, revealDotFilesystem } = resolveHiddenVisibilityFromSettings(this.settings);
+        this.vtManager?.setHiddenVisibility(showHidden, revealDotFilesystem);
+        this._syncHiddenToggle();
+        this._syncHiddenToggleVisibility();
+    }
 
     /**
      * Get expanded nodes for saving in settings
@@ -360,7 +373,7 @@ export default class PluginMainPanel extends ItemView {
         this.persistenceManager.persistExpandedNodesDebounced();
         // Force immediate persistence
         if (this.persistenceManager.persistExpandedNodesDebounced) {
-            setTimeout(() => this.persistenceManager.persistExpandedNodesDebounced(), 0);
+            window.setTimeout(() => this.persistenceManager.persistExpandedNodesDebounced(), 0);
         }
 
         // Clear references
@@ -379,6 +392,7 @@ export default class PluginMainPanel extends ItemView {
             await this.vtManager.updateSettings(newSettings);
         }
         this._syncHiddenToggle();
+        this._syncHiddenToggleVisibility();
         // Update persistence manager with new settings
         this.persistenceManager.updateSettings(newSettings);
     }

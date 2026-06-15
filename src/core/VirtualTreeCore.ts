@@ -1,4 +1,5 @@
 // Browser globals are provided by Obsidian runtime
+
 import { flattenTree } from '../flatten';
 // import { updateInstanceStyles } from '../views/styleSheet';
 import { computeWindow } from '../utils';
@@ -32,6 +33,7 @@ export class VirtualTree {
   private visible: VirtualTreeItem[];
   private total: number;
   private showHidden = true;
+  private revealDotFilesystem = false;
   private _onScroll: () => void;
   // Store the exact scroll handler we add so we can remove it later
   private _scrollHandler?: () => void;
@@ -69,7 +71,7 @@ export class VirtualTree {
 
     // If not found in container, try global search (backward compatibility)
     if (!viewTree) {
-      viewTree = document.querySelector('.dotn_view-tree');
+      viewTree = activeDocument.querySelector('.dotn_view-tree');
     }
 
     if (!viewTree) {
@@ -83,8 +85,7 @@ export class VirtualTree {
       return;
     }
     this.virtualizer = viewTree;
-    // Height may be updated later; rely on CSS for positioning
-    this.virtualizer.style.height = '0px'; // Will be updated based on content
+    this.virtualizer.addClass('dotn-virtualizer--collapsed');
     
     // Don't append the virtualizer if it's already a child of the container
     // This prevents duplicate appending which can cause issues
@@ -100,7 +101,7 @@ export class VirtualTree {
     this.visibleCount = Math.ceil(this.container.clientHeight / this.rowHeight);
     this.poolSize = this.visibleCount + this.buffer * 2;
     for (let i = 0; i < this.poolSize; i++) {
-      const row = document.createElement('div');
+      const row = activeDocument.createElement('div');
       row.className = 'row';
       row.dataset.poolIndex = String(i);
       row.addEventListener('click', (e) => this._onRowClick(e, row));
@@ -119,7 +120,7 @@ export class VirtualTree {
 
   private _getScrollElement(): HTMLElement | null {
     const sc = this.scrollContainer;
-    if (sc instanceof HTMLElement) return sc;
+    if (sc?.instanceOf(HTMLElement)) return sc;
     return this.container;
   }
 
@@ -304,7 +305,12 @@ export class VirtualTree {
   }
 
   setShowHidden(value: boolean): void {
-    this.showHidden = value;
+    this.setHiddenVisibility(value, this.revealDotFilesystem);
+  }
+
+  setHiddenVisibility(showHidden: boolean, revealDotFilesystem: boolean): void {
+    this.showHidden = showHidden;
+    this.revealDotFilesystem = revealDotFilesystem;
     this._recomputeVisible();
     this._render();
   }
@@ -313,14 +319,22 @@ export class VirtualTree {
     return this.showHidden;
   }
 
+  getRevealDotFilesystem(): boolean {
+    return this.revealDotFilesystem;
+  }
+
+  getData(): VirtualTreeBaseItem[] {
+    return this.data;
+  }
+
   protected _syncVirtualizerHeight(contentHeight: number): void {
     if (!this.virtualizer) return;
     const bottomPad = computeTreeBottomPadding(this.container);
-    this.virtualizer.style.height = `${contentHeight + bottomPad}px`;
+    this.virtualizer.setCssStyles({ height: `${contentHeight + bottomPad}px` });
   }
 
   private _recomputeVisible(): void {
-    this.visible = flattenTree(this.data, this.expanded, 0, [], this.showHidden);
+    this.visible = flattenTree(this.data, this.expanded, 0, [], this.showHidden, this.revealDotFilesystem);
     this.total = this.visible.length;
     // Set the virtualizer height to create scrollable area (includes bottom pad)
     this._syncVirtualizerHeight(this.total * this.rowHeight);
@@ -344,7 +358,7 @@ export class VirtualTree {
       // Grow pool if needed
       if (vItems.length > this.poolSize) {
         for (let i = this.poolSize; i < vItems.length; i++) {
-          const row = document.createElement('div');
+          const row = activeDocument.createElement('div');
           row.className = 'row';
           row.dataset.poolIndex = String(i);
           row.addEventListener('click', (e) => this._onRowClick(e, row));
@@ -486,7 +500,7 @@ export class VirtualTree {
       rowIndex: index,
       rowHeight: this.rowHeight,
       totalRows: this.total,
-      container: this.scrollContainer instanceof HTMLElement ? this.scrollContainer : this.container,
+      container: this.scrollContainer?.instanceOf(HTMLElement) ? this.scrollContainer : this.container,
       padding: 'var(--dotn_view-padding, 16px)',
       smooth: true
     });
