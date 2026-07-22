@@ -6,6 +6,7 @@
 import { TreeNode, TreeNodeType, createTreeNode } from './TreeNode.js';
 import { basename } from '../file/PathUtils.js';
 import type { FileInfo, FolderInfo } from '../../ports/VaultPort.js';
+import { isFolderIndexNote } from './folderIndexNote.js';
 
 /**
  * Builder for creating Dendron-style tree structures from files and folders
@@ -89,8 +90,14 @@ export class TreeBuilder {
     const processedPaths = new Set<string>();
 
     for (const file of files) {
+      if (isFolderIndexNote(file, folderPaths)) continue;
+
+      // A deeper file can have already introduced this path as a virtual
+      // ancestor. A real file must always win that conflict, regardless of
+      // the order returned by the vault.
       this.nodeTypeByPath.set(file.path, TreeNodeType.FILE);
       if (processedPaths.has(file.path)) continue;
+
       processedPaths.add(file.path);
 
       const parentPath = file.parentPath || '/';
@@ -201,4 +208,3 @@ export class TreeBuilder {
     return this.childrenAmountByPath.get(path) ?? 0;
   }
 }
-

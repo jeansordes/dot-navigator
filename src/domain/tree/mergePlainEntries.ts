@@ -1,6 +1,21 @@
 import type { FileInfo, FolderInfo } from '../../ports/VaultPort';
 import { basename } from '../file/PathUtils';
+import { isFolderIndexNote } from './folderIndexNote';
 import { createTreeNode, TreeNode, TreeNodeType } from './TreeNode';
+
+function indexTreeNodes(
+  node: TreeNode,
+  nodesByPath: Map<string, TreeNode>,
+  folderPaths: Set<string>,
+): void {
+  nodesByPath.set(node.path, node);
+  if (node.nodeType === TreeNodeType.FOLDER && node.path !== '/') {
+    folderPaths.add(node.path);
+  }
+  for (const child of node.children.values()) {
+    indexTreeNodes(child, nodesByPath, folderPaths);
+  }
+}
 
 function parentPathOf(path: string): string {
   const idx = path.lastIndexOf('/');
@@ -41,18 +56,21 @@ export function mergePlainFilesystemEntries(
   files: FileInfo[],
 ): void {
   const nodesByPath = new Map<string, TreeNode>();
-  nodesByPath.set('/', root);
+  const folderPaths = new Set<string>();
+  indexTreeNodes(root, nodesByPath, folderPaths);
 
-  const folderPaths = [...folders]
+  const sortedFolderPaths = [...folders]
     .map(f => f.path)
     .sort((a, b) => a.split('/').length - b.split('/').length);
 
-  for (const path of folderPaths) {
+  for (const path of sortedFolderPaths) {
+    folderPaths.add(path);
     ensureFolderNode(nodesByPath, root, path);
   }
 
   for (const file of files) {
     if (nodesByPath.has(file.path)) continue;
+    if (isFolderIndexNote(file, folderPaths)) continue;
     const parentPath = file.parentPath && file.parentPath !== '' ? file.parentPath : '/';
     const parent = ensureFolderNode(nodesByPath, root, parentPath);
     const node = createTreeNode({ path: file.path, nodeType: TreeNodeType.FILE });
