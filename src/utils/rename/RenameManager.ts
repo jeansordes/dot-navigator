@@ -1,5 +1,6 @@
 import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
+import { buildPlannedRenames, findRenameConflict } from './RenameWithProgress';
 import {
     computeMoveDestination,
     getDragLeaf,
@@ -295,11 +296,6 @@ export class RenameManager {
             return false;
         }
 
-        if (this.app.vault.getAbstractFileByPath(newPath)) {
-            new Notice(t('noticeFileExists', { path: newPath }));
-            return false;
-        }
-
         const { leaf } = getDragLeaf(draggedPath, draggedKind);
         const options: RenameOptions = {
             originalPath: draggedPath,
@@ -308,6 +304,20 @@ export class RenameManager {
             mode: draggedKind === 'folder' ? RenameMode.FILE_ONLY : RenameMode.FILE_AND_CHILDREN,
             kind: draggedKind,
         };
+
+        // A virtual node has no backing file, so its computed destination may
+        // legitimately already exist. Check only the real files that will be
+        // renamed (its dotted descendants), just as the batch operation does.
+        const planned = buildPlannedRenames(
+            this.app,
+            options,
+            (app, parentPath) => RenameUtils.findChildrenFiles(app, parentPath),
+        );
+        const conflict = findRenameConflict(this.app, planned);
+        if (conflict) {
+            new Notice(t('noticeFileExists', { path: conflict }));
+            return false;
+        }
 
         try {
             const operations = await RenameUtils.renameWithProgress(this.app, options);

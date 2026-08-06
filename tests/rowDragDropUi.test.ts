@@ -1,5 +1,6 @@
 import { Platform } from 'obsidian';
 import { isShortcutModifier, resolveDragSource } from '../src/views/row/rowDragDropUi';
+import { canStartDrag } from '../src/views/row/rowDragDrop';
 
 function makeRow(dataset: Record<string, string>): HTMLElement {
     return { dataset } as HTMLElement;
@@ -69,5 +70,27 @@ describe('resolveDragSource', () => {
             path: 'notes/target.child.md',
             isShortcut: false,
         });
+    });
+});
+
+describe('canStartDrag', () => {
+    const app = {
+        vault: {
+            getAbstractFileByPath: jest.fn(),
+        },
+    };
+
+    beforeEach(() => jest.clearAllMocks());
+
+    it('allows a virtual node without a backing vault entry', () => {
+        app.vault.getAbstractFileByPath.mockReturnValue(null);
+
+        expect(canStartDrag(app as never, 'projects.ideas.md', 'virtual')).toBe(true);
+    });
+
+    it('still requires a backing vault entry for regular files', () => {
+        app.vault.getAbstractFileByPath.mockReturnValue(null);
+
+        expect(canStartDrag(app as never, 'projects.ideas.md', 'file')).toBe(false);
     });
 });

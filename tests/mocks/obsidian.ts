@@ -45,6 +45,12 @@ export class Notice {
     }
 }
 
+export class Modal {
+    constructor(...__args: unknown[]) {
+        // Mock implementation
+    }
+}
+
 export class MetadataCache {
     on(__name: string, __callback: (...args: unknown[]) => void): void {
         /* no-op */

@@ -44,6 +44,18 @@ interface ActiveDrag extends PendingDrag {
     shortcutEligible: boolean;
 }
 
+/**
+ * Virtual nodes deliberately have no backing vault entry. They may still own
+ * real dotted descendants, which RenameManager moves as a batch.
+ */
+export function canStartDrag(
+    app: Pick<App, 'vault'>,
+    path: string,
+    kind: DraggableKind,
+): boolean {
+    return kind === 'virtual' || isVaultIndexedPath(app, path);
+}
+
 export interface RowDragControllerOptions {
     app: App;
     virtualTree: VirtualTreeLike;
@@ -145,7 +157,7 @@ export class RowDragController {
         const row = title.closest('.tree-row');
         if (!(row?.instanceOf(HTMLElement)) || !row.dataset.id) return;
         const { path, isShortcut, noteTargetPath } = resolveDragSource(row);
-        if (!isVaultIndexedPath(this.opts.app, path)) return;
+        if (!canStartDrag(this.opts.app, path, kindAttr)) return;
 
         const isTouch = e.pointerType === 'touch' || (Platform.isMobile && e.pointerType !== 'mouse');
         this.pending = {
