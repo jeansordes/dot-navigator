@@ -84,6 +84,8 @@ export default {
     settingsChildCountModeDirect: 'Enfants directs',
     settingsChildCountModeTotal: 'Total des descendants',
     settingsChildCountModeBoth: 'Les deux',
+    settingsFoldersFirst: 'Dossiers en premier',
+    settingsFoldersFirstDesc: 'Trie les vrais dossiers avant les fichiers et les suggestions virtuelles.',
     settingsHiddenNodesHeader: 'Nœuds cachés',
     settingsHiddenNodesDescription: 'Masquez des notes et dossiers via le menu contextuel. Activez l\'option ci-dessous pour configurer les motifs, les chemins point et le bouton œil du panneau.',
     settingsEnableHiddenNodesReveal: 'Activer l\'affichage des fichiers cachés',

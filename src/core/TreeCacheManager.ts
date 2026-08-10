@@ -7,6 +7,11 @@ export interface VaultStats {
   totalFiles: number;
   totalFolders: number;
   lastModified: number;
+  /**
+   * Stable snapshot of indexed file and folder paths. This catches moves and
+   * renames that preserve both item counts and the newest file mtime.
+   */
+  pathSignature: string;
 }
 
 export interface CachedTreeData {

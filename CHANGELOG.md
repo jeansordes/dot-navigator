@@ -1,3 +1,9 @@
+## [1.28.8](https://github.com/jeansordes/dot-navigator/compare/1.28.7...1.28.8) (2026-08-10)
+
+### Bug Fixes
+
+* move virtual node descendants by drag and drop ([837afee](https://github.com/jeansordes/dot-navigator/commit/837afeee9810f27163d3e224a92a937beb70a878))
+
 ## [1.28.7](https://github.com/jeansordes/dot-navigator/compare/1.28.6...1.28.7) (2026-07-22)
 
 ## [1.28.6](https://github.com/jeansordes/dot-navigator/compare/1.28.5...1.28.6) (2026-06-15)

@@ -56,4 +56,19 @@ describe('collectDotFilesystemEntries', () => {
     expect(result.files.some(f => f.path === '.gitignore')).toBe(false);
     expect(result.folders.some(f => f.path === '.git')).toBe(false);
   });
+
+  it('does not duplicate nested paths returned by Obsidian adapters', async () => {
+    const listDir = async (path: string) => {
+      const listings: Record<string, { files: string[]; folders: string[] }> = {
+        '': { folders: ['00 Inbox'], files: [] },
+        '00 Inbox': { folders: [], files: ['00 Inbox/.DS_Store'] },
+      };
+      return listings[path] ?? { files: [], folders: [] };
+    };
+
+    const result = await collectDotFilesystemEntries(listDir, new Set());
+
+    expect(result.files.map(file => file.path)).toEqual(['00 Inbox/.DS_Store']);
+    expect(result.files.some(file => file.path.includes('00 Inbox/00 Inbox'))).toBe(false);
+  });
 });

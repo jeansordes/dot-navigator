@@ -68,6 +68,7 @@ export class CacheUtils {
       cache.fileStats.totalFiles === currentStats.totalFiles &&
       cache.fileStats.totalFolders === currentStats.totalFolders &&
       cache.fileStats.lastModified === currentStats.lastModified &&
+      cache.fileStats.pathSignature === currentStats.pathSignature &&
       cache.settingsHash === currentSettingsHash &&
       cache.schemaVersion === currentSchemaVersion
     );
@@ -116,10 +117,20 @@ export class CacheUtils {
       return Math.max(max, file.stat?.mtime ?? 0);
     }, 0);
 
+    // Folder moves and renames do not reliably update a file's mtime. Counts
+    // and latest mtime alone can therefore validate an obsolete tree cache.
+    // Keep a deterministic path snapshot so cached rows always map to real
+    // vault paths.
+    const pathSignature = [
+      ...folders.map(folder => `d:${folder.path}`),
+      ...files.map(file => `f:${file.path}:${file.stat?.mtime ?? 0}`),
+    ].sort().join('\n');
+
     return {
       totalFiles: files.length,
       totalFolders: folders.length,
-      lastModified
+      lastModified,
+      pathSignature,
     };
   }
 
@@ -136,6 +147,7 @@ export class CacheUtils {
       hiddenExceptions: settings?.hiddenExceptions,
       enableHiddenNodesReveal: settings?.enableHiddenNodesReveal,
       revealDotFilesystem: settings?.revealDotFilesystem,
+      foldersFirst: settings?.foldersFirst,
     };
     return JSON.stringify(relevantSettings);
   }

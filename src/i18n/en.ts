@@ -84,6 +84,8 @@ export default {
     settingsChildCountModeDirect: 'Direct children',
     settingsChildCountModeTotal: 'Total descendants',
     settingsChildCountModeBoth: 'Both',
+    settingsFoldersFirst: 'Folders first',
+    settingsFoldersFirstDesc: 'Sort real folders before files and virtual suggestions.',
     settingsHiddenNodesHeader: 'Hidden nodes',
     settingsHiddenNodesDescription: 'Hide notes and folders from the tree using the context menu. Enable the option below to configure patterns, dot paths, and the panel eye toggle.',
     settingsEnableHiddenNodesReveal: 'Enable reveal hidden files',

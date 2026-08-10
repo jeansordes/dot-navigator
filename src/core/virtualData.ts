@@ -180,6 +180,15 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     return yaml ?? displayName(node);
   }
 
+  function compareNodes(aNode: TreeNode, bNode: TreeNode): number {
+    if (settings?.foldersFirst) {
+      const aIsFolder = aNode.nodeType === TreeNodeType.FOLDER;
+      const bIsFolder = bNode.nodeType === TreeNodeType.FOLDER;
+      if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+    }
+    return sortKey(aNode).localeCompare(sortKey(bNode));
+  }
+
   function build(node: TreeNode, parentId?: string): VItem {
     parentMap.set(node.path, parentId);
     const yaml = getYamlTitle(app, node.path);
@@ -200,7 +209,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     if (node.children && node.children.size > 0) {
       const children: VItem[] = [];
       Array.from(node.children.entries())
-        .sort(([_aKey, aNode], [_bKey, bNode]) => sortKey(aNode).localeCompare(sortKey(bNode)))
+        .sort(([_aKey, aNode], [_bKey, bNode]) => compareNodes(aNode, bNode))
         .forEach(([, child]) => {
           children.push(build(child, node.path));
         });
@@ -212,7 +221,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
 
   const data: VItem[] = [];
   Array.from(root.children.entries())
-    .sort(([_aKey, aNode], [_bKey, bNode]) => sortKey(aNode).localeCompare(sortKey(bNode)))
+    .sort(([_aKey, aNode], [_bKey, bNode]) => compareNodes(aNode, bNode))
     .forEach(([, child]) => data.push(build(child, root.path)));
 
   enrichRedirectStubs(data, parentMap, collectRedirectEntries(app), {

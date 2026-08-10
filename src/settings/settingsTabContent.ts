@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { addFileCreationSection } from './FileCreationSettings';
 import { addHiddenNodesSettings } from './HiddenNodesSettings';
 import { addChildCountSetting } from './ChildCountSettings';
+import { addFoldersFirstSetting } from './FoldersFirstSetting';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
 import { addMoreMenuEditorSection } from './MoreMenuEditor';
 import { addTipsSection } from './TipsSettings';
@@ -50,6 +51,7 @@ export function renderLegacySettings(
     ...callbacks.getSettingsCallbacks(),
     refreshDisplay: () => callbacks.refreshSettingsTab(),
   });
+  addFoldersFirstSetting(treeDisplayGroup, callbacks.settings, callbacks.getSettingsCallbacks());
 
   const hiddenCount = callbacks.settings.hiddenNodes?.length ?? 0;
   const hiddenNodesGroup = addSettingsGroup(

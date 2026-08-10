@@ -1,5 +1,5 @@
 import { buildVirtualizedData } from '../src/core/virtualData';
-import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../src/types';
+import { DEFAULT_SETTINGS, TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../src/types';
 import { App } from 'obsidian';
 
 // Mock the app and dependencies - using minimal mock since getYamlTitle is mocked
@@ -227,6 +227,59 @@ describe('buildVirtualizedData', () => {
       expect(fooNode.children).toHaveLength(1);
       const barNode = fooNode.children![0];
       expect(barNode.name).toBe('Bar'); // Display name should strip .md and apply SENTENCE_CASE
+    });
+  });
+
+  describe('foldersFirst', () => {
+    it('enables folders-first sorting by default', () => {
+      expect(DEFAULT_SETTINGS.foldersFirst).toBe(true);
+    });
+
+    it('prioritizes real folders while preserving alphabetical order within each group', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['alpha.md', { path: 'alpha.md', nodeType: TreeNodeType.FILE, children: new Map() }],
+          ['zebra', { path: 'zebra', nodeType: TreeNodeType.FOLDER, children: new Map() }],
+          ['beta.md', { path: 'beta.md', nodeType: TreeNodeType.FILE, children: new Map() }],
+          ['archive', { path: 'archive', nodeType: TreeNodeType.FOLDER, children: new Map() }],
+          ['suggestion.md', { path: 'suggestion.md', nodeType: TreeNodeType.SUGGESTION, children: new Map() }],
+        ]),
+      };
+
+      const result = buildVirtualizedData(mockApp, rootNode, {
+        mySetting: 'default',
+        foldersFirst: true,
+        transformDashesToSpaces: DashTransformation.NONE,
+      });
+
+      expect(result.data.map(item => item.id)).toEqual([
+        'archive',
+        'zebra',
+        'alpha.md',
+        'beta.md',
+        'suggestion.md',
+      ]);
+    });
+
+    it('uses alphabetical order for all node kinds when disabled', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['zebra', { path: 'zebra', nodeType: TreeNodeType.FOLDER, children: new Map() }],
+          ['alpha.md', { path: 'alpha.md', nodeType: TreeNodeType.FILE, children: new Map() }],
+        ]),
+      };
+
+      const result = buildVirtualizedData(mockApp, rootNode, {
+        mySetting: 'default',
+        foldersFirst: false,
+        transformDashesToSpaces: DashTransformation.NONE,
+      });
+
+      expect(result.data.map(item => item.id)).toEqual(['alpha.md', 'zebra']);
     });
   });
 });

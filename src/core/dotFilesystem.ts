@@ -49,8 +49,18 @@ function normalizeListPath(path: string): string {
   return path.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
 }
 
-function childPath(parent: string, name: string): string {
-  return parent ? `${parent}/${name}` : name;
+function childPath(parent: string, entry: string): string {
+  const normalizedParent = normalizeListPath(parent);
+  const normalizedEntry = normalizeListPath(entry);
+
+  // Obsidian's adapter returns vault-relative paths for nested listings
+  // (e.g. `00 Inbox/.DS_Store`), whereas test adapters and other adapters
+  // can return just the entry name. Accept both forms without duplicating the
+  // current directory prefix.
+  if (!normalizedParent || normalizedEntry === normalizedParent || normalizedEntry.startsWith(`${normalizedParent}/`)) {
+    return normalizedEntry;
+  }
+  return `${normalizedParent}/${normalizedEntry}`;
 }
 
 /**
