@@ -1,3 +1,9 @@
+# [1.29.0](https://github.com/jeansordes/dot-navigator/compare/1.28.8...1.29.0) (2026-09-14)
+
+### Features
+
+* **tree:** add folder creation context actions ([db7516e](https://github.com/jeansordes/dot-navigator/commit/db7516ed348963090390b439b2fc0c40c86d382f))
+
 ## [1.28.8](https://github.com/jeansordes/dot-navigator/compare/1.28.7...1.28.8) (2026-08-10)
 
 ### Bug Fixes
