@@ -45,19 +45,25 @@ export class FileOperations {
     }
 
     /**
-     * Create a new folder at the vault root.
+     * Create a new folder at the vault root or inside the supplied folder.
      */
-    async createNewFolder(): Promise<void> {
+    async createNewFolder(parentPath = ''): Promise<string | undefined> {
         try {
             debug('Creating new folder');
 
             // Generate a unique folder name
             let counter = 1;
             const folderName = t('untitledPath');
-            let fullPath = folderName;
+            const normalizedParent = parentPath === '/'
+                ? ''
+                : parentPath.replace(/^\/+|\/+$/g, '');
+            const pathFor = (name: string): string => normalizedParent
+                ? `${normalizedParent}/${name}`
+                : name;
+            let fullPath = pathFor(folderName);
 
             while (this.app.vault.getAbstractFileByPath(fullPath)) {
-                fullPath = `${folderName} ${counter}`;
+                fullPath = pathFor(`${folderName} ${counter}`);
                 counter++;
             }
 
@@ -74,11 +80,15 @@ export class FileOperations {
                 throw new Error(`Failed to create folder: ${fullPath}`);
             }
 
-            new Notice(`Created folder: ${fullPath}`);
+            new Notice(t('noticeCreatedFolder', { path: fullPath }));
+            return fullPath;
 
         } catch (error) {
             debugError('Failed to create new folder:', error);
-            new Notice(`Failed to create folder: ${error instanceof Error ? error.message : String(error)}`);
+            new Notice(t('noticeFailedCreateFolder', {
+                error: error instanceof Error ? error.message : String(error)
+            }));
+            return undefined;
         }
     }
 }

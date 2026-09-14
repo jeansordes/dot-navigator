@@ -105,6 +105,10 @@ export class Vault {
         return file;
     }
 
+    async createFolder(path: string): Promise<void> {
+        this.folders.push(new TFolder(path, path.split('/').pop() || ''));
+    }
+
     async read(file: TFile): Promise<string> {
         return this.fileContents.get(file.path) ?? '';
     }

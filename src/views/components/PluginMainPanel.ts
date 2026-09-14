@@ -24,6 +24,7 @@ import { ViewInitialization } from './ViewInitialization';
 import { TreeOperations } from '../tree/TreeOperations';
 import { RuleManager } from '../../utils/schema/RuleManager';
 import { resolveHiddenVisibilityFromSettings, shouldShowHiddenToggle } from '../../core/hiddenVisibility';
+import { registerEmptyTreeContextMenu } from '../tree/treeContextMenu';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -183,6 +184,16 @@ export default class PluginMainPanel extends ItemView {
                 void this.refresh();
             });
         });
+        const treeContextContainer = viewRoot.querySelector('.dotn_view-body');
+        if (treeContextContainer?.instanceOf(HTMLElement)) {
+            registerEmptyTreeContextMenu(
+                this,
+                treeContextContainer,
+                this.app,
+                this.fileOperations,
+                () => this.refresh()
+            );
+        }
         this.layout.onSettingsClick(() => {
             void this.openSettings();
         });

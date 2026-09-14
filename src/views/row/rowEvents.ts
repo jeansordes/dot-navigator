@@ -21,6 +21,8 @@ import { getDotNavigatorPlugin, type DotNavigatorPluginLike } from '../../utils/
 import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
 import { openVaultPathInDefaultApp } from '../../utils/file/openExternalFile';
 import { desktopShellOpenPath } from '../../utils/file/desktopShellOpen';
+import { addCreateFolderMenuItem } from './rowMenuCreateFolder';
+import { shouldShowFor } from './rowMenuVisibility';
 
 async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPluginLike, path: string): Promise<void> {
   toggleHiddenConfig(plugin.settings, path);
@@ -124,6 +126,9 @@ export function handleActionButtonClick(
                 await FileUtils.createChildNote(app, actionPath, plugin?.settings);
               });
           });
+        } else if (it.builtin === 'create-folder') {
+          if (!folder || isShortcut || !isIndexed) continue;
+          addCreateFolderMenuItem(menu, app, folder, it.icon);
         } else if (it.builtin === 'delete') {
           if (!isIndexed) continue;
           if (!addDeleteMenuItem(menu, app, treeItem, isShortcut, file, folder, it.icon)) continue;
@@ -275,17 +280,6 @@ export function getConfiguredMenuItems(app: App): MoreMenuItem[] {
   } catch {
     return DEFAULT_MORE_MENU;
   }
-}
-
-export function shouldShowFor(item: MoreMenuItem, kind: MenuItemKind): boolean {
-  const show = item.showFor && item.showFor.length > 0 ? item.showFor : undefined;
-  if (!show) {
-    if (item.type === 'builtin') {
-      return item.builtin === 'create-child' || item.builtin === 'delete' ? true : kind === 'file';
-    }
-    return kind === 'file';
-  }
-  return show.includes(kind);
 }
 
 export function handleTitleClick(app: App, kind: string | null, id: string, idx: number, vt: VirtualTreeLike, setSelectedId: (id: string) => void, ev?: MouseEvent): void {

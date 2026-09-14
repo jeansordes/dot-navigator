@@ -290,6 +290,16 @@ export function onRowClick(
   }
 
   if (kind === 'folder') {
+    if (e.detail >= 2) {
+      clearPending();
+      if (triggerRename()) {
+        applySelection();
+        return;
+      }
+    }
+
+    if (tryTouchDoubleTapRename()) return;
+
     const toggleBtn = row.querySelector('[data-action="toggle"]');
     if (toggleBtn?.instanceOf(HTMLElement)) {
       invokeFolderToggle(app, vt, id, kind, toggleBtn, e, renameManager, revealCanonicalPath, setSelectedId);

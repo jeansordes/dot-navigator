@@ -147,7 +147,7 @@ export interface MoreMenuItemBase {
 
 export interface MoreMenuItemBuiltin extends MoreMenuItemBase {
     type: 'builtin';
-    builtin: 'create-child' | 'delete' | 'open-closest-parent' | 'rename' | 'show-in-explorer' | 'expand-children' | 'collapse-children' | 'hide';
+    builtin: 'create-child' | 'create-folder' | 'delete' | 'open-closest-parent' | 'rename' | 'show-in-explorer' | 'expand-children' | 'collapse-children' | 'hide';
 }
 
 export interface MoreMenuItemCommand extends MoreMenuItemBase {
@@ -172,6 +172,13 @@ export const DEFAULT_MORE_MENU: MoreMenuItem[] = [
         builtin: 'create-child',
         icon: 'copy-plus',
         showFor: ['file', 'folder', 'virtual', 'suggestion']
+    },
+    {
+        id: 'builtin-create-folder',
+        type: 'builtin',
+        builtin: 'create-folder',
+        icon: 'folder-plus',
+        showFor: ['folder']
     },
     {
         id: 'builtin-expand-children',

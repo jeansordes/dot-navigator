@@ -16,6 +16,7 @@ export function describeMoreMenuItem(item: MoreMenuItem): string {
 
 export function getBuiltinDisplayName(item: MoreMenuItemBuiltin): string {
   if (item.builtin === 'create-child') return t('settingsBuiltinAddChildNote');
+  if (item.builtin === 'create-folder') return t('settingsBuiltinCreateFolder');
   if (item.builtin === 'rename') return t('settingsBuiltinRename');
   if (item.builtin === 'delete') return t('settingsBuiltinDelete');
   if (item.builtin === 'open-closest-parent') return t('settingsBuiltinOpenClosestParent');

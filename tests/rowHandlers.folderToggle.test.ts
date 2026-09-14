@@ -179,7 +179,7 @@ describe('onRowClick folder title as chevron label', () => {
     expect(vt.collapseChildren).not.toHaveBeenCalled();
   });
 
-  it('does not open rename dialog on folder title double-click', () => {
+  it('opens rename dialog on folder title double-click', () => {
     const item = folderItem('projects');
     const vt = makeVirtualTree(item);
     const { row, title } = makeFolderRow('projects');
@@ -187,7 +187,9 @@ describe('onRowClick folder title as chevron label', () => {
 
     onRowClick(app, vt, clickOn(title, 2), row as unknown as HTMLElement, jest.fn(), renameManager);
 
-    expect(renameManager.showRenameDialog).not.toHaveBeenCalled();
+    expect(renameManager.showRenameDialog).toHaveBeenCalledWith('projects', 'folder');
+    expect(vt.expandChildren).not.toHaveBeenCalled();
+    expect(vt.collapseChildren).not.toHaveBeenCalled();
   });
 
   it('focuses empty folder on title click without toggling', () => {
