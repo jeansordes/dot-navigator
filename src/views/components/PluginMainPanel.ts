@@ -25,6 +25,7 @@ import { TreeOperations } from '../tree/TreeOperations';
 import { RuleManager } from '../../utils/schema/RuleManager';
 import { resolveHiddenVisibilityFromSettings, shouldShowHiddenToggle } from '../../core/hiddenVisibility';
 import { registerEmptyTreeContextMenu } from '../tree/treeContextMenu';
+import { createFolderAndRename } from '../misc/folderCreation';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:views:plugin-main-panel');
 const debugError = debug.extend('error');
@@ -180,9 +181,12 @@ export default class PluginMainPanel extends ItemView {
             });
         });
         this.layout.onCreateFolderClick(() => {
-            void this.fileOperations.createNewFolder().then(() => {
-                void this.refresh();
-            });
+            void createFolderAndRename(
+                this.fileOperations,
+                this.renameManager,
+                '',
+                () => this.refresh()
+            );
         });
         const treeContextContainer = viewRoot.querySelector('.dotn_view-body');
         if (treeContextContainer?.instanceOf(HTMLElement)) {
@@ -191,6 +195,7 @@ export default class PluginMainPanel extends ItemView {
                 treeContextContainer,
                 this.app,
                 this.fileOperations,
+                this.renameManager,
                 () => this.refresh()
             );
         }

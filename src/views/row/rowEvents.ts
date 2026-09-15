@@ -128,7 +128,7 @@ export function handleActionButtonClick(
           });
         } else if (it.builtin === 'create-folder') {
           if (!folder || isShortcut || !isIndexed) continue;
-          addCreateFolderMenuItem(menu, app, folder, it.icon);
+          addCreateFolderMenuItem(menu, app, folder, renameManager, it.icon);
         } else if (it.builtin === 'delete') {
           if (!isIndexed) continue;
           if (!addDeleteMenuItem(menu, app, treeItem, isShortcut, file, folder, it.icon)) continue;
