@@ -1,3 +1,9 @@
+## [1.29.1](https://github.com/jeansordes/dot-navigator/compare/1.29.0...1.29.1) (2026-09-15)
+
+### Bug Fixes
+
+* **create:** rename folders immediately after creation ([189fb53](https://github.com/jeansordes/dot-navigator/commit/189fb5332435b7e7123a069c40236cf68220c9fe))
+
 # [1.29.0](https://github.com/jeansordes/dot-navigator/compare/1.28.8...1.29.0) (2026-09-14)
 
 ### Features
