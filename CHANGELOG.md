@@ -1,3 +1,9 @@
+## [1.30.2](https://github.com/jeansordes/dot-navigator/compare/1.30.1...1.30.2) (2026-09-16)
+
+### Bug Fixes
+
+* **tree:** preserve scroll on folder rename ([158778f](https://github.com/jeansordes/dot-navigator/commit/158778f167726f8dc37efab5bf86a471f5dd8d68))
+
 ## [1.30.1](https://github.com/jeansordes/dot-navigator/compare/1.30.0...1.30.1) (2026-09-16)
 
 ### Bug Fixes
