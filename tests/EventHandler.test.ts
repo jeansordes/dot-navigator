@@ -3,7 +3,7 @@ import { DendronEventHandler } from '../src/utils/misc/EventHandler';
 
 Object.defineProperty(globalThis, 'window', { value: globalThis, configurable: true });
 
-describe('DendronEventHandler deletion refresh', () => {
+describe('DendronEventHandler scroll-preserving refresh', () => {
     beforeEach(() => {
         jest.useFakeTimers();
     });
@@ -36,5 +36,29 @@ describe('DendronEventHandler deletion refresh', () => {
         jest.advanceTimersByTime(500);
 
         expect(refresh).toHaveBeenCalledWith(undefined, true, undefined, true);
+    });
+
+    it('requests scroll preservation after renaming a folder', () => {
+        const app = new App();
+        let onRename: ((file: TFile | TFolder, oldPath: string) => void) | undefined;
+        const vaultEvents = app.vault as unknown as {
+            on: (event: string, callback: (...args: unknown[]) => void) => void;
+            off: (event: string, callback: (...args: unknown[]) => void) => void;
+            getMarkdownFiles: () => TFile[];
+        };
+        vaultEvents.on = jest.fn((event, callback) => {
+            if (event === 'rename') onRename = callback as (file: TFile | TFolder, oldPath: string) => void;
+        });
+        vaultEvents.off = jest.fn();
+        vaultEvents.getMarkdownFiles = jest.fn(() => []);
+        const refresh = jest.fn();
+        const handler = new DendronEventHandler(app, refresh, 120);
+        const renamedFolder = Object.assign(new TFolder(), { path: 'notes/renamed' });
+
+        handler.registerFileEvents();
+        onRename?.(renamedFolder, 'notes/original');
+        jest.advanceTimersByTime(500);
+
+        expect(refresh).toHaveBeenCalledWith('notes/renamed', false, undefined, true);
     });
 });

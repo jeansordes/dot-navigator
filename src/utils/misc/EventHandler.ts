@@ -1,4 +1,4 @@
-import { App, TFile, TAbstractFile } from 'obsidian';
+import { App, TFile, TFolder, TAbstractFile } from 'obsidian';
 import { TreeNode } from '../../types';
 import { getYamlRedirectSignature, getYamlTitle } from './YamlTitleUtils';
 import { updateRedirectTargetsOnRename } from '../../core/redirectStub';
@@ -106,7 +106,7 @@ export class DendronEventHandler {
             this.yamlRedirectCache.set(file.path, cachedRedirect);
             void updateRedirectTargetsOnRename(this.app, oldPath, file.path);
         }
-        this.queueRefresh(file?.path, false, true);
+        this.queueRefresh(file?.path, false, true, file instanceof TFolder);
     };
 
     private handleFileModify = (file: TAbstractFile) => {
