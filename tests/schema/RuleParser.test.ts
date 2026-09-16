@@ -202,6 +202,28 @@ created: 2025-09-23
       expect(result.rules).toHaveLength(0);
       expect(result.errors[0].message).toContain('array');
     });
+
+    it.each(['/absolute', 'parent//child', 'parent/../child', 'folder//'])(
+      'rejects invalid child path %s',
+      (child) => {
+        const result = parseRuleArray([
+          { pattern: 'projects', children: [child] },
+        ], 'settings');
+
+        expect(result.rules).toHaveLength(0);
+        expect(result.errors[0].message).toContain('invalid child path');
+      },
+    );
+
+    it('accepts direct and nested file and folder child paths', () => {
+      const result = parseRuleArray([{
+        pattern: 'projects',
+        children: ['note', 'folder/', 'parent/child/', 'parent/child/note'],
+      }], 'settings');
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.rules).toHaveLength(1);
+    });
   });
 
   describe('schemaRulesFromFileContent', () => {
@@ -233,4 +255,3 @@ created: 2025-09-23
     });
   });
 });
-

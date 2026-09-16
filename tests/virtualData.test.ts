@@ -228,6 +228,29 @@ describe('buildVirtualizedData', () => {
       const barNode = fooNode.children![0];
       expect(barNode.name).toBe('Bar'); // Display name should strip .md and apply SENTENCE_CASE
     });
+
+    it('shows folder suggestion names literally without a trailing slash', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['folder.with-dots', {
+            path: 'folder.with-dots',
+            nodeType: TreeNodeType.SUGGESTION,
+            suggestionTargetKind: 'folder',
+            children: new Map(),
+          }],
+        ]),
+      };
+
+      const result = buildVirtualizedData(mockApp, rootNode, {
+        mySetting: 'default',
+        transformDashesToSpaces: DashTransformation.NONE,
+      });
+
+      expect(result.data[0].name).toBe('folder.with-dots');
+      expect(result.data[0].suggestionTargetKind).toBe('folder');
+    });
   });
 
   describe('foldersFirst', () => {
@@ -261,6 +284,30 @@ describe('buildVirtualizedData', () => {
         'beta.md',
         'suggestion.md',
       ]);
+    });
+
+    it('sorts folder suggestions with real folders', () => {
+      const rootNode: TreeNode = {
+        path: '',
+        nodeType: TreeNodeType.VIRTUAL,
+        children: new Map([
+          ['alpha.md', { path: 'alpha.md', nodeType: TreeNodeType.FILE, children: new Map() }],
+          ['zeta', {
+            path: 'zeta',
+            nodeType: TreeNodeType.SUGGESTION,
+            suggestionTargetKind: 'folder',
+            children: new Map(),
+          }],
+        ]),
+      };
+
+      const result = buildVirtualizedData(mockApp, rootNode, {
+        mySetting: 'default',
+        foldersFirst: true,
+        transformDashesToSpaces: DashTransformation.NONE,
+      });
+
+      expect(result.data.map(item => item.id)).toEqual(['zeta', 'alpha.md']);
     });
 
     it('uses alphabetical order for all node kinds when disabled', () => {

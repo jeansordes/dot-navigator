@@ -33,6 +33,7 @@ export function flattenTree(
       originalName: n.originalName,
       title: n.title,
       kind: n.kind,
+      suggestionTargetKind: n.suggestionTargetKind,
       extension: n.extension,
       isRedirect: n.isRedirect,
       targetPath: n.targetPath,

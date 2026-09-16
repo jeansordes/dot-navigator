@@ -13,6 +13,7 @@ import {
   type HideConfig,
 } from './hiddenPatterns';
 import { isDotPrefixedPath } from './dotFilesystem';
+import type { SuggestionTargetKind } from '../domain/schema/SuggestionPath';
 
 export type Kind = 'folder' | 'file' | 'virtual' | 'suggestion';
 
@@ -22,6 +23,7 @@ export interface VItem {
   originalName?: string;
   title?: string;
   kind: Kind;
+  suggestionTargetKind?: SuggestionTargetKind;
   extension?: string;
   isRedirect?: boolean;
   targetPath?: string;
@@ -151,7 +153,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     const base = FileUtils.basename(node.path);
     let name: string;
 
-    if (node.nodeType === TreeNodeType.FOLDER) {
+    if (node.nodeType === TreeNodeType.FOLDER || node.suggestionTargetKind === 'folder') {
       name = base.replace(/ \(\d+\)$/u, '');
     } else if (isDotPrefixedPath(node.path)) {
       name = base.replace(/ \(\d+\)$/u, '');
@@ -182,8 +184,8 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
 
   function compareNodes(aNode: TreeNode, bNode: TreeNode): number {
     if (settings?.foldersFirst) {
-      const aIsFolder = aNode.nodeType === TreeNodeType.FOLDER;
-      const bIsFolder = bNode.nodeType === TreeNodeType.FOLDER;
+      const aIsFolder = aNode.nodeType === TreeNodeType.FOLDER || aNode.suggestionTargetKind === 'folder';
+      const bIsFolder = bNode.nodeType === TreeNodeType.FOLDER || bNode.suggestionTargetKind === 'folder';
       if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
     }
     return sortKey(aNode).localeCompare(sortKey(bNode));
@@ -199,6 +201,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
       originalName,
       title: yaml ?? undefined,
       kind: nodeKind(node),
+      suggestionTargetKind: node.suggestionTargetKind,
     };
 
     if (node.nodeType === TreeNodeType.FILE) {

@@ -77,6 +77,7 @@ describe('RuleSuggester', () => {
 
       expect(suggester.getChildren('special.file.md')).toEqual(['ideas', 'special']);
     });
+
   });
 
   describe('pattern matching', () => {

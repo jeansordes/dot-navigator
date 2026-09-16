@@ -4,6 +4,7 @@
  */
 
 import type { Rule, RuleError, RulePattern } from './RuleTypes.js';
+import { getSuggestionPathError } from './SuggestionPath.js';
 
 /**
  * Extracts JSON content from a file.
@@ -129,6 +130,16 @@ function parseRule(raw: unknown, filePath: string, index: number, allErrors: Rul
     return null;
   }
 
+  const invalidChild = children.find(child => getSuggestionPathError(child) !== null);
+  if (invalidChild !== undefined) {
+    allErrors.push({
+      file: filePath,
+      message: `Rule ${index} has invalid child path '${invalidChild}': ${getSuggestionPathError(invalidChild)}`,
+      details: invalidChild
+    });
+    return null;
+  }
+
   return {
     pattern,
     exclude,
@@ -220,4 +231,3 @@ export function parseRuleFile(content: string, filePath: string): { rules: Rule[
   const parsed = parseRuleArray(doc, filePath);
   return { rules: parsed.rules, errors: [...errors, ...parsed.errors] };
 }
-

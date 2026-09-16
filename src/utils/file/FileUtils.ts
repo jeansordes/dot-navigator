@@ -2,6 +2,7 @@ import { App, TFile, TFolder } from 'obsidian';
 import { Notice } from 'obsidian';
 import { t } from "../../i18n";
 import { PluginSettings } from "../../types";
+import type { SuggestionTargetKind } from '../../domain/schema/SuggestionPath';
 
 type FileExplorerViewApi = {
     revealFile?: (file: TFile) => Promise<void> | void;
@@ -145,6 +146,52 @@ export class FileUtils {
     
         if (note instanceof TFile) {
             await this.openFile(app, note);
+        }
+    }
+
+    private static async ensureFolderPath(app: App, path: string): Promise<void> {
+        const segments = path.split('/').filter(Boolean);
+        let currentPath = '';
+
+        for (const segment of segments) {
+            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+            const existing = app.vault.getAbstractFileByPath(currentPath);
+            if (existing instanceof TFolder) continue;
+            if (existing) throw new Error(`A file already exists at ${currentPath}`);
+            await app.vault.createFolder(currentPath);
+        }
+    }
+
+    public static async createSuggestion(
+        app: App,
+        path: string,
+        targetKind: SuggestionTargetKind,
+    ): Promise<boolean> {
+        try {
+            if (targetKind === 'folder') {
+                const existing = app.vault.getAbstractFileByPath(path);
+                if (existing && !(existing instanceof TFolder)) {
+                    throw new Error(`A file already exists at ${path}`);
+                }
+                if (!existing) {
+                    await this.ensureFolderPath(app, path);
+                    new Notice(t('noticeCreatedFolder', { path }));
+                }
+                return true;
+            }
+
+            const lastSlash = path.lastIndexOf('/');
+            if (lastSlash > 0) {
+                await this.ensureFolderPath(app, path.slice(0, lastSlash));
+            }
+            await this.createAndOpenNote(app, path);
+            return app.vault.getAbstractFileByPath(path) instanceof TFile;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            new Notice(targetKind === 'folder'
+                ? t('noticeFailedCreateFolder', { error: message })
+                : t('noticeFailedCreateNote', { path }));
+            return false;
         }
     }
 

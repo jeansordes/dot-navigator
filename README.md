@@ -96,7 +96,7 @@ redirect: "[[My Note]]"     # wikilink
 
 ## Rule Configuration
 
-Dot Navigator supports **rule-based suggestions** that automatically suggest virtual child notes for existing files. This allows you to scaffold note hierarchies before the actual notes exist.
+Dot Navigator supports **rule-based suggestions** that automatically suggest virtual child notes and folders for existing notes or folders. This allows you to scaffold complete hierarchies before they exist.
 
 ### Setting Up Rules
 
@@ -104,7 +104,7 @@ Dot Navigator supports **rule-based suggestions** that automatically suggest vir
 2. Go to the **Note suggestion schema** section
 3. **Add rules** with the in-app editor, or **Import JSON** to load an existing configuration
 
-Each rule is edited as a card with pattern, exclude, and children fields. You can preview which notes match a pattern, drag to reorder rules, and use **View JSON** to copy or back up your configuration.
+Each rule is edited as a card with pattern, exclude, and children fields. You can preview which notes and folders match a pattern, drag to reorder rules, and use **View JSON** to copy or back up your configuration.
 
 If you previously used a `dot-navigator-rules.json` file in your vault, rules are migrated automatically into plugin settings on first load after upgrading.
 
@@ -112,9 +112,9 @@ If you previously used a `dot-navigator-rules.json` file in your vault, rules ar
 
 Each rule object can have these properties:
 
-- **`pattern`** (required): String or array of strings defining which files to match
-- **`exclude`** (optional): String or array of strings defining files to exclude from matching
-- **`children`** (required): Array of strings defining suggested child note names
+- **`pattern`** (required): String or array of strings defining which note or folder paths to match
+- **`exclude`** (optional): String or array of strings defining paths to exclude from matching
+- **`children`** (required): Array of strings defining suggested child paths. A trailing `/` marks a folder.
 
 ### Pattern Syntax
 
@@ -139,6 +139,10 @@ For more complex pattern matching, you can use **regex patterns** by prefixing w
     "children": ["notes", "tasks"]
   },
   {
+    "pattern": ["Projects/**"],
+    "children": ["brief", "assets/", "research/sources/", "research/summary"]
+  },
+  {
     "pattern": ["/^blog\\.2025\\.[0-9]$/"],
     "children": ["draft", "published"]
   }
@@ -148,6 +152,7 @@ For more complex pattern matching, you can use **regex patterns** by prefixing w
 **What this does:**
 - Files matching `prj.*` (like `prj.frontend`, `prj.backend`) will suggest children `roadmap`, `ideas`, `issues`, and hierarchical children `architecture.backend` and `architecture.frontend`
 - Files matching `work.**` (like `work.tasks`, `work.2024.tasks`, `work.deep.nested`) will suggest `notes`, `tasks` (except `work.archives`)
+- Folders matching `Projects/**` will suggest `brief.md`, an `assets/` folder, nested `research/sources/` folders, and `research/summary.md`
 - Files matching `/^blog\.2025\.[0-9]$/` (regex for single-digit months) will suggest `draft`, `published`
 
 **Hierarchical Children:**
@@ -156,6 +161,15 @@ For dotted children like `"architecture.backend"`, the plugin creates nested sug
   - `backend` (clickable suggestion that creates `backend.md`)
 
 You can create deeply nested hierarchies by using multiple dots, such as `"a.b.c.d"`.
+
+**Folder children:**
+
+- `folder/` suggests a direct folder.
+- `parent/child/` suggests nested folders.
+- `parent/child/note` suggests nested folders ending in `note.md`.
+- A rule may mix files and folders, for example `["file", "new-folder/"]`.
+
+Folder-requiring children are only shown when the rule matched a real folder. When the same rule matches a note, direct file children still use the existing dotted Dendron hierarchy and folder children are omitted.
 
 ### Importing and Exporting Rules
 
@@ -180,7 +194,7 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 - **Create Child Note**: Creates a new child note for the currently active file with the node name being "untitled" (e.g. if you trigger this command on `a.md`, it will create `a.untitled.md`). Use **Rename Current File** or the tree context menu to rename it afterward (you can customize the default name in settings)
 
 ### Suggestion Interaction
-- **Double-click suggestions**: Quickly create suggested notes by double-clicking on them in the tree view
+- **Double-click suggestions**: Quickly create suggested notes or folders by double-clicking on them in the tree view
 - **Single-click suggestions**: Focus/navigate to the suggestion in the tree
 
 ### Rename

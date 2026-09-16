@@ -83,6 +83,12 @@ export function handleActionButtonClick(
     }
   } else if (action === 'create-note') {
     void FileUtils.createAndOpenNote(app, actionPath);
+  } else if (action === 'create-suggestion') {
+    const targetKind = treeItem?.suggestionTargetKind ?? 'file';
+    void (async () => {
+      const created = await FileUtils.createSuggestion(app, actionPath, targetKind);
+      if (created) await plugin?.getPluginMainPanel()?.refresh();
+    })();
   } else if (action === 'unhide') {
     if (plugin) void persistHideConfigAndRefresh(app, plugin, actionPath);
   } else if (action === 'open-target') {

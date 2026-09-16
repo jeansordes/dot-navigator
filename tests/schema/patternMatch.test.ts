@@ -55,5 +55,19 @@ describe('patternMatch', () => {
       expect(preview.matches).toEqual(['prj.a']);
       expect(preview.children).toEqual(['ideas', 'roadmap']);
     });
+
+    it('matches typed folder targets and marks them with a trailing slash', () => {
+      const preview = previewRuleMatches(
+        ['Projects/**'],
+        undefined,
+        ['note', 'folder/'],
+        [
+          { path: 'Projects/alpha', kind: 'folder' },
+          { path: 'Projects/beta', kind: 'file' },
+        ],
+      );
+
+      expect(preview.matches).toEqual(['Projects/alpha/', 'Projects/beta']);
+    });
   });
 });

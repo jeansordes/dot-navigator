@@ -81,20 +81,23 @@ export interface RulePreviewResult {
   children: string[];
 }
 
+export interface RulePreviewTarget {
+  path: string;
+  kind: 'file' | 'folder';
+}
+
 export function previewRuleMatches(
   pattern: string[],
   exclude: string[] | undefined,
   children: string[],
-  notePaths: string[]
+  targets: Array<string | RulePreviewTarget>
 ): RulePreviewResult {
-  const matches = notePaths.filter(notePath => {
-    if (!matchesAnyPattern(notePath, pattern)) {
-      return false;
-    }
-    if (exclude && exclude.length > 0 && matchesAnyPattern(notePath, exclude)) {
-      return false;
-    }
-    return true;
+  const matches = targets.flatMap(target => {
+    const path = typeof target === 'string' ? target : target.path;
+    if (!matchesAnyPattern(path, pattern)) return [];
+    if (exclude && exclude.length > 0 && matchesAnyPattern(path, exclude)) return [];
+    if (typeof target === 'string' || target.kind === 'file') return [path];
+    return [path === '/' ? '/' : `${path}/`];
   });
 
   return { matches, children: [...children] };

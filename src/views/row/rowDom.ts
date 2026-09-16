@@ -238,9 +238,10 @@ export function createActionButtons(item: RowItem, _app: App): HTMLElement {
   if (item.kind === 'virtual' || item.kind === 'suggestion') {
     const createNoteBtn = activeDocument.createElement('div');
     createNoteBtn.className = 'dotn_button-icon';
-    createNoteBtn.title = t('tooltipCreateNote', { path: item.id });
-    createNoteBtn.setAttribute('data-action', 'create-note');
-    setIcon(createNoteBtn, 'file-plus');
+    const isFolderSuggestion = item.kind === 'suggestion' && item.suggestionTargetKind === 'folder';
+    createNoteBtn.title = t(isFolderSuggestion ? 'tooltipCreateFolder' : 'tooltipCreateNote', { path: item.id });
+    createNoteBtn.setAttribute('data-action', item.kind === 'suggestion' ? 'create-suggestion' : 'create-note');
+    setIcon(createNoteBtn, isFolderSuggestion ? 'folder-plus' : 'file-plus');
     container.appendChild(createNoteBtn);
   }
 

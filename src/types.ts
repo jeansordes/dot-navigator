@@ -1,4 +1,5 @@
 import { TFile, TFolder } from 'obsidian';
+import type { SuggestionTargetKind } from './domain/schema/SuggestionPath';
 // Define the view type for our tree view
 export const FILE_TREE_VIEW_TYPE = 'dot-navigator-view';
 export const TREE_VIEW_ICON = 'folder-git-2';
@@ -86,6 +87,7 @@ export interface TreeNode {
     nodeType: TreeNodeType;
     obsidianResource?: TFile | TFolder;
     children: Map<string, TreeNode>;
+    suggestionTargetKind?: SuggestionTargetKind;
     // Flag to track if schema suggestions have been loaded for this node
     _suggestionsLoaded?: boolean;
 } 
@@ -98,6 +100,7 @@ export interface VirtualTreeBaseItem {
     originalName?: string;
     title?: string;
     kind: 'file' | 'folder' | 'virtual' | 'suggestion';
+    suggestionTargetKind?: SuggestionTargetKind;
     // Optional file extension (present for files when available)
     extension?: string;
     isRedirect?: boolean;

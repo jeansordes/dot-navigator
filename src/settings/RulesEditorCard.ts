@@ -13,6 +13,8 @@ import {
   validatePatterns,
 } from '../utils/schema/patternMatch';
 import { parseRuleArray } from '../utils/schema/RuleParser';
+import { getSuggestionPathError } from '../domain/schema/SuggestionPath';
+import type { RulePreviewTarget } from '../utils/schema/patternMatch';
 
 const RULES_REORDER_GROUP = 'schema-rules';
 
@@ -48,6 +50,12 @@ function validateRule(rule: SchemaRule): string[] {
 
   if (!rule.children.length) {
     errors.push(t('settingsRulesErrorMissingChildren'));
+  } else {
+    for (const child of rule.children) {
+      if (getSuggestionPathError(child)) {
+        errors.push(t('settingsRulesErrorInvalidChildPath', { path: child }));
+      }
+    }
   }
 
   return errors;
@@ -56,13 +64,13 @@ function validateRule(rule: SchemaRule): string[] {
 function renderPreviewBody(
   previewBody: HTMLElement,
   rule: SchemaRule,
-  notePaths: string[]
+  previewTargets: RulePreviewTarget[]
 ): void {
   const preview = previewRuleMatches(
     rule.pattern,
     rule.exclude,
     rule.children,
-    notePaths
+    previewTargets
   );
   previewBody.empty();
   previewBody.createDiv({
@@ -94,7 +102,7 @@ export function renderRuleCard(
   rule: SchemaRule,
   index: number,
   total: number,
-  notePaths: string[],
+  previewTargets: RulePreviewTarget[],
   persistRules: (
     rules: SchemaRule[],
     options?: { refreshUI?: boolean }
@@ -152,7 +160,7 @@ export function renderRuleCard(
       rule.pattern,
       rule.exclude,
       rule.children,
-      notePaths
+      previewTargets
     );
     matchChip.setText(t('settingsRulesMatchCount', { count: String(preview.matches.length) }));
   };
@@ -215,7 +223,7 @@ export function renderRuleCard(
   const patternExcludeRow = fieldsEl.createDiv({ cls: 'dotnav-rule-fields-row' });
   addField(patternExcludeRow, t('settingsRulesPatternLabel'), 'pattern', 'example.*');
   addField(patternExcludeRow, t('settingsRulesExcludeLabel'), 'exclude', 'example.archives');
-  addField(fieldsEl, t('settingsRulesChildrenLabel'), 'children', 'notes\ntasks');
+  addField(fieldsEl, t('settingsRulesChildrenLabel'), 'children', 'note\nfolder/\nparent/child/note');
 
   const previewWrap = fieldsEl.createDiv({ cls: 'dotnav-rule-preview' });
   const previewToggle = previewWrap.createEl('button', {
@@ -238,7 +246,7 @@ export function renderRuleCard(
     previewWrap.toggleClass('is-open', open);
     setIcon(chevronEl, open ? 'chevron-down' : 'chevron-right');
     if (open) {
-      renderPreviewBody(previewBody, rule, notePaths);
+      renderPreviewBody(previewBody, rule, previewTargets);
       previewBody.show();
     } else {
       previewBody.hide();

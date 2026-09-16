@@ -6,6 +6,7 @@ import type { SettingsSection } from './settingsGroup';
 import { RulesImportExportModal } from './RulesImportExportModal';
 import { renderRuleCard } from './RulesEditorCard';
 import { stripMdExtension } from '../utils/schema/patternMatch';
+import type { RulePreviewTarget } from '../utils/schema/patternMatch';
 
 export interface RulesEditorCallbacks {
   saveSettings: () => Promise<void>;
@@ -24,10 +25,14 @@ function createEmptyRule(): SchemaRule {
   };
 }
 
-function getNotePaths(app: App): string[] {
-  return app.vault
+function getPreviewTargets(app: App): RulePreviewTarget[] {
+  const notes: RulePreviewTarget[] = app.vault
     .getMarkdownFiles()
-    .map(file => stripMdExtension(file.path));
+    .map(file => ({ path: stripMdExtension(file.path), kind: 'file' }));
+  const folders: RulePreviewTarget[] = app.vault
+    .getAllFolders()
+    .map(folder => ({ path: folder.path || '/', kind: 'folder' }));
+  return [...notes, ...folders];
 }
 
 async function persistRules(
@@ -74,7 +79,7 @@ export function addRulesEditorSection(
     renderRulesEmptyState(section);
   } else {
     const listEl = section.listEl.createDiv({ cls: 'dotnav-settings-card-list' });
-    const notePaths = getNotePaths(app);
+    const previewTargets = getPreviewTargets(app);
     rules.forEach((rule, index) => {
       renderRuleCard(
         listEl,
@@ -82,7 +87,7 @@ export function addRulesEditorSection(
         rule,
         index,
         rules.length,
-        notePaths,
+        previewTargets,
         (next, options) => saveRules(next, options)
       );
     });

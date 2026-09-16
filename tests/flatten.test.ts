@@ -1,6 +1,17 @@
 import { flattenTree } from '../src/flatten';
 
 describe('flattenTree', () => {
+  it('preserves the target kind of folder suggestions', () => {
+    const result = flattenTree([{
+      id: 'folder',
+      name: 'folder',
+      kind: 'suggestion',
+      suggestionTargetKind: 'folder',
+    }]);
+
+    expect(result[0].suggestionTargetKind).toBe('folder');
+  });
+
   it('preserves redirect metadata on flattened rows', () => {
     const rows = flattenTree([
       {

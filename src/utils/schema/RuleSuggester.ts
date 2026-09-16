@@ -2,9 +2,28 @@ import createDebug from 'debug';
 import type { RuleIndex } from './RuleTypes';
 import { TreeNodeType } from '../../types';
 import type { TreeNode } from '../../types';
+import type { SuggestionTargetKind } from '../../domain/schema/SuggestionPath';
+import { parseSuggestionPath } from '../../domain/schema/SuggestionPath';
 import { matchesAnyPattern, stripMdExtension } from './patternMatch';
 
 const debug = createDebug('dot-navigator:rule:suggester');
+
+function joinVaultPath(parentPath: string, childName: string): string {
+  return parentPath === '/' || parentPath === ''
+    ? childName
+    : `${parentPath}/${childName}`;
+}
+
+function isCompatibleNode(node: TreeNode, targetKind: SuggestionTargetKind): boolean {
+  if (targetKind === 'folder') {
+    return node.nodeType === TreeNodeType.FOLDER
+      || (node.nodeType === TreeNodeType.SUGGESTION && node.suggestionTargetKind === 'folder');
+  }
+
+  return node.nodeType === TreeNodeType.FILE
+    || node.nodeType === TreeNodeType.VIRTUAL
+    || (node.nodeType === TreeNodeType.SUGGESTION && node.suggestionTargetKind !== 'folder');
+}
 
 export class RuleSuggester {
   private index: RuleIndex;
@@ -13,204 +32,160 @@ export class RuleSuggester {
     this.index = index;
   }
 
-  /**
-   * Get virtual children for a given file path based on the rules
-   */
-  getChildren(filePath: string): string[] {
-    const notePath = stripMdExtension(filePath);
+  getChildren(path: string, parentType: TreeNodeType = TreeNodeType.FILE): string[] {
+    const matchPath = parentType === TreeNodeType.FOLDER ? path : stripMdExtension(path);
     const children = new Set<string>();
 
     for (const rule of this.index.rules) {
-      // Check if file matches the pattern
-      const matchesPattern = matchesAnyPattern(notePath, rule.pattern);
+      if (!matchesAnyPattern(matchPath, rule.pattern)) continue;
+      if (rule.exclude && matchesAnyPattern(matchPath, rule.exclude)) continue;
 
-      if (!matchesPattern) {
-        continue;
-      }
-
-      // Check if file should be excluded
-      let isExcluded = false;
-      if (rule.exclude) {
-        isExcluded = matchesAnyPattern(notePath, rule.exclude);
-      }
-
-      if (isExcluded) {
-        continue;
-      }
-
-      // Add all children from this rule
       for (const child of rule.children) {
+        const parsed = parseSuggestionPath(child);
+        if (!parsed) continue;
+        if (parentType !== TreeNodeType.FOLDER && parsed.requiresFolderParent) continue;
         children.add(child);
       }
     }
 
     const result = Array.from(children);
-    if (result.length > 0) {
-      debug('File %s matches rules, adding children: %o', filePath, result);
-    }
-
+    if (result.length > 0) debug('Path %s matches rules, adding children: %o', path, result);
     return result;
   }
 
-  /**
-   * Apply rule suggestions to the tree by adding virtual children nodes
-   */
-  apply(root: TreeNode, filter?: (node: TreeNode) => boolean): void {
+  createNodeMap(root: TreeNode): Map<string, TreeNode> {
     const nodeMap = new Map<string, TreeNode>();
+    const visit = (node: TreeNode): void => {
+      nodeMap.set(node.path, node);
+      node.children.forEach(visit);
+    };
+    visit(root);
+    return nodeMap;
+  }
+
+  applyToNode(node: TreeNode, nodeMap: Map<string, TreeNode>): number {
+    if (node.nodeType === TreeNodeType.SUGGESTION) return 0;
+
+    let created = 0;
+    for (const child of this.getChildren(node.path, node.nodeType)) {
+      created += this.createSuggestionHierarchy(node, child, nodeMap);
+    }
+    node._suggestionsLoaded = true;
+    return created;
+  }
+
+  apply(root: TreeNode, filter?: (node: TreeNode) => boolean): void {
+    const nodeMap = this.createNodeMap(root);
     const queue: TreeNode[] = [];
 
     const visit = (node: TreeNode): void => {
-      // Don't process suggestion nodes
-      if (node.nodeType === TreeNodeType.SUGGESTION) {
-        return;
-      }
-
-      // If filter is provided, only process nodes that pass the filter
-      if (filter && !filter(node)) {
-        // Still add to nodeMap for path resolution, but don't queue for processing
-        nodeMap.set(node.path, node);
-        // Still visit children in case they pass the filter
-        node.children.forEach((child) => visit(child));
-        return;
-      }
-
-      nodeMap.set(node.path, node);
-      queue.push(node);
-      node.children.forEach((child) => visit(child));
+      if (node.nodeType === TreeNodeType.SUGGESTION) return;
+      if (!filter || filter(node)) queue.push(node);
+      node.children.forEach(visit);
     };
-
     visit(root);
 
     let totalSuggestions = 0;
-    let filesProcessed = 0;
-    let filesWithSuggestions = 0;
-    const suggestionsByPattern = new Map<string, number>();
+    let pathsWithSuggestions = 0;
 
-    debug('Starting rule suggestions application: %d files to process, %d rules loaded', queue.length, this.index.rules.length);
-
-    // Log rule summary
-    this.index.rules.forEach((rule, index) => {
-      debug('Rule %d: patterns=%o, exclude=%o, children=%o',
-            index + 1, rule.pattern, rule.exclude || 'none', rule.children);
-    });
-
-    while (queue.length) {
-      const node = queue.shift();
-      if (!node) continue;
-
-      filesProcessed++;
-
-      // Get children for this node based on rules
-      const children = this.getChildren(node.path);
-      if (children.length === 0) continue;
-
-      filesWithSuggestions++;
-
-      // Track suggestions by pattern for summary
-      const notePath = stripMdExtension(node.path);
-      const matchingPattern = this.getMatchingPattern(notePath);
-      if (matchingPattern) {
-        const current = suggestionsByPattern.get(matchingPattern) || 0;
-        suggestionsByPattern.set(matchingPattern, current + children.length);
-      }
-
-      // Add suggestion nodes for each child
-      for (const childId of children) {
-        this.createSuggestionHierarchy(node, childId, nodeMap);
-        totalSuggestions++;
-      }
+    for (const node of queue) {
+      const created = this.applyToNode(node, nodeMap);
+      if (created > 0) pathsWithSuggestions++;
+      totalSuggestions += created;
     }
 
-    // Summary logging
     debug('Rule application summary:');
-    debug('  - Files processed: %d', filesProcessed);
-    debug('  - Files with suggestions: %d', filesWithSuggestions);
+    debug('  - Paths processed: %d', queue.length);
+    debug('  - Paths with suggestions: %d', pathsWithSuggestions);
     debug('  - Total suggestion nodes added: %d', totalSuggestions);
-
-    if (suggestionsByPattern.size > 0) {
-      debug('  - Suggestions by pattern:');
-      suggestionsByPattern.forEach((count, pattern) => {
-        debug('    %s: %d suggestions', pattern, count);
-      });
-    }
   }
 
-  /**
-   * Get the pattern that matches a file path (for summary logging)
-   */
-  private getMatchingPattern(notePath: string): string | null {
-    for (const rule of this.index.rules) {
-      if (matchesAnyPattern(notePath, rule.pattern)) {
-        let isExcluded = false;
-        if (rule.exclude) {
-          isExcluded = matchesAnyPattern(notePath, rule.exclude);
-        }
-        if (!isExcluded) {
-          return Array.isArray(rule.pattern) ? rule.pattern.join('|') : rule.pattern;
-        }
-      }
+  private getOrCreateSuggestion(
+    currentNode: TreeNode,
+    path: string,
+    targetKind: SuggestionTargetKind,
+    nodeMap: Map<string, TreeNode>,
+  ): { node: TreeNode | null; created: boolean } {
+    const existing = nodeMap.get(path);
+    if (existing) {
+      return { node: isCompatibleNode(existing, targetKind) ? existing : null, created: false };
     }
-    return null;
+
+    const suggestion: TreeNode = {
+      path,
+      nodeType: TreeNodeType.SUGGESTION,
+      suggestionTargetKind: targetKind,
+      obsidianResource: undefined,
+      children: new Map(),
+    };
+    currentNode.children.set(path, suggestion);
+    nodeMap.set(path, suggestion);
+    return { node: suggestion, created: true };
   }
 
-  /**
-   * Create a hierarchy of suggestion nodes for a child ID that may contain dots
-   * For example, "foo.bar" with parent "parent.md" creates:
-   * - "parent.foo.md" (foo file)
-   * - "parent.foo.bar.md" (bar file)
-   * Uses accumulated segments to build proper Dendron-style paths
-   */
-  private createSuggestionHierarchy(parentNode: TreeNode, childId: string, nodeMap: Map<string, TreeNode>): void {
-    const segments = childId.split('.');
-
+  private createDendronFileHierarchy(
+    parentNode: TreeNode,
+    pathPrefix: string,
+    childName: string,
+    nodeMap: Map<string, TreeNode>,
+  ): number {
+    const segments = childName.split('.');
     let currentNode = parentNode;
-    // Start with the parent path minus .md extension (Dendron-style hierarchy)
-    const currentPath = parentNode.nodeType === TreeNodeType.FILE && parentNode.path.endsWith('.md')
-      ? parentNode.path.slice(0, -3)
-      : parentNode.path;
+    let accumulated = '';
+    let created = 0;
 
-    // Accumulate segments as we build the hierarchy
-    let accumulatedSegments = '';
-
-    for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i];
-
-      // Add this segment to the accumulated path
-      accumulatedSegments += (accumulatedSegments ? '.' : '') + segment;
-
-      // Build the path for this level
-      const segmentPath = `${currentPath}.${accumulatedSegments}.md`;
-
-      // Check if this node already exists (as FILE, VIRTUAL, or SUGGESTION)
-      let segmentNode = currentNode.children.get(segmentPath);
-      if (!segmentNode) {
-        // Check if there's already a FILE or VIRTUAL node with this path
-        const existingNode = nodeMap.get(segmentPath);
-        if (existingNode && (existingNode.nodeType === TreeNodeType.FILE || existingNode.nodeType === TreeNodeType.VIRTUAL)) {
-          // Use the existing FILE/VIRTUAL node instead of creating a suggestion
-          segmentNode = existingNode;
-        } else {
-          // Create the suggestion node
-          segmentNode = {
-            path: segmentPath,
-            nodeType: TreeNodeType.SUGGESTION,
-            obsidianResource: undefined,
-            children: new Map(),
-          };
-
-          currentNode.children.set(segmentPath, segmentNode);
-          nodeMap.set(segmentPath, segmentNode);
-        }
-      }
-
-      currentNode = segmentNode;
-      // currentPath stays the same (base path) for all levels
+    for (const segment of segments) {
+      accumulated += `${accumulated ? '.' : ''}${segment}`;
+      const path = `${pathPrefix}${accumulated}.md`;
+      const result = this.getOrCreateSuggestion(currentNode, path, 'file', nodeMap);
+      if (!result.node) return created;
+      if (result.created) created++;
+      currentNode = result.node;
     }
+
+    return created;
   }
 
-  /**
-   * Update the index with new rules
-   */
+  private createSuggestionHierarchy(
+    parentNode: TreeNode,
+    childId: string,
+    nodeMap: Map<string, TreeNode>,
+  ): number {
+    const parsed = parseSuggestionPath(childId);
+    if (!parsed) return 0;
+
+    if (parentNode.nodeType !== TreeNodeType.FOLDER) {
+      if (parsed.requiresFolderParent) return 0;
+      const basePath = parentNode.path.endsWith('.md')
+        ? parentNode.path.slice(0, -3)
+        : parentNode.path;
+      return this.createDendronFileHierarchy(parentNode, `${basePath}.`, parsed.segments[0], nodeMap);
+    }
+
+    const folderSegments = parsed.targetKind === 'folder'
+      ? parsed.segments
+      : parsed.segments.slice(0, -1);
+    let currentNode = parentNode;
+    let currentFolderPath = parentNode.path;
+    let created = 0;
+
+    for (const segment of folderSegments) {
+      currentFolderPath = joinVaultPath(currentFolderPath, segment);
+      const result = this.getOrCreateSuggestion(currentNode, currentFolderPath, 'folder', nodeMap);
+      if (!result.node) return created;
+      if (result.created) created++;
+      currentNode = result.node;
+    }
+
+    if (parsed.targetKind === 'folder') return created;
+
+    const fileName = parsed.segments[parsed.segments.length - 1];
+    const filePrefix = currentFolderPath === '/' || currentFolderPath === ''
+      ? ''
+      : `${currentFolderPath}/`;
+    return created + this.createDendronFileHierarchy(currentNode, filePrefix, fileName, nodeMap);
+  }
+
   updateIndex(index: RuleIndex): void {
     this.index = index;
   }

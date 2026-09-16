@@ -1,6 +1,6 @@
 import { App, Modal, Notice, Setting } from 'obsidian';
 import type { SchemaRule } from '../types';
-import { parseRulesJsonDocument } from '../utils/schema/RuleParser';
+import { parseRuleArray, parseRulesJsonDocument } from '../utils/schema/RuleParser';
 import { rawArrayToSchemaRules } from '../utils/schema/schemaRulesMigration';
 import { t } from '../i18n';
 
@@ -102,6 +102,12 @@ export class RulesImportExportModal extends Modal {
           }
 
           const { errors } = parseRulesJsonDocument(textarea.value, 'import');
+          const { errors: validationErrors } = parseRuleArray(parsed, 'import');
+          if (validationErrors.length > 0) {
+            errorEl.setText(validationErrors.map(e => e.message).join('\n'));
+            errorEl.show();
+            return;
+          }
           const rules = rawArrayToSchemaRules(parsed);
 
           if (rules.length === 0 && parsed.length > 0) {

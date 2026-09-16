@@ -12,4 +12,5 @@ export {
   findMatchingRules,
   getSuggestedChildren
 } from './RuleMatcher.js';
-
+export { getSuggestionPathError, parseSuggestionPath } from './SuggestionPath.js';
+export type { ParsedSuggestionPath, SuggestionTargetKind } from './SuggestionPath.js';

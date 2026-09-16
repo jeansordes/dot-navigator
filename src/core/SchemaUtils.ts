@@ -1,7 +1,7 @@
 import { RuleManager } from '../utils/schema/RuleManager';
 import { hashSchemaRules } from '../utils/schema/schemaRulesMigration';
 import { RuleSuggester } from '../utils/schema/RuleSuggester';
-import { PluginSettings, TreeNode, TreeNodeType } from '../types';
+import { PluginSettings, TreeNode } from '../types';
 import createDebug from 'debug';
 const debug = createDebug('dot-navigator:core:schema-utils');
 const debugError = debug.extend('error');
@@ -91,6 +91,7 @@ export class SchemaUtils {
     collectUnprocessedNodes(root);
 
     debug(`Found ${nodesToProcess.length} nodes to process in background`);
+    const nodeMap = suggester.createNodeMap(root);
 
     // Process nodes in batches to avoid blocking the UI
     const batchSize = 50; // Process 50 nodes at a time
@@ -103,22 +104,7 @@ export class SchemaUtils {
       }
 
       for (const node of batch) {
-        const childrenToAdd = suggester.getChildren(node.path);
-        if (childrenToAdd.length > 0) {
-          // Add virtual children nodes
-          for (const childName of childrenToAdd) {
-            const childPath = `${node.path}/${childName}`;
-            if (!node.children.has(childName)) {
-              const childNode: TreeNode = {
-                path: childPath,
-                nodeType: TreeNodeType.SUGGESTION,
-                children: new Map(),
-              };
-              node.children.set(childName, childNode);
-            }
-          }
-        }
-        node._suggestionsLoaded = true;
+        suggester.applyToNode(node, nodeMap);
       }
 
       // Continue processing in next animation frame

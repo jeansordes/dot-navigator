@@ -25,7 +25,7 @@ function syncToggleSlot(row: HTMLElement, item: RowItem, hasChildren: boolean, i
   if (hasChildren) {
     if (existingPlaceholder?.instanceOf(HTMLElement)) existingPlaceholder.remove();
 
-    const needsFolderToggle = item.kind === 'folder';
+    const needsFolderToggle = item.kind === 'folder' || item.suggestionTargetKind === 'folder';
     const toggleIsFolder = existingToggle?.classList.contains('dotn_toggle-folder') ?? false;
 
     if (!existingToggle) {
@@ -39,7 +39,7 @@ function syncToggleSlot(row: HTMLElement, item: RowItem, hasChildren: boolean, i
     if (existingToggle?.instanceOf(HTMLElement)) existingToggle.remove();
     row.removeAttribute('aria-expanded');
 
-    if (item.kind === 'folder') {
+    if (item.kind === 'folder' || item.suggestionTargetKind === 'folder') {
       if (!existingPlaceholder) insertToggleSlot(row, createFolderPlaceholder());
     } else if (existingPlaceholder?.instanceOf(HTMLElement)) {
       existingPlaceholder.remove();
@@ -131,8 +131,8 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   while (row.firstChild) row.removeChild(row.firstChild);
   if (item.level && item.level > 0) row.appendChild(createIndentGuides(item.level));
   if (hasChildren) {
-    row.appendChild(createToggleButton(item.kind === 'folder'));
-  } else if (item.kind === 'folder') {
+    row.appendChild(createToggleButton(item.kind === 'folder' || item.suggestionTargetKind === 'folder'));
+  } else if (item.kind === 'folder' || item.suggestionTargetKind === 'folder') {
     row.appendChild(createFolderPlaceholder());
   }
   if (item.kind === 'file') {

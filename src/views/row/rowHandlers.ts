@@ -279,8 +279,7 @@ export function onRowClick(
   if (kind === 'suggestion') {
     if (e.detail >= 2) {
       clearPending();
-      // Double-click on suggestion creates the note
-      handleActionButtonClick(app, 'create-note', id, kind, vt, undefined, e, renameManager);
+      handleActionButtonClick(app, 'create-suggestion', id, kind, vt, undefined, e, renameManager);
       return;
     }
 
