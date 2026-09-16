@@ -5,7 +5,7 @@ import { updateRedirectTargetsOnRename } from '../../core/redirectStub';
 
 export class DendronEventHandler {
     private app: App;
-    private refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void;
+    private refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string, preserveScroll?: boolean) => void;
     private schemaReloadCallback?: () => Promise<void>;
     private schemaConfigUpdateCallback?: (newPath: string) => Promise<void>;
     private refreshDebounceTimeout: number | null = null;
@@ -13,6 +13,7 @@ export class DendronEventHandler {
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
+    private preserveScrollOnNextRefresh = false;
     // Cache YAML titles and redirects to detect changes on modify or metadata events
     private yamlTitleCache: Map<string, string | null> = new Map();
     private yamlRedirectCache: Map<string, string> = new Map();
@@ -21,7 +22,7 @@ export class DendronEventHandler {
     private readonly graceMs = 300; // keep very small to reduce perceived lag
     private schemaRegex: RegExp;
 
-    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>, schemaConfigUpdateCallback?: (newPath: string) => Promise<void>) {
+    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string, preserveScroll?: boolean) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>, schemaConfigUpdateCallback?: (newPath: string) => Promise<void>) {
         this.app = app;
         this.refreshCallback = refreshCallback;
         this.schemaReloadCallback = schemaReloadCallback;
@@ -79,7 +80,7 @@ export class DendronEventHandler {
         // Full rebuild safest for structural delete; allow small debounce
         this.yamlTitleCache.delete(file.path);
         this.yamlRedirectCache.delete(file.path);
-        this.queueRefresh(file?.path, true, false);
+        this.queueRefresh(file?.path, true, false, true);
     };
 
     private handleFileRename = (file: TAbstractFile, oldPath: string) => {
@@ -155,11 +156,12 @@ export class DendronEventHandler {
     /**
      * Queue a refresh with debouncing, tracking all affected paths
      */
-    private queueRefresh(path?: string, forceFullRefresh: boolean = false, immediate: boolean = false): void {
+    private queueRefresh(path?: string, forceFullRefresh: boolean = false, immediate: boolean = false, preserveScroll: boolean = false): void {
         const now = Date.now();
         const withinGrace = now - this.initAt < this.graceMs;
 
         const enqueue = () => {
+            this.preserveScrollOnNextRefresh ||= preserveScroll;
             if (forceFullRefresh) {
                 this.pendingChanges.clear();
                 this.pendingChanges.set('', true);
@@ -206,18 +208,19 @@ export class DendronEventHandler {
             
             if (hasFullRefresh) {
                 // Do a full refresh
-                this.refreshCallback(undefined, true);
+                this.refreshCallback(undefined, true, undefined, this.preserveScrollOnNextRefresh);
             } else if (this.pendingChanges.size === 1) {
                 // Do a single path refresh
                 const [path] = this.pendingChanges.keys();
-                this.refreshCallback(path, false);
+                this.refreshCallback(path, false, undefined, this.preserveScrollOnNextRefresh);
             } else if (this.pendingChanges.size > 1) {
                 // Multiple paths changed, do a full refresh
-                this.refreshCallback(undefined, true);
+                this.refreshCallback(undefined, true, undefined, this.preserveScrollOnNextRefresh);
             }
             
             // Reset state
             this.pendingChanges.clear();
+            this.preserveScrollOnNextRefresh = false;
             this.refreshDebounceTimeout = null;
         }, wait);
     }

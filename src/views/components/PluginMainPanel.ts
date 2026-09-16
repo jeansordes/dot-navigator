@@ -83,7 +83,9 @@ export default class PluginMainPanel extends ItemView {
         // Lower debounce to make updates feel snappier; structural ops still coalesce
         this.eventHandler = new DendronEventHandler(
             this.app,
-            () => { void this.refresh(); },
+            (_path, _forceFullRefresh, _oldPath, preserveScroll) => {
+                void this.refresh({ revealActiveFile: !preserveScroll });
+            },
             120,
             '',
             () => this.reloadSchemaConfig(),
@@ -254,12 +256,12 @@ export default class PluginMainPanel extends ItemView {
 
     // Legacy highlighter removed
 
-    async refresh() {
+    async refresh(options: { revealActiveFile?: boolean } = {}) {
         if (!this.containerEl) return;
         if (this.vtManager) {
             await this.vtManager.updateOnVaultChange();
             // After data updates, ensure the current active file is highlighted
-            if (this.activeFile) {
+            if (this.activeFile && options.revealActiveFile !== false) {
                 this.vtManager.revealPathForActiveFile(this.activeFile.path);
             }
             this._syncHiddenToggleVisibility();
