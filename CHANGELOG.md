@@ -1,3 +1,9 @@
+## [1.30.1](https://github.com/jeansordes/dot-navigator/compare/1.30.0...1.30.1) (2026-09-16)
+
+### Bug Fixes
+
+* **tree:** preserve scroll on deletion ([8d89d15](https://github.com/jeansordes/dot-navigator/commit/8d89d15e13f153962044140935aa54c73fe317b5))
+
 # [1.30.0](https://github.com/jeansordes/dot-navigator/compare/1.29.1...1.30.0) (2026-09-16)
 
 ## [1.29.1](https://github.com/jeansordes/dot-navigator/compare/1.29.0...1.29.1) (2026-09-15)
