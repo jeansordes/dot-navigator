@@ -54,16 +54,6 @@ export default class DotNavigatorPlugin extends Plugin {
 
         debug("Plugin loading");
 
-        // Force Obsidian to detach our previous views which should clean up attached event handlers
-        debug("Detaching any existing tree views");
-        try {
-            // This ensures any existing views are properly closed, triggering onClose() for cleanup
-            this.app.workspace.detachLeavesOfType(FILE_TREE_VIEW_TYPE);
-        } catch {
-            // This is normal if it's the first load
-            debug("No existing views to detach");
-        }
-        
         await this.loadSettings();
 
         this.ruleManager = new RuleManager(() => this.settings.schemaRules ?? []);
@@ -75,7 +65,8 @@ export default class DotNavigatorPlugin extends Plugin {
         // Settings tab
         this.addSettingTab(new DotNavigatorSettingTab(this.app, this));
 
-        // Register the file tree view
+        // Let Obsidian restore existing leaves in place when this view is registered.
+        // Detaching them here would discard the panel's position during plugin updates.
         this.registerView(
             FILE_TREE_VIEW_TYPE,
             (leaf) => new PluginMainPanel(leaf, this.settings, this, this.renameManager, this.ruleManager)
@@ -98,12 +89,6 @@ export default class DotNavigatorPlugin extends Plugin {
 
         this.registerCommands();
 
-        // Auto-open the view on startup if it was previously open
-        this.app.workspace.onLayoutReady(() => {
-            if (this.settings.viewWasOpen && process.env.NODE_ENV !== 'production') {
-                void this.activateView();
-            }
-        });
     }
 
     private registerCommands() {
