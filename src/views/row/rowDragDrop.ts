@@ -1,3 +1,5 @@
+import type { PendingDrag, ActiveDrag } from './rowDragTypes';
+import { cancelPendingFileClicks } from './pendingFileClicks';
 import { App, Platform } from 'obsidian';
 import { isVaultIndexedPath } from '../../core/dotFilesystem';
 import type { RenameManager } from '../../utils/rename/RenameManager';
@@ -18,31 +20,6 @@ import { executeDragDropComplete, type MoveCompleteOptions } from './rowDragDrop
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 400;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
-
-interface PendingDrag {
-    pointerId: number;
-    path: string;
-    kind: DraggableKind;
-    startX: number;
-    startY: number;
-    row: HTMLElement;
-    isTouch: boolean;
-    isShortcut: boolean;
-    noteTargetPath?: string;
-    longPressTimer?: number;
-}
-
-interface ActiveDrag extends PendingDrag {
-    ghost: HTMLElement;
-    grabOffset: { x: number; y: number };
-    lastTargetRow: HTMLElement | null;
-    dropPlaceholder: HTMLElement | null;
-    insertIndex: number | null;
-    clientX: number;
-    clientY: number;
-    shortcutModifierActive: boolean;
-    shortcutEligible: boolean;
-}
 
 /**
  * Virtual nodes deliberately have no backing vault entry. They may still own
@@ -224,15 +201,21 @@ export class RowDragController {
 
     private beginDrag(shortcutModifierActive = false): void {
         if (!this.pending) return;
+        const selection = this.opts.virtualTree.selection;
+        if (selection?.busy) { this.clearPending(); return; }
+        cancelPendingFileClicks(this.opts.virtualTree);
+        const targets = selection?.dragTargets(this.pending.row.dataset.id ?? '') ?? [];
         const ghost = createDragGhost(this.pending.row);
+        if (targets.length > 1) ghost.createSpan({ text: String(targets.length), cls: 'dotn_drag-count' });
         this.pending.row.classList.add('dotn_dragging');
         activeDocument.body.classList.add('dotn_dragging-active');
 
-        const shortcutEligible = !this.pending.isShortcut
+        const shortcutEligible = targets.length < 2 && !this.pending.isShortcut
             && isMarkdownShortcutEligible(this.pending.path, this.pending.kind);
 
         this.active = {
             ...this.pending,
+            targets,
             ghost,
             grabOffset: computeGhostGrabOffset(this.pending.row, this.pending.startX, this.pending.startY),
             lastTargetRow: null,
@@ -266,6 +249,10 @@ export class RowDragController {
         this.endDrag(true);
         if (!drop || !this.opts.renameManager) return;
 
+        if (drag.targets.length > 1 && this.opts.virtualTree.selection) {
+            await this.opts.virtualTree.selection.move(drag.targets, drop.targetPath, drop.targetKind);
+            return;
+        }
         await executeDragDropComplete(
             {
                 path: drag.path,
@@ -293,7 +280,11 @@ export class RowDragController {
             this.active = null;
         }
         this.clearPending();
-        if (suppressClick) this.suppressClickUntil = Date.now() + 400;
+        if (suppressClick) {
+            this.suppressClickUntil = Date.now() + 400;
+            const selection = this.opts.virtualTree.selection;
+            if (selection) selection.suppressClickUntil = this.suppressClickUntil;
+        }
     }
 
     private clearPending(): void {

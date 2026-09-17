@@ -1,3 +1,4 @@
+import { TreeSelectionController } from '../selection/TreeSelectionController';
 import { App } from 'obsidian';
 import { VirtualTree } from '../../virtualTree';
 import type { VirtualTreeOptions } from '../../types';
@@ -9,7 +10,7 @@ import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { renderRow } from '../row/rowRender';
 import { applyTreeDataUpdate } from './treeDataUpdate';
 import { growRowPool, maybeScheduleRowWidthAdjust, renderVisibleRows } from './treeRenderPass';
-import { expandAllInData, expandChildrenInData, collapseChildrenInData } from './treeOps';
+import { findItemById, expandAllInData, expandChildrenInData, collapseChildrenInData } from './treeOps';
 import { setupAttachment, attachToViewBodyImpl } from '../utils/attachUtils'; 
 import {
   collapseAll as collapseAllAction,
@@ -25,6 +26,7 @@ import { RenameManager } from '../../utils/rename/RenameManager';
 import { resolveRevealPathForActiveFile } from '../../core/aliasVirtualData';
 
 export class ComplexVirtualTree extends VirtualTree {
+  selection?: TreeSelectionController;
   private app: App;
   private parentMap: Map<string, string | undefined> = new Map();
   private _boundScroll?: () => void;
@@ -68,6 +70,8 @@ export class ComplexVirtualTree extends VirtualTree {
     if (typeof options.gap === 'number' && options.gap >= 0) this._gap = options.gap;
     this._onExpansionChange = options.onExpansionChange;
     this._renameManager = options.renameManager;
+    this.selection = new TreeSelectionController(this.app, this.virtualTree, this._renameManager);
+    this.selection.load();
 
     setupAttachment({
       container: options.container,
@@ -147,17 +151,6 @@ export class ComplexVirtualTree extends VirtualTree {
     this._pendingReveal = { path, ...options };
   }
 
-  private _findItemInData(path: string, items: VItem[] = this.virtualTree.data): VItem | undefined {
-    for (const item of items) {
-      if (item.id === path) return item;
-      if (item.children) {
-        const found = this._findItemInData(path, item.children);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  }
-
   public updateData(data: VItem[], parentMap: Map<string, string | undefined>): void {
     applyTreeDataUpdate(
       this.virtualTree,
@@ -171,7 +164,7 @@ export class ComplexVirtualTree extends VirtualTree {
 
     const pending = this._pendingReveal;
     if (pending.waitForRedirect) {
-      const item = this._findItemInData(pending.path, data);
+      const item = findItemById(data, pending.path);
       if (!item?.isRedirect) return;
     }
 
@@ -247,7 +240,7 @@ export class ComplexVirtualTree extends VirtualTree {
     } else {
       this.selectedActivePart = 'title';
     }
-    void this.revealPath(revealId);
+    void this.revealPath(revealId, { preserveFocus: true });
   }
 
   // Row rendering (Obsidian-like DOM)
@@ -306,6 +299,7 @@ export class ComplexVirtualTree extends VirtualTree {
   }
 
   public _render(): void {
+    this.selection?.sync();
     this._ensurePoolCapacity();
     const vItems = this.getVirtualItems?.() ?? [];
     growRowPool(this.virtualTree, vItems.length, (row) => {
@@ -313,6 +307,7 @@ export class ComplexVirtualTree extends VirtualTree {
       row.addEventListener('contextmenu', (ev) => { if (ev.instanceOf(MouseEvent)) this._onRowContextMenu(ev, row); });
     });
     renderVisibleRows(this.virtualTree, vItems, (row, item, idx, start) => this._renderRow(row, item, idx, start));
+    this.selection?.afterRender();
     this._syncVirtualizerHeight(this.virtualTree.total * this.virtualTree.rowHeight);
     maybeScheduleRowWidthAdjust(this.virtualTree, {
       getTimer: () => this._widthAdjustTimer,
@@ -332,6 +327,7 @@ export class ComplexVirtualTree extends VirtualTree {
   public ensureSelectedVisible(): void { /* intentionally empty */ }
 
   public destroy(): void {
+    this.selection?.unload();
     detachTreeDragController(this._dragController);
     this._dragController = undefined;
 

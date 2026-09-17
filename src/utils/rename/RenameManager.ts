@@ -1,3 +1,4 @@
+import { withBulkMutation } from '../../application/bulkMutation';
 import { App, Notice } from 'obsidian';
 import { RenameUtils } from './RenameUtils';
 import { buildPlannedRenames, findRenameConflict } from './RenameWithProgress';
@@ -238,7 +239,7 @@ export class RenameManager {
         debug('Undoing rename operations:', operations);
 
         try {
-            await RenameUtils.revertOperations(this.app, operations, onProgress);
+            await withBulkMutation(() => RenameUtils.revertOperations(this.app, operations, onProgress));
             new Notice(t('noticeRenameUndone'));
             return options.originalPath;
         } catch (error) {
@@ -251,6 +252,16 @@ export class RenameManager {
     /**
      * Clear the undo stack
      */
+    recordBulkMove(operations: RenameOperation[]): void {
+        const first = operations.find(operation => operation.success);
+        if (!first) return;
+        this.addToUndoStack(operations, {
+            originalPath: first.originalPath, newPath: first.newPath, newTitle: '',
+            kind: 'file', mode: RenameMode.FILE_ONLY,
+        });
+        this.moveNotice.showMoveNotice(operations.filter(operation => operation.success).length, 0, () => this.undoLastRename());
+    }
+
     clearUndoStack(): void {
         this.undoStack = [];
         clearRenameSession();

@@ -209,3 +209,21 @@ Dot Navigator provides several commands that can be accessed via the Command Pal
 - [Structured Tree](https://github.com/Rudtrack/structured-tree)
 - [Obsidian Structure](https://github.com/dobrovolsky/obsidian-structure)
 - [Obsidian Dendron Tree](https://github.com/levirs565/obsidian-dendron-tree)
+
+
+### Select several files and folders
+
+Use **Select items** in the tree toolbar or the **Dot Navigator: Select items** command to select without opening files, including on touch screens. The open file keeps its usual highlight; selected rows have a lighter background and a check mark. The keyboard focus has a separate outline.
+
+- **Cmd+click** on macOS (**Ctrl+click** on Windows/Linux): add or remove an item.
+- **Shift+click**: select a range in the expanded tree. **Cmd/Ctrl+Shift+click** adds a range.
+- **Up/Down**, **Home/End**: move keyboard focus without opening a file. **Left/Right**: navigate or collapse/expand branches.
+- **Space**: toggle the focused item. **Shift+Up/Down** extends a range; adding **Cmd/Ctrl** keeps other selections.
+- **Cmd/Ctrl+A**: select all selectable rows in the expanded tree, including rows outside the viewport. **Escape** clears the selection.
+- **Enter**: open the focused file. **Cmd/Ctrl+Enter**, middle-click, or **Open in new tabs** replace the former Cmd/Ctrl+click shortcut for opening tabs.
+
+Use **Selection actions**, or right-click a selected member, to copy paths, hide/show, expand/collapse eligible branches, move, or send the selection to trash. A files-only selection can be opened in new tabs. A normal title click resumes opening files and clears the group. Selections inside collapsed or hidden branches are retained, with a hidden-item count in the toolbar. Selection is local to each view and is not saved across reloads.
+
+Dragging a selected member moves the group. Moves show a preview, check all destinations before starting, and share one undo action. If a move fails, the plugin attempts to restore earlier moves and reports any remaining changes. Group drag does not create shortcuts. Delete previews include folder contents and use Obsidian's configured trash behavior. Deleting a dotted parent note does not implicitly delete its sibling files; moving a note retains the existing behavior of moving its dotted descendants. Already included descendants are processed only once.
+
+Group selection currently supports indexed physical files and folders. Virtual branches, suggestions, aliases, redirect shortcuts, and projected nodes retain their individual actions. Bulk renaming and custom commands are not included.

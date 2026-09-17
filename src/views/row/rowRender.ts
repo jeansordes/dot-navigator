@@ -1,4 +1,5 @@
 
+import { renderSelectionAppearance } from '../selection/selectionAppearance';
 import type { App } from 'obsidian';
 import type { RowItem, VirtualTreeLike } from '../utils/viewTypes';
 import { createActionButtons, createFolderPlaceholder, createIndentGuides, createTitleElement, createToggleButton, maybeCreateExtension, createFileIconOrBadge, createAliasIcon, createHiddenIcon, insertChildCountBadge } from './rowDom';
@@ -115,6 +116,7 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
     syncChildCountBadge(row, item);
     row.setAttribute('tabindex', isFocused ? '0' : '-1');
     row.setAttribute('aria-selected', String(isSelected));
+    renderSelectionAppearance(vt, row, item, isSelected);
     // aria-expanded handled above together with toggle button sync
     return;
   }
@@ -158,5 +160,6 @@ export function renderRow(vt: VirtualTreeLike, row: HTMLElement, item: RowItem, 
   row.setAttribute('aria-level', String(item.level + 1));
   row.setAttribute('tabindex', isFocused ? '0' : '-1');
   row.setAttribute('aria-selected', String(isSelected));
-  if (hasChildren) row.setAttribute('aria-expanded', String(isExpanded));
+  if (hasChildren) row.setAttribute('aria-expanded', String(isExpanded)); else row.removeAttribute('aria-expanded');
+  renderSelectionAppearance(vt, row, item, isSelected);
 }

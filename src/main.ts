@@ -1,3 +1,4 @@
+import { registerSelectionCommand } from './utils/view/selectionCommand';
 import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { t } from './i18n';
 import { DEFAULT_SETTINGS, FILE_TREE_VIEW_TYPE, PluginSettings, TREE_VIEW_ICON, MoreMenuItemCommand } from './types';
@@ -106,6 +107,7 @@ export default class DotNavigatorPlugin extends Plugin {
     }
 
     private registerCommands() {
+        registerSelectionCommand(this, () => this.activateView(), () => getTreeView(this.app));
         // This adds a simple command that can be triggered anywhere
         this.addCommand({
             id: 'open-file-tree-view',

@@ -1,3 +1,4 @@
+import { deferDuringBulkMutation } from '../../application/bulkMutation';
 import { App, TFile, TAbstractFile, type EventRef } from 'obsidian';
 import { TreeNode } from '../../types';
 import { getYamlRedirectSignature, getYamlTitle } from './YamlTitleUtils';
@@ -197,13 +198,17 @@ export class DendronEventHandler {
      * This improves performance by preventing rapid UI updates when multiple
      * file events occur close together (e.g., during sync or bulk operations)
      */
+    private readonly resumeBulkRefresh = (): void => this.debounceRefresh();
+
     private debounceRefresh(waitOverride?: number): void {
         if (this.refreshDebounceTimeout) {
             window.clearTimeout(this.refreshDebounceTimeout);
         }
         
+        if (deferDuringBulkMutation(this.resumeBulkRefresh)) return;
         const wait = typeof waitOverride === 'number' ? waitOverride : this.debounceWaitTime;
         this.refreshDebounceTimeout = window.setTimeout(() => {
+            if (deferDuringBulkMutation(this.resumeBulkRefresh)) return;
             // Check if we have a full refresh pending
             const hasFullRefresh = this.pendingChanges.has('') && this.pendingChanges.get('');
             

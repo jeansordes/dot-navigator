@@ -108,6 +108,7 @@ export function handleActionButtonClick(
     if (isShortcut) return;
     void FileUtils.createChildNote(app, actionPath, plugin?.settings);
   } else if (action === 'more') {
+    if (vt.selection?.showContext(id, ev, anchorEl)) return;
     const menu = new Menu();
 
     const items = getConfiguredMenuItems(app);
@@ -115,6 +116,7 @@ export function handleActionButtonClick(
     const file = fileOrFolder instanceof TFile ? fileOrFolder : null;
     const folder = fileOrFolder instanceof TFolder ? fileOrFolder : null;
     const isIndexed = isVaultIndexedPath(app, actionPath);
+    if (file) menu.addItem(mi => mi.setTitle(t('bulkOpenTabs')).setIcon('files').onClick(() => FileUtils.openFile(app, file, true)));
 
     let hasAddedBuiltinItems = false;
     let hasAddedSeparator = false;

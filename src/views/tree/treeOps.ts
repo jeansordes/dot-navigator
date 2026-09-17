@@ -11,7 +11,7 @@ export function expandAllInData(data: VItem[], expanded: Map<string, boolean>): 
   walk(data);
 }
 
-function findItemById(items: VItem[], id: string): VItem | undefined {
+export function findItemById(items: VItem[], id: string): VItem | undefined {
   for (const it of items) {
     if (it.id === id) return it;
     if (it.children?.length) {

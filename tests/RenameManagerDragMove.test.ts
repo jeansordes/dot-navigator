@@ -17,6 +17,23 @@ describe('RenameManager virtual drag moves', () => {
         jest.clearAllMocks();
     });
 
+    afterEach(() => jest.restoreAllMocks());
+
+    it('records an entire bulk move as one undo entry', async () => {
+        const manager = new RenameManager(app);
+        (manager as unknown as { moveNotice: { showMoveNotice: jest.Mock } }).moveNotice.showMoveNotice = jest.fn();
+        const operations = [
+            { originalPath: 'a.md', newPath: 'dest/a.md', success: true },
+            { originalPath: 'b.md', newPath: 'dest/b.md', success: true },
+        ];
+        const revert = jest.spyOn(RenameUtils, 'revertOperations').mockResolvedValue();
+        manager.recordBulkMove(operations);
+        expect(manager.getUndoStackSize()).toBe(1);
+        await manager.undoLastRename();
+        expect(revert).toHaveBeenCalledWith(app, operations, undefined);
+        expect(manager.getUndoStackSize()).toBe(0);
+    });
+
     it('does not reject a virtual destination that has a backing note', async () => {
         const manager = new RenameManager(app);
         (manager as unknown as { moveNotice: { showMoveNotice: jest.Mock } }).moveNotice.showMoveNotice = jest.fn();

@@ -91,6 +91,8 @@ export class Vault {
         return this.files;
     }
 
+    getAllLoadedFiles(): (TFile | TFolder)[] { return [...this.files, ...this.folders]; }
+
     getAllFolders(): TFolder[] {
         return this.folders;
     }
@@ -195,3 +197,18 @@ export function setIcon(__element: HTMLElement, __icon: string): void {
 export const moment = {
     locale: () => 'en'
 }; 
+
+export class Component {
+    load(): void { this.onload(); }
+    unload(): void { this.onunload(); }
+    onload(): void { /* lifecycle stub */ }
+    onunload(): void { /* lifecycle stub */ }
+    registerEvent(_event: unknown): void { /* event stub */ }
+    registerDomEvent(_element: unknown, _event: string, _listener: unknown): void { /* event stub */ }
+    addChild<T extends Component>(component: T): T { component.load(); return component; }
+}
+
+export class FuzzySuggestModal<T> extends Modal {
+    setPlaceholder(_placeholder: string): void { /* modal stub */ }
+    getItems(): T[] { return []; }
+}

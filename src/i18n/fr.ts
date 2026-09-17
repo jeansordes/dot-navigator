@@ -1,5 +1,27 @@
 // French localization
 export default {
+    selectionMode: "Sélectionner des éléments",
+    selectionActions: "Actions de la sélection",
+    selectionClear: "Effacer la sélection",
+    selectionCount: "{{count}} sélectionné(s)",
+    selectionHiddenCount: " ({{count}} masqué(s))",
+    selectionCancel: "Annuler",
+    selectionConfirm: "Confirmer",
+    bulkMissing: "Élément indisponible : {{path}}",
+    bulkInvalidDestination: "Impossible de déplacer un élément dans lui-même ou un de ses descendants.",
+    bulkConflict: "Conflit de destination : {{path}}",
+    bulkMoveTo: "Déplacer la sélection vers…",
+    bulkNoChange: "Tous les éléments sélectionnés sont déjà à cette destination.",
+    bulkMovePreview: "Déplacer ces éléments ?",
+    bulkDeletePreview: "Mettre ces éléments et le contenu des dossiers à la corbeille ?",
+    bulkChanged: "Les éléments ont changé. Vérifiez la sélection et réessayez.",
+    bulkErrors: "Certaines opérations ont échoué :",
+    bulkCopyPaths: "Copier les chemins",
+    bulkOpenTabs: "Ouvrir dans de nouveaux onglets",
+    bulkHide: "Masquer la sélection",
+    bulkShow: "Afficher la sélection",
+    bulkDelete: "Mettre la sélection à la corbeille…",
+
     // View
     viewName: 'Dot Navigator',
     

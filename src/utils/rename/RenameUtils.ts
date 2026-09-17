@@ -109,6 +109,7 @@ export class RenameUtils {
             let operationSuccess = false;
 
             try {
+                if (app.vault.getAbstractFileByPath(op.originalPath)) throw new Error(`Destination already exists: ${op.originalPath}`);
                 const file = app.vault.getAbstractFileByPath(op.newPath);
                 if (file instanceof TFile || file instanceof TFolder) {
                     await app.fileManager.renameFile(file, op.originalPath);

@@ -231,6 +231,8 @@ export default class PluginMainPanel extends ItemView {
      * Public method to highlight a specific file in the tree view
      * This can be called from the main plugin
      */
+    public startSelection(): void { this.vtManager?.getInstance()?.selection?.start(); }
+
     public highlightFile(file: TFile): void {
         this.activeFile = file;
         this.highlightActiveFile();

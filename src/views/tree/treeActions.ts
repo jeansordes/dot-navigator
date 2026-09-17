@@ -24,6 +24,7 @@ export function collapseAll(vt: VirtualTreeLike): void {
 
 export interface RevealPathOptions {
   expandSelf?: boolean;
+  preserveFocus?: boolean;
 }
 
 export async function revealPath(
@@ -48,7 +49,10 @@ export async function revealPath(
   const list = vt.visible;
   const idx = list.findIndex(it => it.id === path);
   if (idx >= 0) {
-    vt.focusedIndex = idx;
+    if (!options?.preserveFocus) {
+      vt.focusedIndex = idx;
+      vt.selection?.state.moveFocus(path);
+    }
     vt.selectedIndex = idx;
     
     // First, scroll vertically to the row using row-based scrolling

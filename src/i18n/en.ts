@@ -1,5 +1,27 @@
 // English localization
 export default {
+    selectionMode: "Select items",
+    selectionActions: "Selection actions",
+    selectionClear: "Clear selection",
+    selectionCount: "{{count}} selected",
+    selectionHiddenCount: " ({{count}} hidden)",
+    selectionCancel: "Cancel",
+    selectionConfirm: "Confirm",
+    bulkMissing: "Item no longer available: {{path}}",
+    bulkInvalidDestination: "Cannot move items into themselves or their descendants.",
+    bulkConflict: "Destination conflict: {{path}}",
+    bulkMoveTo: "Move selection to…",
+    bulkNoChange: "All selected items are already at this destination.",
+    bulkMovePreview: "Move these items?",
+    bulkDeletePreview: "Move these items and folder contents to trash?",
+    bulkChanged: "The items changed. Review the selection and try again.",
+    bulkErrors: "Some operations failed:",
+    bulkCopyPaths: "Copy paths",
+    bulkOpenTabs: "Open in new tabs",
+    bulkHide: "Hide selection",
+    bulkShow: "Show selection",
+    bulkDelete: "Move selection to trash…",
+
     // View
     viewName: 'Dot Navigator',
     

@@ -9,7 +9,7 @@ import createDebug from 'debug';
 const debugError = createDebug('dot-navigator:views:row-handlers:error');
 
 const FILE_CLICK_DELAY = 200;
-const pendingFileClicks = new Map<string, number>();
+import { pendingFileClicks as getPendingFileClicks } from './pendingFileClicks';
 const TOUCH_DOUBLE_TAP_DELAY = 350;
 const TOUCH_DOUBLE_TAP_DISTANCE = 24;
 const TOUCH_INTERACTION_WINDOW = 700;
@@ -178,12 +178,13 @@ export function onRowClick(
     return;
   }
 
+  const pendingFileClicks = getPendingFileClicks(vt);
   const id = row.dataset.id!;
   const idx = Number(row.dataset.index!);
   const item: RowItem = vt.visible[idx];
 
   vt.focusedIndex = idx;
-  vt.container.focus();
+  if (vt.selection) vt.selection.focusTree(); else vt.container.focus();
 
   const target = e.target;
   if (!(target instanceof Element)) {
@@ -244,13 +245,8 @@ export function onRowClick(
   };
 
   const applySelection = (): void => {
-    if (kind === 'file') {
-      vt.selectedIndex = idx;
-      vt.selectedActivePart = 'title';
-      setSelectedId(id);
-    } else {
-      vt.focusedIndex = idx;
-    }
+    vt.focusedIndex = idx;
+    vt.selection?.state.moveFocus(id);
     vt._render();
   };
 
@@ -335,7 +331,7 @@ export function onRowContextMenu(app: App, vt: VirtualTreeLike, e: MouseEvent, r
   const item: RowItem = vt.visible[idx];
 
   vt.focusedIndex = idx;
-  vt.container.focus();
+  if (vt.selection) vt.selection.focusTree(); else vt.container.focus();
 
   handleActionButtonClick(app, 'more', id, item.kind, vt, row, e, renameManager);
 }

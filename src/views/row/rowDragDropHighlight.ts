@@ -1,5 +1,6 @@
 import type { DraggableKind } from '../../utils/rename/DragMoveUtils';
 import type { VirtualTreeLike } from '../utils/viewTypes';
+import type { BulkTarget } from '../../domain/tree/BulkOperationPlan';
 import {
     computeInsertionPreview,
     createDropPlaceholder,
@@ -11,6 +12,7 @@ import {
 } from './rowDragDropUi';
 
 export interface DragHighlightState {
+    targets?: BulkTarget[];
     path: string;
     kind: DraggableKind;
     row: HTMLElement;
@@ -43,7 +45,9 @@ export function updateDragDropHighlight(
     }
 
     const valid = drop
-        ? isDropAllowed(active.path, active.kind, drop.targetPath, drop.targetKind)
+        ? (active.targets && active.targets.length > 1
+            ? deps.virtualTree.selection?.canDrop(active.targets, drop.targetPath, drop.targetKind) === true
+            : isDropAllowed(active.path, active.kind, drop.targetPath, drop.targetKind))
         : false;
 
     if (targetRow && targetRow !== active.row && valid) {
