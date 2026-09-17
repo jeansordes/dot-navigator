@@ -1,3 +1,9 @@
+## [1.31.2](https://github.com/jeansordes/dot-navigator/compare/1.31.1...1.31.2) (2026-09-17)
+
+### Bug Fixes
+
+* **tree:** refine selection behavior and add copy path action ([8407ccf](https://github.com/jeansordes/dot-navigator/commit/8407ccf2cc0ac915a6bef243588605a8e37df1e4))
+
 ## [1.31.1](https://github.com/jeansordes/dot-navigator/compare/1.31.0...1.31.1) (2026-09-17)
 
 ### Bug Fixes
