@@ -209,6 +209,14 @@
         background-color: var(--dotn_bg);
     }
 
+    .dotn_quick-create-child {
+        display: none;
+    }
+
+    &.dotn_shift-held .dotn_quick-create-child {
+        display: flex;
+    }
+
     /* Remove the extra overlay that clipped highlight */
 
     .dotn_icon svg,
@@ -515,4 +523,3 @@
         transform: scale(1);
     }
 }
-

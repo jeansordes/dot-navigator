@@ -4,6 +4,7 @@ import { t } from '../../i18n';
 import type { ChildCountMode } from '../../types';
 import { resolveChildCountBadge } from '../../utils/childCount';
 import type { RowItem } from '../utils/viewTypes';
+import { canCreateChildQuickAction } from './shiftQuickAction';
 
 export function createIndentGuides(level: number): HTMLElement {
   const indent = activeDocument.createElement('div');
@@ -245,7 +246,15 @@ export function createActionButtons(item: RowItem, _app: App): HTMLElement {
     container.appendChild(createNoteBtn);
   }
 
-  // Replace the single child button with a "more" menu trigger
+  if (canCreateChildQuickAction(item)) {
+    const createChildBtn = activeDocument.createElement('div');
+    createChildBtn.className = 'dotn_button-icon dotn_quick-create-child';
+    createChildBtn.title = t('tooltipCreateChildNote', { path: item.id });
+    createChildBtn.setAttribute('data-action', 'create-child');
+    setIcon(createChildBtn, 'copy-plus');
+    container.appendChild(createChildBtn);
+  }
+
   const moreBtn = activeDocument.createElement('div');
   moreBtn.className = 'dotn_button-icon';
   moreBtn.title = t('tooltipMoreActions');

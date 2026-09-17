@@ -24,6 +24,7 @@ import type { RowDragController } from '../row/rowDragDrop';
 import { attachTreeDragController, detachTreeDragController } from './treeDragAttach';
 import { RenameManager } from '../../utils/rename/RenameManager';
 import { resolveRevealPathForActiveFile } from '../../core/aliasVirtualData';
+import { bindShiftQuickAction } from '../row/shiftQuickAction';
 
 export class ComplexVirtualTree extends VirtualTree {
   selection?: TreeSelectionController;
@@ -47,6 +48,7 @@ export class ComplexVirtualTree extends VirtualTree {
   private _renameManager?: RenameManager;
   private _dragController?: RowDragController;
   private _pendingReveal?: { path: string; expandSelf?: boolean; waitForRedirect?: boolean };
+  private _releaseShiftQuickAction?: () => void;
   /** Which part of a redirect stub row shows the active highlight */
   selectedActivePart: 'title' | 'stub-icon' = 'title';
 
@@ -72,6 +74,7 @@ export class ComplexVirtualTree extends VirtualTree {
     this._renameManager = options.renameManager;
     this.selection = new TreeSelectionController(this.app, this.virtualTree, this._renameManager);
     this.selection.load();
+    this._releaseShiftQuickAction = bindShiftQuickAction(options.container);
 
     setupAttachment({
       container: options.container,
@@ -328,6 +331,8 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public destroy(): void {
     this.selection?.unload();
+    this._releaseShiftQuickAction?.();
+    this._releaseShiftQuickAction = undefined;
     detachTreeDragController(this._dragController);
     this._dragController = undefined;
 
