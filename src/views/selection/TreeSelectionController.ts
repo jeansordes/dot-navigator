@@ -34,6 +34,9 @@ export class TreeSelectionController extends Component {
   readonly visibleIds = new Set<string>();
   get focusElement(): HTMLElement { return this.tree.container.querySelector<HTMLElement>('.dotn_view-body') ?? this.tree.container; }
   focusTree(): void { this.focusElement.focus(); }
+  showKeyboardFocus(visible: boolean): void {
+    this.focusElement.classList.toggle('dotn_keyboard-navigation', visible);
+  }
 
   constructor(readonly app: App, readonly tree: VirtualTreeLike, readonly renameManager?: RenameManager) { super(); }
 
@@ -46,6 +49,9 @@ export class TreeSelectionController extends Component {
     this.focusElement.setAttribute('aria-multiselectable', 'true');
     this.toolbar = this.addChild(new SelectionToolbar(this));
     this.registerDomEvent(tree.container, 'keydown', event => handleSelectionKey(this, event));
+    this.registerDomEvent(tree.container, 'pointerdown', () => this.showKeyboardFocus(false), true);
+    this.registerDomEvent(this.focusElement, 'focus', () => this.showKeyboardFocus(this.focusElement.matches(':focus-visible')));
+    this.registerDomEvent(this.focusElement, 'blur', () => this.showKeyboardFocus(false));
     this.registerDomEvent(tree.container, 'click', event => this.click(event), true);
     this.registerDomEvent(tree.container, 'auxclick', event => {
       if (event.button !== 1 || !(event.target instanceof Element) || !event.target.closest('.dotn_tree-item-title')) return;
@@ -161,6 +167,10 @@ export class TreeSelectionController extends Component {
   showContext(id: string, event?: MouseEvent, anchor?: HTMLElement): boolean {
     if (!this.selectable.has(id)) return false;
     cancelPendingFileClicks(this.tree);
+    if (!this.mode && this.state.ids.size === 0) {
+      this.state.moveFocus(id); this.changed();
+      return false;
+    }
     if (!this.state.ids.has(id)) this.state.replace(id);
     this.state.focus = id; this.changed();
     if (this.state.ids.size > 1 || this.mode) { this.showMenu(anchor, event); return true; }
@@ -189,5 +199,6 @@ export class TreeSelectionController extends Component {
     this.disposed = true;
     cancelPendingFileClicks(this.tree);
     this.focusElement.removeAttribute('aria-activedescendant');
+    this.showKeyboardFocus(false);
   }
 }

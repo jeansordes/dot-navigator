@@ -22,6 +22,7 @@ import { showDoubleClickFeedback } from './rowDoubleClickFeedback';
 import { openVaultPathInDefaultApp } from '../../utils/file/openExternalFile';
 import { desktopShellOpenPath } from '../../utils/file/desktopShellOpen';
 import { addCreateFolderMenuItem } from './rowMenuCreateFolder';
+import { addCopyPathMenuItem } from './rowMenuCopyPath';
 import { shouldShowFor } from './rowMenuVisibility';
 
 async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPluginLike, path: string): Promise<void> {
@@ -30,15 +31,11 @@ async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPluginL
   await plugin.getPluginMainPanel()?.refresh();
 }
 
-function getPlugin(app: App): DotNavigatorPluginLike | undefined {
-  return getDotNavigatorPlugin(app);
-}
+function getPlugin(app: App): DotNavigatorPluginLike | undefined { return getDotNavigatorPlugin(app); }
 
 function revealPathInSystemExplorer(app: App, path: string): void {
   const showInFolder = (app as ObsidianInternalApp).showInFolder;
-  if (typeof showInFolder === 'function') {
-    showInFolder.call(app, path);
-  }
+  if (typeof showInFolder === 'function') showInFolder.call(app, path);
 }
 
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
@@ -137,6 +134,9 @@ export function handleActionButtonClick(
         } else if (it.builtin === 'create-folder') {
           if (!folder || isShortcut || !isIndexed) continue;
           addCreateFolderMenuItem(menu, app, folder, renameManager, it.icon);
+        } else if (it.builtin === 'copy-path') {
+          if (!actionPath) continue;
+          addCopyPathMenuItem(menu, actionPath, it.icon);
         } else if (it.builtin === 'delete') {
           if (!isIndexed) continue;
           if (!addDeleteMenuItem(menu, app, treeItem, isShortcut, file, folder, it.icon)) continue;

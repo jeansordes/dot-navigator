@@ -203,9 +203,8 @@
         gap: var(--dotn_gap);
         z-index: 5;
         /* Keep above text, but let highlight extend underneath */
-        background-color: transparent;
         margin-left: var(--dotn_gap);
-        box-shadow: 0px 0px 0 4px var(--dotn_bg), 8px 0px 0 0px var(--dotn_bg);
+        box-shadow: none;
         background-color: var(--dotn_bg);
     }
 

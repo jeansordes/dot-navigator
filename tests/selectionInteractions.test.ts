@@ -23,7 +23,7 @@ function setup() {
   app.vault.getAbstractFileByPath = jest.fn(path => path === 'virtual' ? null
     : Object.assign(path === 'a' ? new TFolder() : new TFile(), { path }));
   const tree = {
-    data: rows, visible: rows, container: { querySelector: () => null, focus: jest.fn() },
+    data: rows, visible: rows, container: { querySelector: () => null, focus: jest.fn(), classList: { toggle: jest.fn() } },
     _render: jest.fn(), scrollToIndex: jest.fn(), expanded: new Map(),
     toggle: jest.fn(), expand: jest.fn(), collapse: jest.fn(), pool: [], selectedIndex: 2,
   } as unknown as VirtualTreeLike;
@@ -65,6 +65,20 @@ describe('selection keyboard and click integration', () => {
     Platform.isMacOS = true;
     key(controller, 'a', { metaKey: true });
     expect([...controller.state.ids]).toEqual(['a', 'a/child.md', 'b.md', 'c.md']);
+  });
+
+  it('reveals keyboard focus for navigation, but not for a lone modifier', () => {
+    const { controller, tree } = setup();
+    for (const modifier of ['Shift', 'Control', 'Alt', 'Meta']) {
+      const event = key(controller, modifier);
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    }
+    expect(tree.container.classList.toggle).not.toHaveBeenCalled();
+    expect(controller.state.focus).toBe('a');
+    expect(controller.state.ids.size).toBe(0);
+    key(controller, 'ArrowDown');
+    expect(tree.container.classList.toggle).toHaveBeenLastCalledWith('dotn_keyboard-navigation', true);
+    expect(controller.state.focus).toBe('a/child.md');
   });
 
   it('does not intercept editor input or buttons', () => {
@@ -115,6 +129,49 @@ describe('selection keyboard and click integration', () => {
     (controller as unknown as { click(event: MouseEvent): void }).click(event);
     expect(event.stopPropagation).toHaveBeenCalled();
     expect(controller.state.ids.size).toBe(0);
+  });
+
+  it.each(['a', 'b.md'])('leaves selection inactive when opening the context menu for %s', id => {
+    const { controller } = setup();
+    const menu = jest.spyOn(controller, 'showMenu').mockImplementation(() => undefined);
+    expect(controller.showContext(id)).toBe(false);
+    expect(controller.state.ids.size).toBe(0);
+    expect(controller.mode).toBe(false);
+    expect(controller.state.focus).toBe(id);
+    expect(menu).not.toHaveBeenCalled();
+  });
+
+  it.each(['a', 'b.md'])('lets an ordinary left click on %s through without selecting', id => {
+    const { controller } = setup();
+    const row = new Target('.tree-row'); row.dataset.id = id;
+    const target = new Target('.dotn_tree-item-title', row);
+    const event = { target, button: 0, preventDefault: jest.fn(), stopPropagation: jest.fn() } as unknown as MouseEvent;
+    (controller as unknown as { click(event: MouseEvent): void }).click(event);
+    expect(controller.state.ids.size).toBe(0);
+    expect(controller.mode).toBe(false);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopPropagation).not.toHaveBeenCalled();
+  });
+
+  it('selects a context target when selection mode was explicitly enabled', () => {
+    const { controller } = setup();
+    const menu = jest.spyOn(controller, 'showMenu').mockImplementation(() => undefined);
+    controller.start();
+    expect(controller.showContext('b.md')).toBe(true);
+    expect([...controller.state.ids]).toEqual(['b.md']);
+    expect(menu).toHaveBeenCalled();
+  });
+
+  it('preserves a group on context click and replaces it when clicking outside the group', () => {
+    const { controller } = setup();
+    const menu = jest.spyOn(controller, 'showMenu').mockImplementation(() => undefined);
+    controller.select('a', false, false);
+    controller.select('b.md', false, false);
+    expect(controller.showContext('b.md')).toBe(true);
+    expect([...controller.state.ids]).toEqual(['a', 'b.md']);
+    expect(menu).toHaveBeenCalledTimes(1);
+    expect(controller.showContext('c.md')).toBe(false);
+    expect([...controller.state.ids]).toEqual(['c.md']);
   });
 
   it('keeps a collapsed selection and moves focus to its visible parent', () => {

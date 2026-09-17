@@ -24,7 +24,7 @@
   background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
   border-radius: var(--radius-s);
 }
-.dotn_view [role='tree']:focus-visible .tree-row.dotn_keyboard-focus {
+.dotn_view [role='tree'].dotn_keyboard-navigation:focus .tree-row.dotn_keyboard-focus {
   outline: 1px solid var(--interactive-accent);
   outline-offset: -1px;
   border-radius: var(--radius-s);

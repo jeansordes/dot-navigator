@@ -38,6 +38,7 @@ export function handleSelectionKey(controller: TreeSelectionController, event: K
   else if (key === 'Enter') controller.open(item, mod);
   else if (key === 'ContextMenu' || (key === 'F10' && event.shiftKey)) controller.contextKey(item);
   else return;
+  controller.showKeyboardFocus(true);
   event.preventDefault();
   event.stopPropagation();
   if (['ArrowUp', 'ArrowDown', 'Home', 'End', 'ArrowLeft', 'ArrowRight'].includes(key)) {
