@@ -142,9 +142,15 @@ export class ComplexVirtualTree extends VirtualTree {
     return super.getShowHidden();
   }
 
-  public getSelectedId(): string | undefined {
-    return this._selectedId;
+  public getSelectedId(): string | undefined { return this._selectedId; }
+  public clearActiveFile(): void {
+    this._selectedId = undefined;
+    this._preferShortcutReveal = false;
+    this.selectedActivePart = 'title';
+    this.virtualTree.selectedIndex = -1;
+    this.virtualTree._render();
   }
+  public isPathFocused(path: string): boolean { return this.virtualTree.visible[this.virtualTree.focusedIndex]?.id === path; }
 
   public revealAfterUpdate(path: string, options?: MoveCompleteOptions): void {
     if (!path) {

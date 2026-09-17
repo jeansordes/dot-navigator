@@ -83,13 +83,12 @@ export default class PluginMainPanel extends ItemView {
         // Lower debounce to make updates feel snappier; structural ops still coalesce
         this.eventHandler = new DendronEventHandler(
             this.app,
-            (_path, _forceFullRefresh, _oldPath, preserveScroll) => {
-                void this.refresh({ revealActiveFile: !preserveScroll });
-            },
+            (_path, _forceFullRefresh, _oldPath, preserveScroll) => { void this.refresh({ revealActiveFile: !preserveScroll }); },
             120,
             '',
             () => this.reloadSchemaConfig(),
-            (newPath) => this.handleSchemaConfigRename(newPath)
+            (newPath) => this.handleSchemaConfigRename(newPath),
+            (oldPath) => !(this.virtualTree?.isPathFocused(oldPath) ?? false)
         );
         // Controls will be initialized in onOpen when container is available
     }
@@ -215,10 +214,10 @@ export default class PluginMainPanel extends ItemView {
 
     private _registerEventHandlers(): void {
         this.eventHandler.registerFileEvents();
-        this.eventHandler.registerActiveFileEvents((file) => {
+        this.registerEvent(this.eventHandler.registerActiveFileEvents((file) => {
             this.activeFile = file;
             this.highlightActiveFile();
-        });
+        }));
     }
 
     private _highlightInitialActiveFile(): void {
@@ -241,11 +240,15 @@ export default class PluginMainPanel extends ItemView {
      * Highlight the active file in the tree view and scroll it into view
      */
     private highlightActiveFile(): void {
-        const file = this.activeFile ?? this.app.workspace.getActiveFile();
-        if (!file) return;
+        const file = this.activeFile;
 
         // Prefer going through the manager (stable API)
         try {
+            if (!file) {
+                if (this.vtManager) this.vtManager.clearActiveFile();
+                else this.virtualTree?.clearActiveFile();
+                return;
+            }
             if (this.vtManager) { this.vtManager.revealPathForActiveFile(file.path); return; }
             if (this.virtualTree) { this.virtualTree.revealPathForActiveFile(file.path); return; }
         } catch (e) {

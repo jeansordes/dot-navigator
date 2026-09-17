@@ -1,6 +1,7 @@
 import { Platform } from 'obsidian';
 import { isShortcutModifier, resolveDragSource } from '../src/views/row/rowDragDropUi';
-import { canStartDrag } from '../src/views/row/rowDragDrop';
+import { canStartDrag, isDraggedRowFocused } from '../src/views/row/rowDragDrop';
+import type { VirtualTreeLike } from '../src/views/utils/viewTypes';
 
 function makeRow(dataset: Record<string, string>): HTMLElement {
     return { dataset } as HTMLElement;
@@ -92,5 +93,17 @@ describe('canStartDrag', () => {
         app.vault.getAbstractFileByPath.mockReturnValue(null);
 
         expect(canStartDrag(app as never, 'projects.ideas.md', 'file')).toBe(false);
+    });
+});
+
+describe('isDraggedRowFocused', () => {
+    const vt = {
+        focusedIndex: 1,
+        visible: [{ id: 'a.md' }, { id: 'b.md' }],
+    } as VirtualTreeLike;
+
+    it('follows only the row that had focus before the drag', () => {
+        expect(isDraggedRowFocused(vt, 'b.md')).toBe(true);
+        expect(isDraggedRowFocused(vt, 'a.md')).toBe(false);
     });
 });

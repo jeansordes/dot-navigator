@@ -109,4 +109,3 @@ export function scrollToIndex(vt: VirtualTreeLike, index: number): void {
     bufferRows: 3
   });
 }
-

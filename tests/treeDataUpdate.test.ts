@@ -1,5 +1,6 @@
 import type { VItem } from '../src/core/virtualData';
-import { computeDirtyItemIds, hasItemVisualChange } from '../src/views/tree/treeDataUpdate';
+import { applyTreeDataUpdate, computeDirtyItemIds, hasItemVisualChange } from '../src/views/tree/treeDataUpdate';
+import type { VirtualTreeLike } from '../src/views/utils/viewTypes';
 
 function fileItem(overrides: Partial<VItem> = {}): VItem {
   return {
@@ -64,5 +65,33 @@ describe('computeDirtyItemIds', () => {
     ];
 
     expect(computeDirtyItemIds(oldData, newData)).toEqual(new Set(['notes/stub.md']));
+  });
+});
+
+describe('applyTreeDataUpdate', () => {
+  it('restores the previous scroll offset after rendering new data', () => {
+    const host = {
+      scrollTop: 240,
+      scrollHeight: 1000,
+      clientHeight: 300,
+    } as HTMLElement;
+    const vt = {
+      container: host,
+      data: [fileItem()],
+      total: 1,
+      focusedIndex: 0,
+      _recomputeVisible: jest.fn(),
+      _render: jest.fn(() => { host.scrollTop = 0; }),
+    } as unknown as VirtualTreeLike;
+
+    applyTreeDataUpdate(
+      vt,
+      [fileItem({ name: 'Renamed' })],
+      new Map(),
+      jest.fn(),
+      jest.fn(),
+    );
+
+    expect(host.scrollTop).toBe(240);
   });
 });

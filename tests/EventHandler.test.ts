@@ -38,7 +38,12 @@ describe('DendronEventHandler scroll-preserving refresh', () => {
         expect(refresh).toHaveBeenCalledWith(undefined, true, undefined, true);
     });
 
-    it('requests scroll preservation after renaming a folder', () => {
+    it.each([
+        ['focused file', Object.assign(new TFile(), { path: 'notes/renamed.md' }), 'notes/original.md', 'notes/original.md', false],
+        ['unfocused file', Object.assign(new TFile(), { path: 'notes/renamed.md' }), 'notes/original.md', 'other.md', true],
+        ['focused folder', Object.assign(new TFolder(), { path: 'notes/renamed' }), 'notes/original', 'notes/original', false],
+        ['unfocused folder', Object.assign(new TFolder(), { path: 'notes/renamed' }), 'notes/original', 'other', true],
+    ])('chooses scroll preservation after renaming a %s', (_kind, renamedEntry, oldPath, focusedPath, preserveScroll) => {
         const app = new App();
         let onRename: ((file: TFile | TFolder, oldPath: string) => void) | undefined;
         const vaultEvents = app.vault as unknown as {
@@ -52,13 +57,14 @@ describe('DendronEventHandler scroll-preserving refresh', () => {
         vaultEvents.off = jest.fn();
         vaultEvents.getMarkdownFiles = jest.fn(() => []);
         const refresh = jest.fn();
-        const handler = new DendronEventHandler(app, refresh, 120);
-        const renamedFolder = Object.assign(new TFolder(), { path: 'notes/renamed' });
-
+        const handler = new DendronEventHandler(
+            app, refresh, 120, '', undefined, undefined,
+            (renamedOldPath) => renamedOldPath !== focusedPath,
+        );
         handler.registerFileEvents();
-        onRename?.(renamedFolder, 'notes/original');
+        onRename?.(renamedEntry, oldPath);
         jest.advanceTimersByTime(500);
 
-        expect(refresh).toHaveBeenCalledWith('notes/renamed', false, undefined, true);
+        expect(refresh).toHaveBeenCalledWith(renamedEntry.path, false, undefined, preserveScroll);
     });
 });

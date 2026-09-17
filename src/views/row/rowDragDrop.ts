@@ -56,6 +56,10 @@ export function canStartDrag(
     return kind === 'virtual' || isVaultIndexedPath(app, path);
 }
 
+export function isDraggedRowFocused(vt: VirtualTreeLike, rowId: string): boolean {
+    return vt.visible[vt.focusedIndex]?.id === rowId;
+}
+
 export interface RowDragControllerOptions {
     app: App;
     virtualTree: VirtualTreeLike;
@@ -257,6 +261,7 @@ export class RowDragController {
     private async completeDrag(clientX: number, clientY: number): Promise<void> {
         if (!this.active) return;
         const drag = this.active;
+        const wasFocused = isDraggedRowFocused(this.opts.virtualTree, drag.row.dataset.id ?? '');
         const drop = resolveDropTarget(clientX, clientY, this.opts.viewBody);
         this.endDrag(true);
         if (!drop || !this.opts.renameManager) return;
@@ -272,7 +277,7 @@ export class RowDragController {
             },
             drop,
             this.opts.renameManager,
-            this.opts.onMoveComplete,
+            wasFocused ? this.opts.onMoveComplete : undefined,
         );
     }
 

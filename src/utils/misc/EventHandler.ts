@@ -1,4 +1,4 @@
-import { App, TFile, TFolder, TAbstractFile } from 'obsidian';
+import { App, TFile, TAbstractFile, type EventRef } from 'obsidian';
 import { TreeNode } from '../../types';
 import { getYamlRedirectSignature, getYamlTitle } from './YamlTitleUtils';
 import { updateRedirectTargetsOnRename } from '../../core/redirectStub';
@@ -8,12 +8,13 @@ export class DendronEventHandler {
     private refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string, preserveScroll?: boolean) => void;
     private schemaReloadCallback?: () => Promise<void>;
     private schemaConfigUpdateCallback?: (newPath: string) => Promise<void>;
+    private shouldPreserveScrollOnRename: (oldPath: string) => boolean;
     private refreshDebounceTimeout: number | null = null;
     // Default debounce time of 500ms for better performance
     private debounceWaitTime = 500;
     // Track paths and flags for debounced updates
     private pendingChanges: Map<string, boolean> = new Map(); // path -> forceFullRefresh
-    private preserveScrollOnNextRefresh = false;
+    private revealOnNextRefresh = false;
     // Cache YAML titles and redirects to detect changes on modify or metadata events
     private yamlTitleCache: Map<string, string | null> = new Map();
     private yamlRedirectCache: Map<string, string> = new Map();
@@ -22,11 +23,12 @@ export class DendronEventHandler {
     private readonly graceMs = 300; // keep very small to reduce perceived lag
     private schemaRegex: RegExp;
 
-    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string, preserveScroll?: boolean) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>, schemaConfigUpdateCallback?: (newPath: string) => Promise<void>) {
+    constructor(app: App, refreshCallback: (path?: string, forceFullRefresh?: boolean, oldPath?: string, preserveScroll?: boolean) => void, debounceTime?: number, schemaConfigFilePath?: string, schemaReloadCallback?: () => Promise<void>, schemaConfigUpdateCallback?: (newPath: string) => Promise<void>, shouldPreserveScrollOnRename: (oldPath: string) => boolean = () => true) {
         this.app = app;
         this.refreshCallback = refreshCallback;
         this.schemaReloadCallback = schemaReloadCallback;
         this.schemaConfigUpdateCallback = schemaConfigUpdateCallback;
+        this.shouldPreserveScrollOnRename = shouldPreserveScrollOnRename;
         this.schemaRegex = this.createSchemaFileRegex(schemaConfigFilePath || 'dot-navigator-rules.json');
         if (debounceTime !== undefined) {
             this.debounceWaitTime = debounceTime;
@@ -106,7 +108,8 @@ export class DendronEventHandler {
             this.yamlRedirectCache.set(file.path, cachedRedirect);
             void updateRedirectTargetsOnRename(this.app, oldPath, file.path);
         }
-        this.queueRefresh(file?.path, false, true, file instanceof TFolder);
+        // Follow the new path only when the renamed node was focused.
+        this.queueRefresh(file?.path, false, true, this.shouldPreserveScrollOnRename(oldPath));
     };
 
     private handleFileModify = (file: TAbstractFile) => {
@@ -161,7 +164,9 @@ export class DendronEventHandler {
         const withinGrace = now - this.initAt < this.graceMs;
 
         const enqueue = () => {
-            this.preserveScrollOnNextRefresh ||= preserveScroll;
+            // If any event in a rename batch concerns the focused node, that
+            // explicit follow request takes precedence over scroll preservation.
+            this.revealOnNextRefresh ||= !preserveScroll;
             if (forceFullRefresh) {
                 this.pendingChanges.clear();
                 this.pendingChanges.set('', true);
@@ -183,12 +188,8 @@ export class DendronEventHandler {
     /**
      * Register events for active file changes
      */
-    registerActiveFileEvents(callback: (file: TFile) => void): void {
-        this.app.workspace.on('file-open', (file) => {
-            if (file) {
-                callback(file);
-            }
-        });
+    registerActiveFileEvents(callback: (file: TFile | null) => void): EventRef {
+        return this.app.workspace.on('file-open', callback);
     }
 
     /**
@@ -208,19 +209,19 @@ export class DendronEventHandler {
             
             if (hasFullRefresh) {
                 // Do a full refresh
-                this.refreshCallback(undefined, true, undefined, this.preserveScrollOnNextRefresh);
+                this.refreshCallback(undefined, true, undefined, !this.revealOnNextRefresh);
             } else if (this.pendingChanges.size === 1) {
                 // Do a single path refresh
                 const [path] = this.pendingChanges.keys();
-                this.refreshCallback(path, false, undefined, this.preserveScrollOnNextRefresh);
+                this.refreshCallback(path, false, undefined, !this.revealOnNextRefresh);
             } else if (this.pendingChanges.size > 1) {
                 // Multiple paths changed, do a full refresh
-                this.refreshCallback(undefined, true, undefined, this.preserveScrollOnNextRefresh);
+                this.refreshCallback(undefined, true, undefined, !this.revealOnNextRefresh);
             }
             
             // Reset state
             this.pendingChanges.clear();
-            this.preserveScrollOnNextRefresh = false;
+            this.revealOnNextRefresh = false;
             this.refreshDebounceTimeout = null;
         }, wait);
     }

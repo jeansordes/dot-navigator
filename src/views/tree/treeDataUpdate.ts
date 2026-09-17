@@ -77,7 +77,9 @@ export function applyTreeDataUpdate(
     vt._render();
 
     const maxScrollTop = getMaxScrollTop(host);
-    if (prevScrollTop > maxScrollTop) host.scrollTop = maxScrollTop;
+    // Rendering can replace/reposition virtual rows and let the browser adjust
+    // the viewport. Restore the exact previous offset whenever it is still valid.
+    host.scrollTop = Math.min(prevScrollTop, maxScrollTop);
 
     onExpansionChange?.();
 }
