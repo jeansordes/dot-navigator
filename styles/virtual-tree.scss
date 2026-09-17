@@ -69,7 +69,7 @@
 .tree-row .dotn_indent {
     position: absolute;
     /* Align guide columns centered under the toggle triangle, including the gap offset */
-    left: calc(var(--dotn_view-padding) + (var(--dotn_button-size) / 2));
+    left: calc(var(--dotn_view-padding) + var(--dotn_selection-gutter, 0px) + (var(--dotn_button-size) / 2));
     /* Extend slightly above and below to maintain continuous look between rows */
     top: calc(-1 * var(--dotn_gap) + 1px);
     height: calc(var(--dotn_button-size) + (var(--dotn_gap) * 2) - 2px);
@@ -97,5 +97,5 @@
 
 /* Dynamic indentation using CSS custom properties - supports infinite levels */
 .tree-row {
-    padding-left: calc(var(--dotn_view-padding) + (var(--row-indent, 0) * 20px));
+    padding-left: calc(var(--dotn_view-padding) + var(--dotn_selection-gutter, 0px) + (var(--row-indent, 0) * 20px));
 }

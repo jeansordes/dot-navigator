@@ -11,8 +11,13 @@
     box-shadow: none;
     background: transparent;
     svg { width: 16px; height: 16px; }
-    &[aria-pressed='true'] { color: var(--text-accent); background: var(--background-modifier-hover); }
   }
+}
+.dotn_view .dotn_selection-toggle {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  &[aria-pressed='true'] { color: var(--text-accent); background: var(--background-modifier-hover); }
 }
 .dotn_selection-count { flex: 1; color: var(--text-muted); font-size: var(--font-ui-smaller); }
 .dotn_view .tree-row.dotn_group-selected {
@@ -26,10 +31,12 @@
 }
 .dotn_view .dotn_selection-check {
   display: none;
-  flex-shrink: 0;
+  position: absolute;
+  left: var(--dotn_view-padding);
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
-  margin-inline: 4px;
+  margin: 0;
   border: 1px solid var(--text-muted);
   border-radius: 3px;
   text-align: center;
@@ -37,7 +44,9 @@
   font-size: 12px;
   color: var(--text-normal);
 }
-.dotn_selection-mode .dotn_selection-check,
+.dotn_selection-mode { --dotn_selection-gutter: 24px; }
+.dotn_view.dotn_selection-mode .dotn_selection-check,
+.dotn_view .dotn_selection-mode .dotn_selection-check,
 .dotn_view .dotn_group-selected .dotn_selection-check { display: inline-block; }
 .dotn_bulk-preview { max-height: 50vh; overflow: auto; overflow-wrap: anywhere; }
 .dotn_drag-count { padding-inline: 6px; border-radius: 8px; background: var(--interactive-accent); color: var(--text-on-accent); }

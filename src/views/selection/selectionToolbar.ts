@@ -16,10 +16,14 @@ export class SelectionToolbar extends Component {
     const body = host?.querySelector('.dotn_view-body');
     if (body) body.before(this.bar); else container.before(this.bar);
     this.toggle = this.button(t('selectionMode'), 'list-checks', () => {
-      controller.mode = !controller.mode;
-      controller.changed();
+      if (controller.mode || controller.state.ids.size > 0) controller.clear();
+      else controller.start();
       controller.focusTree();
     });
+    this.toggle.className = 'dotn_button-icon dotn_selection-toggle';
+    const header = host?.querySelector('.dotn_view-header');
+    if (header) header.insertBefore(this.toggle, header.querySelector('.dotn_spacer'));
+    else container.before(this.toggle);
     this.toggle.setAttribute('aria-pressed', 'false');
     this.count = this.bar.createSpan({ cls: 'dotn_selection-count' });
     this.count.setAttribute('role', 'status');
@@ -41,9 +45,15 @@ export class SelectionToolbar extends Component {
     const text = t('selectionCount', { count: String(count) })
       + (hidden ? t('selectionHiddenCount', { count: String(hidden) }) : '');
     if (this.count.textContent !== text) this.count.textContent = text;
-    this.toggle.setAttribute('aria-pressed', String(controller.mode));
+    const selecting = controller.mode || count > 0;
+    this.toggle.setAttribute('aria-pressed', String(selecting));
+    this.bar.classList.toggle('is-hidden', !selecting);
     this.actions.disabled = count === 0 || controller.busy;
-    controller.tree.container.classList.toggle('dotn_selection-mode', controller.mode);
+    controller.tree.container.classList.toggle('dotn_selection-mode', selecting);
   }
-  onunload(): void { this.bar.remove(); }
+  onunload(): void {
+    this.bar.remove();
+    this.toggle.remove();
+    this.controller.tree.container.classList.remove('dotn_selection-mode');
+  }
 }

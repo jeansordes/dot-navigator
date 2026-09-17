@@ -10,7 +10,7 @@ export function canCreateChildQuickAction(item: RowItem): boolean {
  * the row DOM lets this work immediately for virtualized rows without a render.
  */
 export function bindShiftQuickAction(container: HTMLElement): () => void {
-  const document = container.ownerDocument;
+  const ownerDocument = container.ownerDocument;
   const getHost = (): HTMLElement => container.closest<HTMLElement>('.dotn_view')
     ?? container.querySelector<HTMLElement>('.dotn_view')
     ?? container;
@@ -25,13 +25,13 @@ export function bindShiftQuickAction(container: HTMLElement): () => void {
   };
   const clear = (): void => setVisible(false);
 
-  document.addEventListener('keydown', onKeyDown, true);
-  document.addEventListener('keyup', onKeyUp, true);
+  ownerDocument.addEventListener('keydown', onKeyDown, true);
+  ownerDocument.addEventListener('keyup', onKeyUp, true);
   window.addEventListener('blur', clear);
 
   return () => {
-    document.removeEventListener('keydown', onKeyDown, true);
-    document.removeEventListener('keyup', onKeyUp, true);
+    ownerDocument.removeEventListener('keydown', onKeyDown, true);
+    ownerDocument.removeEventListener('keyup', onKeyUp, true);
     window.removeEventListener('blur', clear);
     clear();
   };
