@@ -198,12 +198,14 @@
     .dotn_action-buttons-container {
         position: sticky;
         top: 0;
-        right: var(--dotn_view-padding);
+        right: 0;
         display: flex;
+        flex-shrink: 0;
         gap: var(--dotn_gap);
         z-index: 5;
-        /* Keep above text, but let highlight extend underneath */
-        margin-left: var(--dotn_gap);
+        /* Keep the sticky actions and their side gutters above scrolling titles. */
+        padding-left: var(--dotn_gap);
+        padding-right: var(--dotn_view-padding);
         box-shadow: none;
         background-color: var(--dotn_bg);
     }
@@ -215,8 +217,6 @@
     &.dotn_shift-held .dotn_quick-create-child {
         display: flex;
     }
-
-    /* Remove the extra overlay that clipped highlight */
 
     .dotn_icon svg,
     .dotn_button-icon svg {
