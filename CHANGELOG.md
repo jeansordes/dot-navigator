@@ -1,3 +1,9 @@
+## [1.31.4](https://github.com/jeansordes/dot-navigator/compare/1.31.3...1.31.4) (2026-09-17)
+
+### Bug Fixes
+
+* prevent active title bleeding around sticky actions ([5a9b60e](https://github.com/jeansordes/dot-navigator/commit/5a9b60e1886f9fc7f8efe8849b96a62fa46b2838))
+
 ## [1.31.3](https://github.com/jeansordes/dot-navigator/compare/1.31.2...1.31.3) (2026-09-17)
 
 ### Bug Fixes
