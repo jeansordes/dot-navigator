@@ -1,3 +1,10 @@
+## [1.30.3](https://github.com/jeansordes/dot-navigator/compare/1.30.2...1.30.3) (2026-09-17)
+
+### Bug Fixes
+
+* **tree:** clear stale active file highlight ([f769d5f](https://github.com/jeansordes/dot-navigator/commit/f769d5fa350c561d99678c991f8c2bf2eb517a41))
+* **tree:** preserve scroll for unfocused moves ([e9cac80](https://github.com/jeansordes/dot-navigator/commit/e9cac802158edbdb7407552b4a9f2a32699d7448))
+
 ## [1.30.2](https://github.com/jeansordes/dot-navigator/compare/1.30.1...1.30.2) (2026-09-16)
 
 ### Bug Fixes
