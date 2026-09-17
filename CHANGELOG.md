@@ -1,3 +1,9 @@
+# [1.31.0](https://github.com/jeansordes/dot-navigator/compare/1.30.3...1.31.0) (2026-09-17)
+
+### Features
+
+* **tree:** add independent multi-selection and bulk actions ([664a7d7](https://github.com/jeansordes/dot-navigator/commit/664a7d7fce86dc6f68fbb38c2217f9d30ec2f569))
+
 ## [1.30.3](https://github.com/jeansordes/dot-navigator/compare/1.30.2...1.30.3) (2026-09-17)
 
 ### Bug Fixes
