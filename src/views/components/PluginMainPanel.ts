@@ -244,11 +244,7 @@ export default class PluginMainPanel extends ItemView {
 
         // Prefer going through the manager (stable API)
         try {
-            if (!file) {
-                if (this.vtManager) this.vtManager.clearActiveFile();
-                else this.virtualTree?.clearActiveFile();
-                return;
-            }
+            if (!file) { (this.vtManager ?? this.virtualTree)?.clearActiveFile(); return; }
             if (this.vtManager) { this.vtManager.revealPathForActiveFile(file.path); return; }
             if (this.virtualTree) { this.virtualTree.revealPathForActiveFile(file.path); return; }
         } catch (e) {

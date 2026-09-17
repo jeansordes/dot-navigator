@@ -32,6 +32,7 @@ export class ComplexVirtualTree extends VirtualTree {
   private _resizeObs?: ResizeObserver;
   private _onExpansionChange?: () => void;
   private _selectedId?: string;
+  private _selectionRevision = 0;
   private _preferShortcutReveal = false;
   private _isAttached: boolean = false;
   // Lazily initialized because base class constructor calls into our _render before fields run
@@ -134,22 +135,8 @@ export class ComplexVirtualTree extends VirtualTree {
 
   public setParentMap(map: Map<string, string | undefined>): void { this.parentMap = map; }
 
-  public setShowHidden(value: boolean): void {
-    super.setShowHidden(value);
-  }
-
-  public getShowHidden(): boolean {
-    return super.getShowHidden();
-  }
-
   public getSelectedId(): string | undefined { return this._selectedId; }
-  public clearActiveFile(): void {
-    this._selectedId = undefined;
-    this._preferShortcutReveal = false;
-    this.selectedActivePart = 'title';
-    this.virtualTree.selectedIndex = -1;
-    this.virtualTree._render();
-  }
+  public clearActiveFile(): void { this._selectionRevision++; this._selectedId = undefined; this._preferShortcutReveal = false; this.selectedActivePart = 'title'; this.virtualTree.selectedIndex = -1; this.virtualTree._render(); }
   public isPathFocused(path: string): boolean { return this.virtualTree.visible[this.virtualTree.focusedIndex]?.id === path; }
 
   public revealAfterUpdate(path: string, options?: MoveCompleteOptions): void {
@@ -236,8 +223,9 @@ export class ComplexVirtualTree extends VirtualTree {
   }
 
   public async revealPath(path: string, options?: RevealPathOptions): Promise<void> {
+    const revision = ++this._selectionRevision;
     const idx = await revealAction(this.virtualTree, this.parentMap, path, options);
-    if (idx != null) this._selectedId = path;
+    if (idx != null && revision === this._selectionRevision) this._selectedId = path;
     this._onExpansionChange?.();
   }
 
@@ -261,9 +249,6 @@ export class ComplexVirtualTree extends VirtualTree {
     }
     void this.revealPath(revealId);
   }
-
-  // Ensure correct container gets scrolled when jumping to an index
-  public scrollToIndex(index: number): void { super.scrollToIndex(index); }
 
   // Row rendering (Obsidian-like DOM)
   private _renderRow(row: HTMLElement, item: RowItem, itemIndex: number, startPx?: number): void {
@@ -340,9 +325,7 @@ export class ComplexVirtualTree extends VirtualTree {
   // Reapply selection by id after the visible list changes so highlight stays on the same item.
   private _reapplySelection(): void {
     if (!this._selectedId) return;
-    const list = this.virtualTree.visible;
-    const idx = list.findIndex(it => it.id === this._selectedId);
-    this.virtualTree.selectedIndex = idx;
+    this.virtualTree.selectedIndex = this.virtualTree.visible.findIndex(it => it.id === this._selectedId);
   }
 
   // No-op placeholder kept for potential future use (do not scroll on expand/collapse)
