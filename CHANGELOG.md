@@ -1,3 +1,9 @@
+## [1.31.3](https://github.com/jeansordes/dot-navigator/compare/1.31.2...1.31.3) (2026-09-17)
+
+### Bug Fixes
+
+* **view:** preserve panel placement when plugin reloads ([ff90f9b](https://github.com/jeansordes/dot-navigator/commit/ff90f9b73275cbf95a1a82e3385d5c36f8086e83))
+
 ## [1.31.2](https://github.com/jeansordes/dot-navigator/compare/1.31.1...1.31.2) (2026-09-17)
 
 ### Bug Fixes
