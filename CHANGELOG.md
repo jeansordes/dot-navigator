@@ -1,3 +1,13 @@
+## [1.31.1](https://github.com/jeansordes/dot-navigator/compare/1.31.0...1.31.1) (2026-09-17)
+
+### Bug Fixes
+
+* **tree:** improve selection toolbar and align checkboxes ([bca7164](https://github.com/jeansordes/dot-navigator/commit/bca7164cde4468541efb161b325c3de5e8769c82))
+
+### Features
+
+* **tree:** show child note action while shift is held ([7ed3d59](https://github.com/jeansordes/dot-navigator/commit/7ed3d5963868af33db08138a677954847190568f))
+
 # [1.31.0](https://github.com/jeansordes/dot-navigator/compare/1.30.3...1.31.0) (2026-09-17)
 
 ### Features
