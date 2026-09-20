@@ -24,20 +24,19 @@ import { desktopShellOpenPath } from '../../utils/file/desktopShellOpen';
 import { addCreateFolderMenuItem } from './rowMenuCreateFolder';
 import { addCopyPathMenuItem } from './rowMenuCopyPath';
 import { shouldShowFor } from './rowMenuVisibility';
-
+import { isMarkdownShortcutEligible } from '../../utils/rename/DragMoveUtils';
+import { addCreateShortcutMenuItem } from './rowMenuCreateShortcut';
+import { addCreateChildMenuItem } from './rowMenuCreateChild';
 async function persistHideConfigAndRefresh(app: App, plugin: DotNavigatorPluginLike, path: string): Promise<void> {
   toggleHiddenConfig(plugin.settings, path);
   await plugin.saveSettings();
   await plugin.getPluginMainPanel()?.refresh();
 }
-
 function getPlugin(app: App): DotNavigatorPluginLike | undefined { return getDotNavigatorPlugin(app); }
-
 function revealPathInSystemExplorer(app: App, path: string): void {
   const showInFolder = (app as ObsidianInternalApp).showInFolder;
   if (typeof showInFolder === 'function') showInFolder.call(app, path);
 }
-
 export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: number, id: string, setSelectedId: (id: string) => void): void {
   if (item.kind === 'file') {
     vt.selectedIndex = idx;
@@ -45,7 +44,6 @@ export function handleRowDefaultClick(vt: VirtualTreeLike, item: RowItem, idx: n
   }
   vt._render();
 }
-
 export function handleActionButtonClick(
   app: App,
   action: string | null,
@@ -124,13 +122,10 @@ export function handleActionButtonClick(
         hasAddedBuiltinItems = true;
         if (it.builtin === 'create-child') {
           if (isShortcut || !isIndexed) continue;
-          menu.addItem((mi) => {
-            mi.setTitle(t('commandCreateChildNote'))
-              .setIcon(it.icon || 'copy-plus')
-              .onClick(async () => {
-                await FileUtils.createChildNote(app, actionPath, plugin?.settings);
-              });
-          });
+          addCreateChildMenuItem(menu, app, actionPath, plugin?.settings, it.icon);
+        } else if (it.builtin === 'create-shortcut') {
+          if (!file || isShortcut || !renameManager || !isMarkdownShortcutEligible(file.path, 'file')) continue;
+          addCreateShortcutMenuItem(menu, app, file, renameManager, plugin, it.icon);
         } else if (it.builtin === 'create-folder') {
           if (!folder || isShortcut || !isIndexed) continue;
           addCreateFolderMenuItem(menu, app, folder, renameManager, it.icon);
@@ -281,7 +276,8 @@ export function getConfiguredMenuItems(app: App): MoreMenuItem[] {
       ? plugin.settings.moreMenuItems
       : [];
     if (!builtinOrder.length && !userItems.length && legacyItems.length > 0) {
-      return legacyItems;
+      const legacyBuiltinIds = new Set(legacyItems.filter((item) => item.type === 'builtin').map((item) => item.id));
+      return [...legacyItems, ...DEFAULT_MORE_MENU.filter((item) => item.type === 'builtin' && !legacyBuiltinIds.has(item.id))];
     }
 
     return [...orderedBuiltins, ...userItems];
@@ -297,9 +293,7 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
     vt.selectedIndex = idx;
     vt.selectedActivePart = 'title';
     setSelectedId(id);
-    if (item && isShortcutItem(item)) {
-      vt.preferShortcutRevealOnNextActiveFile?.();
-    }
+    if (item && isShortcutItem(item)) vt.preferShortcutRevealOnNextActiveFile?.();
     const file = app.vault.getAbstractFileByPath(openPath);
     if (file instanceof TFile) {
       const openInNewTab = ev?.metaKey || ev?.ctrlKey;
@@ -316,5 +310,3 @@ export function handleTitleClick(app: App, kind: string | null, id: string, idx:
   }
   vt._render();
 }
-
-// Native rename/delete are executed via File Explorer commands through FileUtils.

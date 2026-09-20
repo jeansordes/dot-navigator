@@ -37,6 +37,8 @@ export class TFolder {
         this.name = name;
         this.parent = parent;
     }
+
+    isRoot(): boolean { return this.path === ''; }
 }
 
 export class Notice {
@@ -209,6 +211,7 @@ export class Component {
 }
 
 export class FuzzySuggestModal<T> extends Modal {
+    constructor(protected app: App) { super(app); }
     setPlaceholder(_placeholder: string): void { /* modal stub */ }
     getItems(): T[] { return []; }
 }

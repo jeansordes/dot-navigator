@@ -11,6 +11,8 @@ import { RenameManager } from './utils/rename/RenameManager';
 import { RuleManager } from './utils/schema/RuleManager';
 import { readLegacySchemaRulesFile, resolveSchemaRulesOnLoad } from './utils/schema/schemaRulesOnLoad';
 import { getTreeView } from './utils/view/getTreeView';
+import { isMarkdownShortcutEligible } from './utils/rename/DragMoveUtils';
+import { openShortcutDestinationPicker } from './utils/rename/openShortcutDestinationPicker';
 
 const debug = createDebug('dot-navigator:main');
 
@@ -174,6 +176,22 @@ export default class DotNavigatorPlugin extends Plugin {
             }
         });
 
+        this.addCommand({
+            id: 'create-shortcut-to-current-file',
+            name: t('commandCreateShortcut'),
+            checkCallback: (checking: boolean) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (!activeFile || !isMarkdownShortcutEligible(activeFile.path, 'file') || !this.renameManager) return false;
+
+                if (!checking) {
+                    openShortcutDestinationPicker(this.app, activeFile.path, this.renameManager, async () => {
+                        await getTreeView(this.app)?.refresh();
+                    });
+                }
+                return true;
+            },
+        });
+
         // Add a command to open the closest existing parent note
         this.addCommand({
             id: 'open-closest-parent-note',
@@ -206,6 +224,7 @@ export default class DotNavigatorPlugin extends Plugin {
             }
         });
     }
+
 
     async initLeaf(): Promise<WorkspaceLeaf | null> {
         // Always create the view in the left panel

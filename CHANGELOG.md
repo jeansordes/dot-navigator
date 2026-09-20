@@ -1,3 +1,5 @@
+## [1.31.5](https://github.com/jeansordes/dot-navigator/compare/1.31.4...1.31.5) (2026-09-20)
+
 ## [1.31.4](https://github.com/jeansordes/dot-navigator/compare/1.31.3...1.31.4) (2026-09-17)
 
 ### Bug Fixes
