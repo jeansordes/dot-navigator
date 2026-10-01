@@ -6,6 +6,7 @@
 import { TreeBuilder, TreeNode, TreeNodeType } from '../domain/tree/index.js';
 import type { VaultPort } from '../ports/VaultPort.js';
 import type { MetadataPort } from '../ports/MetadataPort.js';
+import { hierarchyFilePath, fileExtension } from '../domain/file/excalidrawExtension.js';
 import { basename } from '../domain/file/PathUtils.js';
 import {
   REDIRECT_FM_KEY,
@@ -111,7 +112,7 @@ export class TreeService {
     };
 
     const getBaseName = (node: TreeNode): string => {
-      const base = basename(node.path);
+      const base = basename(node.nodeType === TreeNodeType.FILE ? hierarchyFilePath(node.path) : node.path);
 
       if (node.nodeType === TreeNodeType.FOLDER) {
         return base.replace(/ \(\d+\)$/u, '');
@@ -127,11 +128,6 @@ export class TreeService {
         const matched = base.match(/([^.]+)\.[^.]+$/u);
         return (matched ? matched[1] : base).replace(/ \(\d+\)$/u, '');
       }
-    };
-
-    const getExtension = (path: string): string | undefined => {
-      const idx = path.lastIndexOf('.');
-      return idx > -1 ? path.slice(idx + 1) : undefined;
     };
 
     const getSortKey = (node: TreeNode): string => {
@@ -152,7 +148,7 @@ export class TreeService {
       };
 
       if (node.nodeType === TreeNodeType.FILE) {
-        const e = getExtension(node.path);
+        const e = fileExtension(node.path);
         if (e) item.extension = e;
       }
 

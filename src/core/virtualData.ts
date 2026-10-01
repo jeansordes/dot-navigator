@@ -1,3 +1,4 @@
+import { hierarchyFilePath, fileExtension } from '../domain/file/excalidrawExtension';
 import { App, TFile } from 'obsidian';
 import { FileUtils } from '../utils/file/FileUtils';
 import { TreeNode, TreeNodeType, PluginSettings, DashTransformation } from '../types';
@@ -150,7 +151,10 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
   }
 
   function baseName(node: TreeNode): string {
-    const base = FileUtils.basename(node.path);
+    const path = node.nodeType === TreeNodeType.FILE
+      ? hierarchyFilePath(node.path, settings?.excalidrawCompatibility ?? true)
+      : node.path;
+    const base = FileUtils.basename(path);
     let name: string;
 
     if (node.nodeType === TreeNodeType.FOLDER || node.suggestionTargetKind === 'folder') {
@@ -205,7 +209,7 @@ export function buildVirtualizedData(app: App, root: TreeNode, settings?: Plugin
     };
 
     if (node.nodeType === TreeNodeType.FILE) {
-      const e = extOf(node.path);
+      const e = fileExtension(node.path, settings?.excalidrawCompatibility ?? true);
       if (e) item.extension = e;
     }
 

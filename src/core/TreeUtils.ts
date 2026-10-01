@@ -53,10 +53,10 @@ export class TreeUtils {
   /**
    * Build the tree structure from vault files and folders, including dot-prefixed adapter entries.
    */
-  static async buildTreeStructure(app: App, _settings?: PluginSettings): Promise<TreeNode> {
+  static async buildTreeStructure(app: App, settings?: PluginSettings): Promise<TreeNode> {
     const folders = app.vault.getAllFolders().map(toFolderInfo);
     const files = app.vault.getFiles().map(toFileInfo);
-    const treeBuilder = new TreeBuilder();
+    const treeBuilder = new TreeBuilder(settings?.excalidrawCompatibility ?? true);
     const root = treeBuilder.buildDendronStructure(folders, files);
 
     const indexedPaths = buildIndexedPathSet(files, folders);

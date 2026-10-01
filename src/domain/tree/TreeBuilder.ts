@@ -4,6 +4,7 @@
  */
 
 import { TreeNode, TreeNodeType, createTreeNode } from './TreeNode.js';
+import { hierarchyFilePath } from '../file/excalidrawExtension.js';
 import { basename } from '../file/PathUtils.js';
 import type { FileInfo, FolderInfo } from '../../ports/VaultPort.js';
 import { isFolderIndexNote } from './folderIndexNote.js';
@@ -12,6 +13,8 @@ import { isFolderIndexNote } from './folderIndexNote.js';
  * Builder for creating Dendron-style tree structures from files and folders
  */
 export class TreeBuilder {
+  constructor(private readonly excalidrawCompatibility = true) {}
+
   private pathsByDepthLevel: Map<number, Set<string>> = new Map<number, Set<string>>();
   private nodeTypeByPath = new Map<string, TreeNodeType>();
   private childrenAmountByPath = new Map<string, number>();
@@ -102,7 +105,10 @@ export class TreeBuilder {
 
       const parentPath = file.parentPath || '/';
       const folderDepth = parentPath === '/' ? 0 : parentPath.split('/').length;
-      const fileDepth = file.basename.split('.').length;
+      const hierarchyName = this.excalidrawCompatibility && file.path.endsWith('.excalidraw.md')
+        ? file.basename.slice(0, -'.excalidraw'.length)
+        : file.basename;
+      const fileDepth = hierarchyName.split('.').length;
       const depth = folderDepth + fileDepth;
 
       // File registration
@@ -184,6 +190,10 @@ export class TreeBuilder {
     if (nodeType === TreeNodeType.FOLDER) {
       const result = path.replace(/[/]?[^/]*$/, '');
       return result === '' ? '/' : result;
+    }
+
+    if (nodeType === TreeNodeType.FILE) {
+      path = hierarchyFilePath(path, this.excalidrawCompatibility);
     }
 
     // if it's not a FOLDER, then it's FILE or VIRTUAL

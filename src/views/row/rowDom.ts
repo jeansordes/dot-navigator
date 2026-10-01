@@ -74,7 +74,7 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   else if (videoExts.has(ext)) iconName = 'file-video';
   else if (codeExts.has(ext)) iconName = 'file-code';
   else if (txtExts.has(ext)) iconName = 'file-text';
-  else if (ext === 'excalidraw' || item.name.endsWith('excalidraw')) iconName = 'pen-tool';
+  else if (ext === 'excalidraw' || ext === 'excalidraw.md' || item.name.endsWith('excalidraw')) iconName = 'pen-tool';
   else if (ext === 'canvas') iconName = 'layout-dashboard';
   else if (ext === 'base') iconName = 'layout-list';
   else iconName = 'file-question';

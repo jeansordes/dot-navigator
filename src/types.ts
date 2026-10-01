@@ -47,6 +47,7 @@ export interface PluginSettings {
     showChildCount?: boolean;
     childCountDisplay?: ChildCountDisplayMode; // When to reveal the count badge
     childCountMode?: ChildCountMode; // What the badge counts: direct, total, or both
+    excalidrawCompatibility?: boolean; // Treat .excalidraw.md as one extension
     foldersFirst?: boolean; // Prioritize real folders before other nodes when sorting
     /** @deprecated Removed — migrated away on load */
     hideChildCountWhenExpanded?: boolean;
@@ -73,6 +74,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     childCountDisplay: 'off',
     childCountMode: 'direct',
     foldersFirst: true,
+    excalidrawCompatibility: true,
 }
 
 export enum TreeNodeType {

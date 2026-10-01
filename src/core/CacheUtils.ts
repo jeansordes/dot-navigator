@@ -148,6 +148,7 @@ export class CacheUtils {
       enableHiddenNodesReveal: settings?.enableHiddenNodesReveal,
       revealDotFilesystem: settings?.revealDotFilesystem,
       foldersFirst: settings?.foldersFirst,
+      excalidrawCompatibility: settings?.excalidrawCompatibility ?? true,
     };
     return JSON.stringify(relevantSettings);
   }
