@@ -1,3 +1,10 @@
+## [1.31.6](https://github.com/jeansordes/dot-navigator/compare/1.31.5...1.31.6) (2026-10-01)
+
+### Bug Fixes
+
+* recognize compound Excalidraw extension with compatibility setting ([fa53637](https://github.com/jeansordes/dot-navigator/commit/fa53637c9ccf45f5a97b43d11d5dcc1d23735ffb))
+* use Obsidian theme colors in navigator ([84474d2](https://github.com/jeansordes/dot-navigator/commit/84474d24b14e4469e279d4119ec0ab3ac3ecc778))
+
 ## [1.31.5](https://github.com/jeansordes/dot-navigator/compare/1.31.4...1.31.5) (2026-09-20)
 
 ## [1.31.4](https://github.com/jeansordes/dot-navigator/compare/1.31.3...1.31.4) (2026-09-17)
