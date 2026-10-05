@@ -126,10 +126,30 @@ The helper returns success/failure and displays a localized notice on rejection.
 Focused regression coverage: localized search definitions, dynamic visibility, control defaults and persistence callbacks, idempotent legacy migration, optional-method validation and receiver binding, explicit-only clipboard writes/rejection feedback, render cleanup. Existing suites cover bulk conflicts, schema previews, redirects, cache serialization and row interactions.
 
 - Focused tests: 11 passing (including active drag teardown).
-- Full CI: passed on October 6, 2026 — isolated type check, lint, hygiene, production audit (zero vulnerabilities), build, and 68 suites / 496 tests.
-- Live Obsidian 1.14.3 checks: French settings search, controls/editors and 18-match rule preview work; tree and rename dialog/suggestions render in a popout. Test popout closed and sidebar restored without renaming any vault files. EN/FR definitions, saves, conditional rows and listener/drag cleanup are covered by regressions. The menu customization deep link and collection reordering save/update correctly; original order was restored and the settings scroll position retained. Tree drag feedback still needs a focused live pass.
-- Branch preview: pending publication of the implementation commit to a reviewable branch. No release requested.
+- Full CI: passed on October 6, 2026 — isolated type check, lint, hygiene, production audit (zero vulnerabilities), build. Original checkout: 68 suites / 496 tests including separate dependency-security work; isolated review branch: 67 suites / 487 tests.
+- Live Obsidian 1.14.3 checks: French settings search, controls/editors and 18-match rule preview work; tree and rename dialog/suggestions render in a popout. Test popout closed and sidebar restored without renaming any vault files. EN/FR definitions, saves, conditional rows and listener/drag cleanup are covered by regressions. The menu customization deep link and collection reordering save/update correctly; original order was restored and the settings scroll position retained. A safe tree self-drop leaves the file unchanged and cleans up drag feedback.
+- Branch preview: submitted through the account page for commit `ff2a9890239ce784c664e4a3732d4e810ea7c8f4` on pushed branch `codex/community-review-fixes`; completed with only a dependency pass; source/behavior coverage was not returned. No release requested.
 
 ## Passing baseline categories
 
 Preserve artifact attestations for `main.js` and `styles.css`, no suspicious network patterns, vault-write pass, no vulnerable dependencies, no obfuscation, and reproducible release build. A branch preview without release assets may not reproduce the release-only checks.
+
+## Branch preview reconciliation
+
+The account preview for `ff2a9890239ce784c664e4a3732d4e810ea7c8f4` (displayed October 5, 2026) completed and returned only **DEPENDENCIES: Pass — No vulnerable dependencies found**. It returned no SOURCE CODE or BEHAVIOR results. Absence of results is not evidence that those checks ran. Remote source-warning clearance remains unconfirmed; the epic and behavior/reconciliation task remain open.
+
+| Original finding | Local implementation / verification | Preview result |
+|---|---|---|
+| Unsafe calls | Explicit DOM/ES2022 libraries; isolated production check and unsafe-call lint pass. | No source result returned |
+| Unsafe returns | Declared returns and inferred collections pass the corrected type/lint gates. | No source result returned |
+| Unsafe arguments | Typed collection callbacks and checked optional API boundaries pass lint. | No source result returned |
+| Unsafe member access | Typed libraries and `__TM_DEV__` remove the reported Node environment access. | No source result returned |
+| Unsafe assignments | Cache/redirect/preview inference passes isolated type check and lint. | No source result returned |
+| Native DOM creation | Reported elements/fragments use Obsidian helpers; explicit helper rule passes; live main/popout checks pass. | No source result returned |
+| Unnecessary receiver assertions | Legacy settings intersection and receiver-preserving optional API adapters pass lint and regressions. | No source result returned |
+| Assertions not changing types | Command/touch assertions removed; lint and interaction suites pass. | No source result returned |
+| Searchable settings definitions | Declarative definitions, EN/FR indexing, persistence and cleanup tests pass; live French search, preview, reorder and scroll retention pass. | No source result returned |
+| Vault enumeration | Retained local indexing with shared operation snapshots and documented display-only hiding. | No behavior result returned |
+| Clipboard access | Four explicit actions use one helper with failure feedback; no reads; tests and disclosure complete. | No behavior result returned |
+
+The dependency-security changes in the original checkout were not included in the review branch. The isolated branch audit and account preview both pass independently.
