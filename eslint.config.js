@@ -13,6 +13,7 @@
 
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
+import preferCreateEl from "eslint-plugin-obsidianmd/dist/lib/rules/preferCreateEl.js";
 import manifest from "./manifest.json" with { type: "json" };
 
 /** @typedef {import('eslint').Linter.Config} Config */
@@ -93,12 +94,14 @@ export default [
 			globals: {
 				activeDocument: "readonly",
 				activeWindow: "readonly",
+				__TM_DEV__: "readonly",
 			},
 		},
 	},
 	...obsidianRecommended,
 	{
 		files: typeCheckedFiles,
+		plugins: { review: { rules: { "prefer-create-el": preferCreateEl } } },
 		rules: {
 			"max-lines": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
 			"no-console": [
@@ -127,6 +130,8 @@ export default [
 					message: "Use app.fileManager.trashFile(file) to respect user preferences.",
 				},
 			],
+			"@typescript-eslint/no-unnecessary-type-assertion": "error",
+			"review/prefer-create-el": "error",
 			"@typescript-eslint/no-unsafe-assignment": "error",
 			"@typescript-eslint/no-unsafe-argument": "error",
 			"@typescript-eslint/no-unsafe-return": "error",
@@ -163,6 +168,7 @@ export default [
 			},
 		},
 		rules: {
+			"@typescript-eslint/no-unnecessary-type-assertion": "off",
 			"@typescript-eslint/consistent-type-assertions": "off",
 			"@typescript-eslint/no-deprecated": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",

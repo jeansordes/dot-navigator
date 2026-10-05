@@ -10,7 +10,7 @@ export class SelectionToolbar extends Component {
   constructor(private readonly controller: TreeSelectionController) {
     super();
     const container = controller.tree.container;
-    this.bar = container.ownerDocument.createElement('div');
+    this.bar = container.createDiv();
     this.bar.className = 'dotn_selection-toolbar';
     const host = container.closest('.dotn_view');
     const body = host?.querySelector('.dotn_view-body');

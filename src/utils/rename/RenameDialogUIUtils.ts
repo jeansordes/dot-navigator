@@ -1,3 +1,4 @@
+import { copyText } from '../misc/clipboard';
 /**
  * Utility functions for creating RenameDialog UI components
  */
@@ -24,7 +25,7 @@ export function createModeSelection(
     modeSelection: RenameMode,
     callbacks: ModeSelectionCallbacks
 ): HTMLElement {
-    const modeContainer = container.createEl('div', { cls: 'rename-mode-container' });
+    const modeContainer = container.createDiv({ cls: 'rename-mode-container' });
 
     let toggleComponent: ToggleComponent;
 
@@ -69,26 +70,26 @@ export function createChildrenList(
 ): HTMLElement {
     const totalFiles = 1 + (data.children?.length || 0); // Main file + children
 
-    const childrenContainer = container.createEl('div', { cls: 'rename-children-container' });
+    const childrenContainer = container.createDiv({ cls: 'rename-children-container' });
 
     // For folders, skip the header completely
     if (data.kind !== 'folder') {
         // Header with icon
-        const header = childrenContainer.createEl('div', {
+        const header = childrenContainer.createDiv({
             cls: 'rename-children-header'
         });
 
         // Create icon container and text
-        const iconContainer = header.createEl('span', { cls: 'rename-children-icon' });
+        const iconContainer = header.createSpan({ cls: 'rename-children-icon' });
         setIcon(iconContainer, 'file-edit');
 
-        header.createEl('span', {
+        header.createSpan({
             text: t('renameDialogChildrenPreview', { count: String(totalFiles) })
         });
     }
 
     // Children list with scrollable content
-    const childrenList = childrenContainer.createEl('div', { cls: 'rename-children-list' });
+    const childrenList = childrenContainer.createDiv({ cls: 'rename-children-list' });
 
     // Add main file first (but not for folders where we don't want the main file styling)
     createFileItem(childrenList, data.path, data.kind !== 'folder', callbacks);
@@ -112,18 +113,18 @@ export function createFileItem(
     isMainFile: boolean,
     callbacks: FileItemCallbacks
 ): void {
-    const fileItem = container.createEl('div', { cls: 'rename-child-item' });
+    const fileItem = container.createDiv({ cls: 'rename-child-item' });
     if (isMainFile) {
         fileItem.addClass('rename-main-file');
     }
 
     // Create inline diff for the file
-    const diffContainer = fileItem.createEl('div', { cls: 'rename-file-diff' });
+    const diffContainer = fileItem.createDiv({ cls: 'rename-file-diff' });
     callbacks.updateFileDiff(diffContainer, filePath, isMainFile);
 
     if (isMainFile) {
         // Add copy button for main file (after the diff)
-        const copyButton = fileItem.createEl('div', {
+        const copyButton = fileItem.createDiv({
             cls: 'rename-copy-button',
             attr: { 'aria-label': 'Copy file path', 'role': 'button', 'tabindex': '0' }
         });
@@ -134,7 +135,7 @@ export function createFileItem(
             if (diffContainer) {
                 const textToCopy = diffContainer.textContent || '';
                 try {
-                    await navigator.clipboard.writeText(textToCopy);
+                    if (!await copyText(textToCopy)) return;
                     // Show check icon for 1 second
                     setIcon(copyButton, 'check');
                     window.setTimeout(() => {
@@ -164,7 +165,7 @@ export function createFileItem(
  * Create the hints UI component
  */
 export function createHints(container: HTMLElement, data?: RenameDialogData): HTMLElement {
-    const hintsContainer = container.createEl('div', { cls: 'prompt-instructions' });
+    const hintsContainer = container.createDiv({ cls: 'prompt-instructions' });
 
     const hints = [
         { key: '↑↓', action: t('renameDialogHintNavigate') },
@@ -173,12 +174,12 @@ export function createHints(container: HTMLElement, data?: RenameDialogData): HT
     ];
 
     hints.forEach((hint, index) => {
-        const instruction = hintsContainer.createEl('div', { cls: 'prompt-instruction' });
-        instruction.createEl('span', {
+        const instruction = hintsContainer.createDiv({ cls: 'prompt-instruction' });
+        instruction.createSpan({
             text: hint.key,
             cls: 'prompt-instruction-command'
         });
-        instruction.createEl('span', {
+        instruction.createSpan({
             text: hint.action,
             cls: 'prompt-instruction-text'
         });

@@ -227,3 +227,11 @@ Use **Selection actions**, or right-click a selected member, to copy paths, hide
 Dragging a selected member moves the group. Moves show a preview, check all destinations before starting, and share one undo action. If a move fails, the plugin attempts to restore earlier moves and reports any remaining changes. Group drag does not create shortcuts. Delete previews include folder contents and use Obsidian's configured trash behavior. Deleting a dotted parent note does not implicitly delete its sibling files; moving a note retains the existing behavior of moving its dotted descendants. Already included descendants are processed only once.
 
 Group selection currently supports indexed physical files and folders. Virtual branches, suggestions, aliases, redirect shortcuts, and projected nodes retain their individual actions. Bulk renaming and custom commands are not included.
+
+## Privacy and local processing
+
+Dot Navigator builds its navigation tree from the files and folders in the current vault. It enumerates paths and uses Obsidian's local metadata cache for titles, aliases, redirects, and rule previews. The same local index supports cache validation and conflict checks before rename, move, and bulk operations. Rule preview scans run when their editor is rendered, not when Obsidian indexes settings for search. File snapshots are reused within an operation where possible; confirmed bulk operations recheck the current vault to detect changes.
+
+Hidden nodes and hidden patterns control what the tree displays. They do not restrict the plugin's access to vault paths and are not an access-control boundary. Dot Navigator sends no vault contents or paths to external services and adds no telemetry.
+
+The plugin never reads the system clipboard. It writes only when you explicitly select a copy action: a note path, selected paths, the rename dialog's displayed text, or exported rules JSON. A failed write shows a notice. Clipboard behavior and vault enumeration may remain visible as recommendations in Obsidian's automated review because these capabilities are intentional.

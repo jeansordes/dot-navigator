@@ -78,6 +78,7 @@ export default {
     confirmDeleteFile: 'Delete this file?\n{{path}}',
     
     // Notices
+    noticeClipboardFailed: 'Could not copy to clipboard.',
     noticeCreatedNote: 'Created note: {{path}}',
     noticeFailedCreateNote: 'Failed to create note: {{path}}',
     noticeCreatedFolder: 'Created folder: {{path}}',

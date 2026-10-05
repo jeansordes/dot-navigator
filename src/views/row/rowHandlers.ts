@@ -107,7 +107,7 @@ function isTouchDoubleTap(id: string, interaction: TouchInteraction): boolean {
 
 function resolveTouchInteraction(id: string, e: MouseEvent): TouchInteraction | undefined {
   return consumeRecentTouchInteraction(id)
-    ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 } as TouchInteraction) : undefined);
+    ?? (isFallbackTouchEvent(e) ? ({ time: Date.now(), x: e.clientX ?? 0, y: e.clientY ?? 0 }) : undefined);
 }
 
 function invokeFolderToggle(

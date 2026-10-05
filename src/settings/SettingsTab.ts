@@ -1,9 +1,9 @@
-import { App, PluginSettingTab, Notice } from 'obsidian';
+import { App, PluginSettingTab, Notice, type SettingDefinitionItem } from 'obsidian';
 import DotNavigatorPlugin from '../main';
 import { MoreMenuItemCommand, FILE_TREE_VIEW_TYPE } from '../types';
 import type { BuiltinItemsSettingsCallbacks } from './BuiltinItemsSettings';
 import type { CustomCommandsSettingsCallbacks } from './CustomCommandsSettings';
-import { renderLegacySettings } from './settingsTabContent';
+import { getSettingsDefinitions } from './settingsTabContent';
 import {
   describeMoreMenuItem,
   getBuiltinDisplayName,
@@ -106,7 +106,7 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
   }
 
   private refreshSettingsTab(): void {
-    this.redisplayLegacy();
+    this.update();
   }
 
   private redisplayPreservingScroll(): void {
@@ -119,14 +119,8 @@ export class DotNavigatorSettingTab extends PluginSettingTab {
     });
   }
 
-  private redisplayLegacy(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    renderLegacySettings(containerEl, this.getSectionCallbacks());
-  }
-
-  display(): void {
-    this.redisplayLegacy();
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return getSettingsDefinitions(this.getSectionCallbacks());
   }
 
   private async updateBuiltinOrder(order: string[]): Promise<void> {

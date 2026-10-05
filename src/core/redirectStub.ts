@@ -178,10 +178,11 @@ function resolveRedirectEntry(
 
 export function collectRedirectEntries(app: App): RedirectEntry[] {
   try {
+    const files = app.vault.getFiles();
     const fileExists = (path: string) => app.vault.getAbstractFileByPath(path) instanceof TFile;
     const resolveLinkpath = createObsidianLinkpathResolver(app);
 
-    return app.vault.getFiles().flatMap(file => {
+    return files.flatMap(file => {
       const cache = app.metadataCache.getFileCache(file);
       const entry = resolveRedirectEntry(
         file.path,

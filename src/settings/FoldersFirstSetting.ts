@@ -12,7 +12,7 @@ export function addFoldersFirstSetting(
   settings: PluginSettings,
   callbacks: FoldersFirstSettingCallbacks,
 ): void {
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsFoldersFirst'), t('settingsFoldersFirstDesc'), (setting) => {
     setting
       .setName(t('settingsFoldersFirst'))
       .setDesc(t('settingsFoldersFirstDesc'))

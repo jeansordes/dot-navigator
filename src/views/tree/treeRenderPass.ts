@@ -17,7 +17,7 @@ export function growRowPool(
     if (!(host.instanceOf(HTMLElement))) return;
 
     for (let i = vt.poolSize; i < targetSize; i++) {
-        const row = activeDocument.createElement('div');
+        const row = activeDocument.adoptNode(createDiv());
         row.className = 'tree-row';
         row.dataset.poolIndex = String(i);
         onRowInit(row);

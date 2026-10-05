@@ -44,7 +44,7 @@ export default class DotNavigatorPlugin extends Plugin {
         // Toggle debug output dynamically using debug.enable/disable
         // Dev: enable our namespaces; Prod: disable all
         try {
-            const isProd = process.env.NODE_ENV === 'production';
+            const isProd = !__TM_DEV__;
             if (isProd) {
                 createDebug.disable();
             } else {

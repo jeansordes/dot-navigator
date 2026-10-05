@@ -1,3 +1,4 @@
+import { copyText } from '../../utils/misc/clipboard';
 import type { Menu } from 'obsidian';
 import { t } from '../../i18n';
 
@@ -6,7 +7,7 @@ export function addCopyPathMenuItem(menu: Menu, path: string, icon?: string): vo
     item.setTitle(t('menuCopyPath'))
       .setIcon(icon || 'copy')
       .onClick(async () => {
-        await navigator.clipboard.writeText(path);
+        await copyText(path);
       });
   });
 }

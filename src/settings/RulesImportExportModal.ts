@@ -1,3 +1,4 @@
+import { copyText } from '../utils/misc/clipboard';
 import { App, Modal, Notice, Setting } from 'obsidian';
 import type { SchemaRule } from '../types';
 import { parseRuleArray, parseRulesJsonDocument } from '../utils/schema/RuleParser';
@@ -64,8 +65,7 @@ export class RulesImportExportModal extends Modal {
           .setCta()
           .onClick(async () => {
             try {
-              await navigator.clipboard.writeText(textarea.value);
-              new Notice(t('settingsRulesCopiedJson'));
+              if (await copyText(textarea.value)) new Notice(t('settingsRulesCopiedJson'));
             } catch {
               new Notice(t('settingsRulesCopyFailed'));
             }

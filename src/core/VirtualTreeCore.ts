@@ -101,7 +101,7 @@ export class VirtualTree {
     this.visibleCount = Math.ceil(this.container.clientHeight / this.rowHeight);
     this.poolSize = this.visibleCount + this.buffer * 2;
     for (let i = 0; i < this.poolSize; i++) {
-      const row = activeDocument.createElement('div');
+      const row = activeDocument.adoptNode(createDiv());
       row.className = 'row';
       row.dataset.poolIndex = String(i);
       row.addEventListener('click', (e) => this._onRowClick(e, row));
@@ -358,7 +358,7 @@ export class VirtualTree {
       // Grow pool if needed
       if (vItems.length > this.poolSize) {
         for (let i = this.poolSize; i < vItems.length; i++) {
-          const row = activeDocument.createElement('div');
+          const row = activeDocument.adoptNode(createDiv());
           row.className = 'row';
           row.dataset.poolIndex = String(i);
           row.addEventListener('click', (e) => this._onRowClick(e, row));

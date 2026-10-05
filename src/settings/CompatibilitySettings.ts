@@ -8,7 +8,7 @@ export function addCompatibilitySettings(
   settings: PluginSettings,
   callbacks: FoldersFirstSettingCallbacks,
 ): void {
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsExcalidrawCompatibility'), t('settingsExcalidrawCompatibilityDesc'), (setting) => {
     setting
       .setName(t('settingsExcalidrawCompatibility'))
       .setDesc(t('settingsExcalidrawCompatibilityDesc'))

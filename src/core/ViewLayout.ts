@@ -34,11 +34,11 @@ export class ViewLayout {
       bodyEl = existingBody;
     } else {
       container.empty();
-      headerEl = activeDocument.createElement('div');
+      headerEl = activeDocument.adoptNode(createDiv());
       headerEl.className = 'dotn_view-header';
       container.appendChild(headerEl);
 
-      bodyEl = activeDocument.createElement('div');
+      bodyEl = activeDocument.adoptNode(createDiv());
       bodyEl.className = 'dotn_view-body';
       container.appendChild(bodyEl);
     }
@@ -52,7 +52,7 @@ export class ViewLayout {
     if (existingTree?.instanceOf(HTMLElement)) {
       treeEl = existingTree;
     } else {
-      treeEl = activeDocument.createElement('div');
+      treeEl = activeDocument.adoptNode(createDiv());
       treeEl.className = 'dotn_view-tree';
       bodyEl.appendChild(treeEl);
     }
@@ -221,7 +221,7 @@ export class ViewLayout {
   private ensureHeaderControls(header: HTMLElement): void {
     // Create file button
     if (!header.querySelector('.dotn_create-file')) {
-      const createFileBtn = activeDocument.createElement('div');
+      const createFileBtn = activeDocument.adoptNode(createDiv());
       createFileBtn.className = 'dotn_button-icon dotn_create-file';
       setIcon(createFileBtn, 'file-plus');
       createFileBtn.setAttribute('title', t('tooltipCreateNewFile'));
@@ -230,7 +230,7 @@ export class ViewLayout {
 
     // Create folder button  
     if (!header.querySelector('.dotn_create-folder')) {
-      const createFolderBtn = activeDocument.createElement('div');
+      const createFolderBtn = activeDocument.adoptNode(createDiv());
       createFolderBtn.className = 'dotn_button-icon dotn_create-folder';
       setIcon(createFolderBtn, 'folder-plus');
       createFolderBtn.setAttribute('title', t('tooltipCreateNewFolder'));
@@ -239,9 +239,9 @@ export class ViewLayout {
 
     // Toggle button
     if (!header.querySelector('.dotn_tree-toggle-button')) {
-      const toggleButton = activeDocument.createElement('div');
+      const toggleButton = activeDocument.adoptNode(createDiv());
       toggleButton.className = 'dotn_tree-toggle-button';
-      const iconContainer = activeDocument.createElement('div');
+      const iconContainer = activeDocument.adoptNode(createDiv());
       iconContainer.className = 'dotn_tree-toggle-icon dotn_button-icon';
       toggleButton.appendChild(iconContainer);
       header.appendChild(toggleButton);
@@ -252,9 +252,9 @@ export class ViewLayout {
 
     // Toggle hidden nodes button
     if (!header.querySelector('.dotn_toggle-hidden')) {
-      const hiddenToggle = activeDocument.createElement('div');
+      const hiddenToggle = activeDocument.adoptNode(createDiv());
       hiddenToggle.className = 'dotn_toggle-hidden';
-      const hiddenIcon = activeDocument.createElement('div');
+      const hiddenIcon = activeDocument.adoptNode(createDiv());
       hiddenIcon.className = 'dotn_toggle-hidden-icon dotn_button-icon';
       hiddenToggle.appendChild(hiddenIcon);
       header.appendChild(hiddenToggle);
@@ -264,7 +264,7 @@ export class ViewLayout {
 
     // Reveal active button
     if (!header.querySelector('.dotn_reveal-active')) {
-      const revealBtn = activeDocument.createElement('div');
+      const revealBtn = activeDocument.adoptNode(createDiv());
       revealBtn.className = 'dotn_button-icon dotn_reveal-active';
       setIcon(revealBtn, 'locate-fixed');
       revealBtn.setAttribute('title', t('tooltipRevealActiveFile'));
@@ -272,14 +272,14 @@ export class ViewLayout {
     }
 
     if (!header.querySelector('.dotn_spacer')) {
-      const spacer = activeDocument.createElement('div');
+      const spacer = activeDocument.adoptNode(createDiv());
       spacer.className = 'dotn_spacer';
       header.appendChild(spacer);
     }
 
     // Settings button
     if (!header.querySelector('.dotn_settings-button')) {
-      const settingsBtn = activeDocument.createElement('div');
+      const settingsBtn = activeDocument.adoptNode(createDiv());
       settingsBtn.className = 'dotn_button-icon dotn_settings-button';
       setIcon(settingsBtn, 'settings');
       settingsBtn.setAttribute('title', t('tooltipOpenSettings'));

@@ -1,4 +1,4 @@
-import type { App } from 'obsidian';
+import type { App, SettingDefinitionGroup } from 'obsidian';
 import { DEFAULT_MORE_MENU } from '../types';
 import type { PluginSettings } from '../types';
 import { t } from '../i18n';
@@ -10,7 +10,7 @@ import { addFoldersFirstSetting } from './FoldersFirstSetting';
 import { addSchemaSuggestionsToggle, addSchemaConfigurationSection } from './SchemaSettings';
 import { addMoreMenuEditorSection } from './MoreMenuEditor';
 import { addTipsSection } from './TipsSettings';
-import { addSettingsGroup, createGroupHeading } from './settingsGroup';
+import { addSettingsGroup } from './settingsGroup';
 import type { BuiltinItemsSettingsCallbacks } from './BuiltinItemsSettings';
 import type { CustomCommandsSettingsCallbacks } from './CustomCommandsSettings';
 
@@ -31,22 +31,22 @@ export interface SettingsTabSectionCallbacks {
   updateUserItems: (list: import('../types').MoreMenuItemCommand[]) => Promise<void>;
 }
 
-export function renderLegacySettings(
-  containerEl: HTMLElement,
+export function getSettingsDefinitions(
   callbacks: SettingsTabSectionCallbacks
-): void {
+): SettingDefinitionGroup[] {
+  const definitions: SettingDefinitionGroup[] = [];
   addFileCreationSection(
     addSettingsGroup(
-      containerEl,
-      createGroupHeading(t('settingsFileCreationHeader'), t('settingsFileCreationDescription'))
+      definitions,
+      t('settingsFileCreationHeader'), t('settingsFileCreationDescription')
     ),
     callbacks.settings,
     callbacks.getSettingsCallbacks()
   );
 
   const treeDisplayGroup = addSettingsGroup(
-    containerEl,
-    createGroupHeading(t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription'))
+    definitions,
+    t('settingsTreeDisplayHeader'), t('settingsTreeDisplayDescription')
   );
   addChildCountSetting(treeDisplayGroup, callbacks.settings, {
     ...callbacks.getSettingsCallbacks(),
@@ -55,21 +55,16 @@ export function renderLegacySettings(
   addFoldersFirstSetting(treeDisplayGroup, callbacks.settings, callbacks.getSettingsCallbacks());
 
   addCompatibilitySettings(
-    addSettingsGroup(containerEl, createGroupHeading(t('settingsCompatibilityHeader'))),
+    addSettingsGroup(definitions, t('settingsCompatibilityHeader')),
     callbacks.settings,
     callbacks.getSettingsCallbacks(),
   );
 
   const hiddenCount = callbacks.settings.hiddenNodes?.length ?? 0;
   const hiddenNodesGroup = addSettingsGroup(
-    containerEl,
-    createGroupHeading(
-      t('settingsHiddenNodesHeader'),
-      t('settingsHiddenNodesDescription'),
-      hiddenCount
-    )
+    definitions,
+    t('settingsHiddenNodesHeader'), t('settingsHiddenNodesDescription'), hiddenCount, 'dotnav-hidden-nodes'
   );
-  hiddenNodesGroup.groupEl.addClass('dotnav-hidden-nodes');
   addHiddenNodesSettings(hiddenNodesGroup, callbacks.settings, {
     ...callbacks.getSettingsCallbacks(),
     updateHiddenSettings: () => callbacks.updateHiddenSettings(),
@@ -77,11 +72,8 @@ export function renderLegacySettings(
   });
 
   const schemaGroup = addSettingsGroup(
-    containerEl,
-    createGroupHeading(
-      t('settingsSchemaConfigurationHeader'),
-      t('settingsSchemaConfigurationDescription')
-    )
+    definitions,
+    t('settingsSchemaConfigurationHeader'), t('settingsSchemaConfigurationDescription')
   );
   addSchemaSuggestionsToggle(schemaGroup, callbacks.settings, {
     ...callbacks.getSettingsCallbacks(),
@@ -99,10 +91,9 @@ export function renderLegacySettings(
   );
 
   const moreMenuGroup = addSettingsGroup(
-    containerEl,
-    createGroupHeading(t('settingsMoreMenuHeader'), t('settingsMoreMenuDescription'))
+    definitions,
+    t('settingsMoreMenuHeader'), t('settingsMoreMenuDescription'), undefined, undefined, 'dotnav-more-menu'
   );
-  moreMenuGroup.groupEl.id = 'dotnav-more-menu';
   addMoreMenuEditorSection(moreMenuGroup, callbacks.app, {
     builtin: callbacks.getBuiltinCallbacks(),
     custom: callbacks.getCustomCommandsCallbacks(),
@@ -117,8 +108,9 @@ export function renderLegacySettings(
 
   addTipsSection(
     addSettingsGroup(
-      containerEl,
-      createGroupHeading(t('settingsTipsHeader'), t('settingsTipsDescription'))
+      definitions,
+      t('settingsTipsHeader'), t('settingsTipsDescription')
     )
   );
+  return definitions;
 }

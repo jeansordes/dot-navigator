@@ -1,9 +1,11 @@
+import type { RenderLifetime } from './renderLifetime';
 import { setIcon } from 'obsidian';
 export function createIconButton(
   parent: HTMLElement,
   icon: string,
   onClick: () => void,
-  disabled = false
+  disabled = false,
+  lifetime?: RenderLifetime
 ): HTMLButtonElement {
   const btn = parent.createEl('button', {
     cls: 'clickable-icon dotnav-settings-card-action',
@@ -11,11 +13,13 @@ export function createIconButton(
   });
   setIcon(btn, icon);
   btn.disabled = disabled;
-  btn.addEventListener('click', (event) => {
+  const listener = (event: MouseEvent): void => {
     event.preventDefault();
     if (!btn.disabled) {
       onClick();
     }
-  });
+  };
+  if (lifetime) lifetime.listen(btn, 'click', listener);
+  else btn.addEventListener('click', listener);
   return btn;
 }

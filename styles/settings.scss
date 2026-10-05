@@ -442,20 +442,20 @@ body.dotnav-reordering * {
     margin-top: var(--size-4-3);
     padding: 0 var(--size-4-3);
 
-    > .setting-item {
+    &.setting-item {
         background-color: transparent;
         padding-left: 0;
         padding-right: 0;
     }
 
-    > .setting-item .setting-item-control {
+    &.setting-item .setting-item-control {
         width: 100%;
         justify-content: stretch;
         flex-wrap: wrap;
         gap: var(--size-4-2);
     }
 
-    > .setting-item .setting-item-control button {
+    &.setting-item .setting-item-control button {
         flex: 1 1 auto;
         display: inline-flex;
         align-items: center;
@@ -483,8 +483,8 @@ body.dotnav-reordering * {
     grid-template-columns: 1fr;
 }
 
-.is-mobile .dotnav-rules-actions > .setting-item .setting-item-control,
-.is-mobile .dotnav-more-menu-actions > .setting-item .setting-item-control {
+.is-mobile .dotnav-rules-actions.setting-item .setting-item-control,
+.is-mobile .dotnav-more-menu-actions.setting-item .setting-item-control {
     flex-direction: column;
     align-items: stretch;
 
@@ -551,4 +551,15 @@ body.dotnav-reordering * {
     .setting-item-control button {
         width: auto;
     }
+}
+
+// Custom card definitions render their own complete contents inside the host row.
+.dotnav-custom-setting.setting-item {
+    display: block;
+    border-top: 0;
+    padding: 0;
+}
+.dotnav-rules-actions.setting-item .setting-item-info,
+.dotnav-more-menu-actions.setting-item .setting-item-info {
+    display: none;
 }

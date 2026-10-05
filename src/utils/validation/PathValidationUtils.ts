@@ -32,7 +32,7 @@ export function validatePath(
 
     if (foldersToCreate.length > 0) {
         if (!hintEl) {
-            hintEl = contentEl.createEl('div', { cls: 'rename-path-hint' });
+            hintEl = contentEl.createDiv({ cls: 'rename-path-hint' });
             // Insert after the input container
             if (inputContainer) {
                 inputContainer.insertAdjacentElement('afterend', hintEl);
@@ -43,15 +43,15 @@ export function validatePath(
         hintEl.empty();
 
         // Add intro text
-        hintEl.createEl('span', {
+        hintEl.createSpan({
             text: 'The following folders will be created: ',
             cls: 'rename-path-hint-text'
         });
 
         // Add folder labels
-        const labelsContainer = hintEl.createEl('div', { cls: 'rename-folder-labels' });
+        const labelsContainer = hintEl.createDiv({ cls: 'rename-folder-labels' });
         foldersToCreate.forEach(folder => {
-            labelsContainer.createEl('span', {
+            labelsContainer.createSpan({
                 text: folder,
                 cls: 'rename-folder-label'
             });
@@ -69,19 +69,19 @@ export function showWarning(contentEl: HTMLElement): HTMLElement {
     hideWarning(contentEl);
 
     // Create warning element
-    const warningElement = contentEl.createEl('div', { cls: 'rename-warning-message' });
+    const warningElement = contentEl.createDiv({ cls: 'rename-warning-message' });
 
     // Add warning icon
-    const iconContainer = warningElement.createEl('div', { cls: 'rename-warning-icon' });
+    const iconContainer = warningElement.createDiv({ cls: 'rename-warning-icon' });
     setIcon(iconContainer, 'alert-triangle');
 
     // Add warning content
-    const contentDiv = warningElement.createEl('div', { cls: 'rename-warning-content' });
-    contentDiv.createEl('div', {
+    const contentDiv = warningElement.createDiv({ cls: 'rename-warning-content' });
+    contentDiv.createDiv({
         text: t('renameDialogFileExists'),
         cls: 'rename-warning-title'
     });
-    contentDiv.createEl('div', {
+    contentDiv.createDiv({
         text: t('renameDialogFileExistsDesc'),
         cls: 'rename-warning-description'
     });
@@ -113,19 +113,19 @@ export function showExtensionChangeWarning(contentEl: HTMLElement): HTMLElement 
     hideExtensionChangeWarning(contentEl);
 
     // Create warning element
-    const warningElement = contentEl.createEl('div', { cls: 'rename-extension-warning-message' });
+    const warningElement = contentEl.createDiv({ cls: 'rename-extension-warning-message' });
 
     // Add warning icon
-    const iconContainer = warningElement.createEl('div', { cls: 'rename-warning-icon' });
+    const iconContainer = warningElement.createDiv({ cls: 'rename-warning-icon' });
     setIcon(iconContainer, 'info');
 
     // Add warning content
-    const contentDiv = warningElement.createEl('div', { cls: 'rename-warning-content' });
-    contentDiv.createEl('div', {
+    const contentDiv = warningElement.createDiv({ cls: 'rename-warning-content' });
+    contentDiv.createDiv({
         text: 'Extension change',
         cls: 'rename-warning-title'
     });
-    contentDiv.createEl('div', {
+    contentDiv.createDiv({
         text: 'Changing the extension will only affect this file. Other notes with the same name will keep their original extensions.',
         cls: 'rename-warning-description'
     });

@@ -17,7 +17,7 @@ export function addFileCreationSection(
   settings: FileCreationSettingsData,
   callbacks: FileCreationSettingsCallbacks
 ): void {
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsDefaultNewFileName'), t('settingsDefaultNewFileNameDesc'), (setting) => {
     setting
       .setName(t('settingsDefaultNewFileName'))
       .setDesc(t('settingsDefaultNewFileNameDesc'))
@@ -31,7 +31,7 @@ export function addFileCreationSection(
       });
   });
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsTransformDashes'), t('settingsTransformDashesDesc'), (setting) => {
     setting
       .setName(t('settingsTransformDashes'))
       .setDesc(t('settingsTransformDashesDesc'))

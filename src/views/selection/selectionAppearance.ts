@@ -16,7 +16,7 @@ export function renderSelectionAppearance(tree: VirtualTreeLike, row: HTMLElemen
   let mark = row.querySelector('.dotn_selection-check');
   if (selection.selectable.has(item.id)) {
     if (!mark) {
-      mark = row.ownerDocument.createElement('span');
+      mark = row.createSpan();
       mark.className = 'dotn_selection-check';
       mark.setAttribute('aria-hidden', 'true');
       row.insertBefore(mark, row.firstChild);

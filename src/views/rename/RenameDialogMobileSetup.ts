@@ -9,7 +9,7 @@ export interface MobileHeaderConfig {
 
 export function setupMobileHeader(contentEl: HTMLElement, config: MobileHeaderConfig): HTMLElement {
     // Build a dedicated header on mobile so the modal stays compact, leaves room to tap outside, and remains touch-friendly.
-    const header = contentEl.createEl('div', { cls: 'rename-mobile-header' });
+    const header = contentEl.createDiv({ cls: 'rename-mobile-header' });
 
     const closeButton = header.createEl('button', {
         cls: 'clickable-icon rename-mobile-close-button',
@@ -25,5 +25,5 @@ export function setupMobileHeader(contentEl: HTMLElement, config: MobileHeaderCo
     });
     submitButton.addEventListener('click', () => config.onSubmit());
 
-    return contentEl.createEl('div', { cls: 'rename-mobile-body' });
+    return contentEl.createDiv({ cls: 'rename-mobile-body' });
 }

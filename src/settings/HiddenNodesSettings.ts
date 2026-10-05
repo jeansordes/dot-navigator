@@ -1,3 +1,4 @@
+import { RenderLifetime } from './renderLifetime';
 import { setIcon, TextComponent } from 'obsidian';
 import { t } from '../i18n';
 import type { PluginSettings } from '../types';
@@ -18,7 +19,7 @@ export function addHiddenNodesSettings(
 ): void {
   const masterEnabled = settings.enableHiddenNodesReveal ?? false;
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsEnableHiddenNodesReveal'), t('settingsEnableHiddenNodesRevealDesc'), (setting) => {
     setting
       .setName(t('settingsEnableHiddenNodesReveal'))
       .setDesc(t('settingsEnableHiddenNodesRevealDesc'))
@@ -47,7 +48,7 @@ function addHiddenNodesAdvancedSettings(
   settings: PluginSettings,
   callbacks: HiddenNodesSettingsCallbacks
 ): void {
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsHideDotPaths'), t('settingsHideDotPathsDesc'), (setting) => {
     setting
       .setName(t('settingsHideDotPaths'))
       .setDesc(t('settingsHideDotPathsDesc'))
@@ -63,7 +64,7 @@ function addHiddenNodesAdvancedSettings(
       });
   });
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsRevealDotFilesystem'), t('settingsRevealDotFilesystemDesc'), (setting) => {
     setting.settingEl.addClass('dotnav-reveal-dot-filesystem');
     setting
       .setName(t('settingsRevealDotFilesystem'))
@@ -84,7 +85,8 @@ function addHiddenNodesAdvancedSettings(
   });
 
   const patterns = settings.hiddenPatterns ?? [];
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsHiddenPatterns'), t('settingsHiddenPatternsDesc'), (setting) => {
+    const lifetime = new RenderLifetime();
     setting
       .setName(t('settingsHiddenPatterns'))
       .setDesc(t('settingsHiddenPatternsDesc'));
@@ -92,7 +94,7 @@ function addHiddenNodesAdvancedSettings(
     setting.addText((text) => {
       input = text;
       text.setPlaceholder(t('settingsHiddenPatternsPlaceholder'));
-      text.inputEl.addEventListener('keydown', (e) => {
+      lifetime.listen(text.inputEl, 'keydown', (e) => {
         if (e.key !== 'Enter' || !input) return;
         const patternInput = input;
         void (async () => {
@@ -124,13 +126,14 @@ function addHiddenNodesAdvancedSettings(
           input?.setValue('');
         });
     });
+    return lifetime.dispose;
   });
 
   if (patterns.length === 0) {
     addEmptyState(section, t('settingsNoHiddenPatterns'));
   } else {
     patterns.forEach((pattern) => {
-      section.addSetting((row) => {
+      section.addSetting(pattern, undefined, (row) => {
         row.settingEl.addClass('dotnav-hidden-pattern-item');
         row.setName(pattern);
         row.addExtraButton((btn) => {
@@ -154,7 +157,7 @@ function addHiddenNodesAdvancedSettings(
     addEmptyState(section, t('settingsNoHiddenNodes'));
   } else {
     hiddenPaths.forEach((path) => {
-      section.addSetting((row) => {
+      section.addSetting(FileUtils.basename(path), path, (row) => {
         row.settingEl.addClass('dotnav-hidden-node-item');
         const name = FileUtils.basename(path);
         row.setName(name);
@@ -177,7 +180,7 @@ function addHiddenNodesAdvancedSettings(
     });
   }
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsClearHiddenNodes'), t('settingsClearHiddenNodesDesc'), (setting) => {
     setting.settingEl.addClass('dotnav-hidden-nodes-clear');
     setting
       .setName(t('settingsClearHiddenNodes'))

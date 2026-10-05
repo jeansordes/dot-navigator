@@ -1,3 +1,4 @@
+import { RenderLifetime } from './renderLifetime';
 import { setIcon } from 'obsidian';
 import { t } from '../i18n';
 import type { PluginSettings, SchemaRule } from '../types';
@@ -107,7 +108,8 @@ export function renderRuleCard(
     rules: SchemaRule[],
     options?: { refreshUI?: boolean }
   ) => Promise<void>
-): void {
+): () => void {
+  const lifetime = new RenderLifetime();
   const card = container.createDiv({ cls: 'dotnav-settings-card dotnav-rule-card' });
   card.dataset.ruleIndex = String(index);
 
@@ -130,7 +132,7 @@ export function renderRuleCard(
       rules.splice(index, 1);
       await persistRules(rules, { refreshUI: true });
     })();
-  });
+  }, false, lifetime);
 
   createIconButton(actions, 'arrow-up', () => {
     void (async () => {
@@ -138,7 +140,7 @@ export function renderRuleCard(
       const next = moveByOffset(rules, index, -1);
       await persistRules(next, { refreshUI: true });
     })();
-  }, index === 0);
+  }, index === 0, lifetime);
 
   createIconButton(actions, 'arrow-down', () => {
     void (async () => {
@@ -146,13 +148,13 @@ export function renderRuleCard(
       const next = moveByOffset(rules, index, 1);
       await persistRules(next, { refreshUI: true });
     })();
-  }, index === total - 1);
+  }, index === total - 1, lifetime);
 
-  attachReorderHandle(grip, card, RULES_REORDER_GROUP, index, async (from, to) => {
+  lifetime.register(attachReorderHandle(grip, card, RULES_REORDER_GROUP, index, async (from, to) => {
     const rules = [...(settings.schemaRules ?? [])];
     const next = moveInArray(rules, from, to);
     await persistRules(next, { refreshUI: true });
-  });
+  }));
 
   const updateHeaderMeta = (): void => {
     summaryEl.setText(formatRuleSummary(rule));
@@ -209,7 +211,7 @@ export function renderRuleCard(
     textarea.value = arrayToLines(rule[key]);
     textarea.rows = 3;
 
-    textarea.addEventListener('change', () => {
+    lifetime.listen(textarea, 'change', () => {
       const values = linesToArray(textarea.value);
       if (key === 'exclude') {
         rule.exclude = values.length > 0 ? values : undefined;
@@ -253,10 +255,11 @@ export function renderRuleCard(
     }
   };
 
-  previewToggle.addEventListener('click', () => {
+  lifetime.listen(previewToggle, 'click', () => {
     setPreviewOpen(!previewOpen.value);
   });
 
   updateHeaderMeta();
   renderErrors();
+  return lifetime.dispose;
 }

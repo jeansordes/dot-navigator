@@ -94,7 +94,7 @@ export function setupPathAutocomplete(
 
     // Create suggestions container
     const createSuggestionsContainer = (): HTMLElement => {
-        const suggestions = container.createEl('div', { cls: 'rename-path-suggestions' });
+        const suggestions = container.createDiv({ cls: 'rename-path-suggestions' });
 
         // Position after the input container
         const inputContainer = container.querySelector('.rename-input-container');
@@ -122,20 +122,20 @@ export function setupPathAutocomplete(
         // Handle empty input
         if (!query.trim()) {
             // Create header for empty state
-            const header = state.suggestionsContainer.createEl('div', {
+            const header = state.suggestionsContainer.createDiv({
                 cls: 'rename-path-suggestions-header'
             });
-            const iconContainer = header.createEl('span', { cls: 'rename-suggestions-icon' });
+            const iconContainer = header.createSpan({ cls: 'rename-suggestions-icon' });
             setIcon(iconContainer, 'folder');
-            header.createEl('span', {
+            header.createSpan({
                 text: t('renameDialogPathSuggestions')
             });
 
             // Create list container with empty message
-            const listContainer = state.suggestionsContainer.createEl('div', {
+            const listContainer = state.suggestionsContainer.createDiv({
                 cls: 'rename-path-suggestions-list'
             });
-            listContainer.createEl('div', {
+            listContainer.createDiv({
                 cls: 'rename-path-suggestions-no-results',
                 text: 'Type to search for paths...'
             });
@@ -173,27 +173,27 @@ export function setupPathAutocomplete(
         }
 
         // Add a header to clarify what the suggestions are for, show result count
-        const header = state.suggestionsContainer.createEl('div', {
+        const header = state.suggestionsContainer.createDiv({
             cls: 'rename-path-suggestions-header'
         });
 
         // Create icon container and text
-        const iconContainer = header.createEl('span', { cls: 'rename-suggestions-icon' });
+        const iconContainer = header.createSpan({ cls: 'rename-suggestions-icon' });
         setIcon(iconContainer, 'folder');
 
         const resultCount = matches.length === 100 ? '100+' : matches.length.toString();
-        header.createEl('span', {
+        header.createSpan({
             text: `${t('renameDialogPathSuggestions')} (${resultCount})`
         });
 
         // Create scrollable list container
-        const listContainer = state.suggestionsContainer.createEl('div', {
+        const listContainer = state.suggestionsContainer.createDiv({
             cls: 'rename-path-suggestions-list'
         });
 
         if (matches.length === 0) {
             // Show "no results" message in the list container
-            listContainer.createEl('div', {
+            listContainer.createDiv({
                 cls: 'rename-path-suggestions-no-results',
                 text: 'No matching paths found'
             });
@@ -206,7 +206,7 @@ export function setupPathAutocomplete(
 
         // Show all matches, but limit visible items to 100 with scrolling
         matches.slice(0, 100).forEach((matchResult, index) => {
-            const suggestion = listContainer.createEl('div', {
+            const suggestion = listContainer.createDiv({
                 cls: 'rename-path-suggestion'
             });
 

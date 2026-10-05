@@ -5,7 +5,7 @@ function showToggleActionIcon(toggleEl: HTMLElement, direction: 'expand' | 'coll
   const iconName = direction === 'expand' ? 'chevrons-up-down' : 'chevrons-down-up';
   toggleEl.querySelector('.dotn_chevron-action-layer')?.remove();
 
-  const layer = activeDocument.createElement('div');
+  const layer = activeDocument.adoptNode(createDiv());
   layer.className = `dotn_chevron-action-layer dotn_chevron-action-layer--${direction}`;
   setIcon(layer, iconName);
   toggleEl.appendChild(layer);

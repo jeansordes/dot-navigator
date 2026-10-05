@@ -91,7 +91,7 @@ export function setupRenameDialogContent({
     }
 
     const pathParts = parsePath(data.path, data.extension);
-    const inputContainer = layoutContainer.createEl('div', { cls: 'rename-input-container' });
+    const inputContainer = layoutContainer.createDiv({ cls: 'rename-input-container' });
 
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
 

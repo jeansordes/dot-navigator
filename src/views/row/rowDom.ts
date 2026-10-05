@@ -7,11 +7,11 @@ import type { RowItem } from '../utils/viewTypes';
 import { canCreateChildQuickAction } from './shiftQuickAction';
 
 export function createIndentGuides(level: number): HTMLElement {
-  const indent = activeDocument.createElement('div');
+  const indent = activeDocument.adoptNode(createDiv());
   indent.className = 'dotn_indent';
   indent.style.width = `${level * 20}px`;
   for (let i = 0; i < level; i++) {
-    const col = activeDocument.createElement('span');
+    const col = activeDocument.adoptNode(createSpan());
     col.className = 'dotn_indent-col';
     indent.appendChild(col);
   }
@@ -25,7 +25,7 @@ function appendChevronIcon(container: HTMLElement): void {
 }
 
 export function createToggleButton(isFolder = false): HTMLElement {
-  const toggleBtn = activeDocument.createElement('div');
+  const toggleBtn = activeDocument.adoptNode(createDiv());
   toggleBtn.className = 'dotn_button-icon';
   toggleBtn.setAttribute('data-action', 'toggle');
   toggleBtn.title = 'Toggle';
@@ -33,11 +33,11 @@ export function createToggleButton(isFolder = false): HTMLElement {
   if (isFolder) {
     toggleBtn.classList.add('dotn_toggle-folder');
 
-    const folderIcon = activeDocument.createElement('span');
+    const folderIcon = activeDocument.adoptNode(createSpan());
     folderIcon.className = 'dotn_toggle-folder-icon';
     setIcon(folderIcon, 'folder');
 
-    const chevronIcon = activeDocument.createElement('span');
+    const chevronIcon = activeDocument.adoptNode(createSpan());
     chevronIcon.className = 'dotn_toggle-chevron-icon';
     appendChevronIcon(chevronIcon);
 
@@ -51,7 +51,7 @@ export function createToggleButton(isFolder = false): HTMLElement {
 }
 
 export function createFolderPlaceholder(): HTMLElement {
-  const placeholder = activeDocument.createElement('div');
+  const placeholder = activeDocument.adoptNode(createDiv());
   placeholder.className = 'dotn_button-icon dotn_folder-placeholder';
   setIcon(placeholder, 'folder');
   return placeholder;
@@ -79,7 +79,7 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
   else if (ext === 'base') iconName = 'layout-list';
   else iconName = 'file-question';
 
-  const icon = activeDocument.createElement('div');
+  const icon = activeDocument.adoptNode(createDiv());
   icon.className = 'dotn_icon';
   icon.setAttribute('data-icon-name', iconName);
   setIcon(icon, iconName);
@@ -87,16 +87,16 @@ export function createFileIconOrBadge(item: RowItem): HTMLElement | null {
 }
 
 export function createHiddenIcon(): HTMLElement {
-  const icon = activeDocument.createElement('div');
+  const icon = activeDocument.adoptNode(createDiv());
   icon.className = 'dotn_button-icon dotn_hidden-icon';
   icon.setAttribute('data-action', 'unhide');
   icon.title = t('tooltipUnhideNode');
 
-  const closed = activeDocument.createElement('span');
+  const closed = activeDocument.adoptNode(createSpan());
   closed.className = 'dotn_hidden-icon-closed';
   setIcon(closed, 'eye-off');
 
-  const open = activeDocument.createElement('span');
+  const open = activeDocument.adoptNode(createSpan());
   open.className = 'dotn_hidden-icon-open';
   setIcon(open, 'eye');
 
@@ -107,7 +107,7 @@ export function createHiddenIcon(): HTMLElement {
 
 export function createAliasIcon(item: RowItem): HTMLElement | null {
   if (!item.isRedirect) return null;
-  const icon = activeDocument.createElement('div');
+  const icon = activeDocument.adoptNode(createDiv());
   icon.className = 'dotn_button-icon dotn_alias-icon';
   icon.setAttribute('data-action', 'open-target');
   icon.title = `Open stub: ${item.id}`;
@@ -116,18 +116,18 @@ export function createAliasIcon(item: RowItem): HTMLElement | null {
 }
 
 function appendTwoPartTitle(container: HTMLElement, primaryText: string, secondaryText: string | null, separatorText = '·'): void {
-  const primary = activeDocument.createElement('span');
+  const primary = activeDocument.adoptNode(createSpan());
   primary.textContent = primaryText;
   primary.className = 'yaml-custom-title';
   container.appendChild(primary);
 
   if (!secondaryText) return;
 
-  const separator = activeDocument.createElement('span');
+  const separator = activeDocument.adoptNode(createSpan());
   separator.textContent = separatorText;
   separator.className = 'yaml-filename';
 
-  const secondary = activeDocument.createElement('span');
+  const secondary = activeDocument.adoptNode(createSpan());
   secondary.textContent = secondaryText;
   secondary.className = 'yaml-filename';
 
@@ -141,7 +141,7 @@ export function createTitleElement(item: RowItem): HTMLElement {
     : item.kind === 'file'
       ? 'dotn_tree-item-title is-clickable'
       : 'dotn_tree-item-title';
-  const title = activeDocument.createElement('div');
+  const title = activeDocument.adoptNode(createDiv());
   title.className = titleClass;
   title.title = item.targetPath ? `${item.id} -> ${item.targetPath}` : item.id;
   title.setAttribute('data-node-kind', item.kind);
@@ -164,7 +164,7 @@ export function createTitleElement(item: RowItem): HTMLElement {
   if (item.kind === 'file' && item.extension) {
     const ext = item.extension.toLowerCase();
     if (ext && ext !== 'md' && !item.name.endsWith('excalidraw')) { // Don't show .md extension
-      const extBadge = activeDocument.createElement('span');
+      const extBadge = activeDocument.adoptNode(createSpan());
       extBadge.className = 'dotn_extension-badge';
       extBadge.textContent = '.' + ext.toUpperCase();
       title.appendChild(extBadge);
@@ -195,7 +195,7 @@ export function buildChildCountBadge(row: HTMLElement, item: RowItem): HTMLEleme
     const resolved = resolveChildCountBadge(direct, total, resolveChildCountMode(row));
     if (!resolved) return null;
 
-    const badge = activeDocument.createElement('span');
+    const badge = activeDocument.adoptNode(createSpan());
     badge.className = 'dotn_tree-count-badge';
     badge.textContent = resolved.text;
     badge.title = resolved.tooltip;
@@ -203,7 +203,7 @@ export function buildChildCountBadge(row: HTMLElement, item: RowItem): HTMLEleme
   }
 
   if (item.kind === 'virtual') {
-    const badge = activeDocument.createElement('span');
+    const badge = activeDocument.adoptNode(createSpan());
     badge.className = 'dotn_tree-count-badge';
     badge.textContent = '+';
     badge.title = t('tooltipChildCountEmpty');
@@ -233,11 +233,11 @@ export function insertChildCountBadge(row: HTMLElement, item: RowItem): void {
 }
 
 export function createActionButtons(item: RowItem, _app: App): HTMLElement {
-  const container = activeDocument.createElement('div');
+  const container = activeDocument.adoptNode(createDiv());
   container.className = 'dotn_action-buttons-container';
 
   if (item.kind === 'virtual' || item.kind === 'suggestion') {
-    const createNoteBtn = activeDocument.createElement('div');
+    const createNoteBtn = activeDocument.adoptNode(createDiv());
     createNoteBtn.className = 'dotn_button-icon';
     const isFolderSuggestion = item.kind === 'suggestion' && item.suggestionTargetKind === 'folder';
     createNoteBtn.title = t(isFolderSuggestion ? 'tooltipCreateFolder' : 'tooltipCreateNote', { path: item.id });
@@ -247,7 +247,7 @@ export function createActionButtons(item: RowItem, _app: App): HTMLElement {
   }
 
   if (canCreateChildQuickAction(item)) {
-    const createChildBtn = activeDocument.createElement('div');
+    const createChildBtn = activeDocument.adoptNode(createDiv());
     createChildBtn.className = 'dotn_button-icon dotn_quick-create-child';
     createChildBtn.title = t('tooltipCreateChildNote', { path: item.id });
     createChildBtn.setAttribute('data-action', 'create-child');
@@ -255,7 +255,7 @@ export function createActionButtons(item: RowItem, _app: App): HTMLElement {
     container.appendChild(createChildBtn);
   }
 
-  const moreBtn = activeDocument.createElement('div');
+  const moreBtn = activeDocument.adoptNode(createDiv());
   moreBtn.className = 'dotn_button-icon';
   moreBtn.title = t('tooltipMoreActions');
   moreBtn.setAttribute('data-action', 'more');

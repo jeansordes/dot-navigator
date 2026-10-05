@@ -1,3 +1,4 @@
+import { RenderLifetime } from './renderLifetime';
 import { setIcon } from 'obsidian';
 import { t } from '../i18n';
 import type { MoreMenuItemBuiltin, MoreMenuItemCommand } from '../types';
@@ -59,15 +60,16 @@ function addReorderButtons(
   actions: HTMLElement,
   index: number,
   total: number,
-  onMove: (offset: number) => void | Promise<void>
+  onMove: (offset: number) => void | Promise<void>,
+  lifetime: RenderLifetime
 ): void {
   createIconButton(actions, 'arrow-up', () => {
     void onMove(-1);
-  }, index === 0);
+  }, index === 0, lifetime);
 
   createIconButton(actions, 'arrow-down', () => {
     void onMove(1);
-  }, index === total - 1);
+  }, index === total - 1, lifetime);
 }
 
 export function renderBuiltinMenuCard(
@@ -78,7 +80,8 @@ export function renderBuiltinMenuCard(
   displayName: string,
   onReorder: (order: string[]) => Promise<void>,
   getOrder: () => string[]
-): void {
+): () => void {
+  const lifetime = new RenderLifetime();
   const card = container.createDiv({
     cls: 'dotnav-settings-card dotnav-menu-item-card',
   });
@@ -94,12 +97,13 @@ export function renderBuiltinMenuCard(
   addReorderButtons(actions, index, total, async (offset) => {
     const order = getOrder();
     await onReorder(moveByOffset(order, index, offset));
-  });
+  }, lifetime);
 
-  attachReorderHandle(grip, card, BUILTIN_REORDER_GROUP, index, async (from, to) => {
+  lifetime.register(attachReorderHandle(grip, card, BUILTIN_REORDER_GROUP, index, async (from, to) => {
     const order = getOrder();
     await onReorder(moveInArray(order, from, to));
-  });
+  }));
+  return lifetime.dispose;
 }
 
 export function renderCustomMenuCard(
@@ -112,7 +116,8 @@ export function renderCustomMenuCard(
   onDelete: () => void | Promise<void>,
   onReorder: (items: MoreMenuItemCommand[]) => Promise<void>,
   getItems: () => MoreMenuItemCommand[]
-): void {
+): () => void {
+  const lifetime = new RenderLifetime();
   const card = container.createDiv({
     cls: 'dotnav-settings-card dotnav-menu-item-card',
   });
@@ -125,18 +130,19 @@ export function renderCustomMenuCard(
     withBody: false,
   });
 
-  createIconButton(actions, 'pencil', onEdit);
+  createIconButton(actions, 'pencil', onEdit, false, lifetime);
   createIconButton(actions, 'trash-2', () => {
     void onDelete();
-  });
+  }, false, lifetime);
 
   addReorderButtons(actions, index, total, async (offset) => {
     const items = getItems();
     await onReorder(moveByOffset(items, index, offset));
-  });
+  }, lifetime);
 
-  attachReorderHandle(grip, card, CUSTOM_REORDER_GROUP, index, async (from, to) => {
+  lifetime.register(attachReorderHandle(grip, card, CUSTOM_REORDER_GROUP, index, async (from, to) => {
     const items = getItems();
     await onReorder(moveInArray(items, from, to));
-  });
+  }));
+  return lifetime.dispose;
 }

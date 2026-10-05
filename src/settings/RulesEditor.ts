@@ -50,16 +50,18 @@ async function persistRules(
 }
 
 function renderRulesEmptyState(section: SettingsSection): void {
-  const emptyEl = section.listEl.createDiv({ cls: 'dotnav-rules-empty' });
-  const iconEl = emptyEl.createDiv({ cls: 'dotnav-rules-empty-icon' });
-  setIcon(iconEl, 'list-tree');
-  emptyEl.createDiv({
-    cls: 'dotnav-rules-empty-title',
-    text: t('settingsRulesEmpty'),
-  });
-  emptyEl.createDiv({
-    cls: 'dotnav-rules-empty-desc',
-    text: t('settingsRulesEmptyDesc'),
+  section.addCustom(t('settingsRulesEmpty'), t('settingsRulesEmptyDesc'), container => {
+    const emptyEl = container.createDiv({ cls: 'dotnav-rules-empty' });
+    const iconEl = emptyEl.createDiv({ cls: 'dotnav-rules-empty-icon' });
+    setIcon(iconEl, 'list-tree');
+    emptyEl.createDiv({
+      cls: 'dotnav-rules-empty-title',
+      text: t('settingsRulesEmpty'),
+    });
+    emptyEl.createDiv({
+      cls: 'dotnav-rules-empty-desc',
+      text: t('settingsRulesEmptyDesc'),
+    });
   });
 }
 
@@ -78,23 +80,22 @@ export function addRulesEditorSection(
   if (rules.length === 0) {
     renderRulesEmptyState(section);
   } else {
-    const listEl = section.listEl.createDiv({ cls: 'dotnav-settings-card-list' });
-    const previewTargets = getPreviewTargets(app);
+    // Delay enumeration until actual rendering, never settings search indexing.
+    let previewTargets: RulePreviewTarget[] | undefined;
     rules.forEach((rule, index) => {
-      renderRuleCard(
-        listEl,
-        settings,
-        rule,
-        index,
-        rules.length,
-        previewTargets,
-        (next, options) => saveRules(next, options)
-      );
+      section.addCustom(t('settingsRulesCardTitle', { index: String(index + 1) }),
+        [t('settingsRulesPatternLabel'), t('settingsRulesExcludeLabel'), t('settingsRulesChildrenLabel'), ...rule.pattern, ...rule.children].join(' · '),
+        container => {
+          previewTargets ??= getPreviewTargets(app);
+          container.addClass('dotnav-settings-card-list');
+          return renderRuleCard(container, settings, rule, index, rules.length, previewTargets,
+            (next, options) => saveRules(next, options));
+        });
     });
   }
 
   const actionsSection = addActionSettingsRows(section, 'dotnav-rules-actions');
-  actionsSection.addSetting((setting) => {
+  actionsSection.addSetting(t('settingsRulesAddRule'), [t('settingsRulesViewJson'), t('settingsRulesImportJsonButton')].join(' · '), (setting) => {
     setting.settingEl.addClass('dotnav-rules-actions-row');
     setting.addButton((btn) => {
       btn

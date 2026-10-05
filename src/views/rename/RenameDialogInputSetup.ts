@@ -30,7 +30,7 @@ export function setupPathInput(
     let autocompleteState: AutocompleteState | null = getAutocompleteState();
 
     if (data.kind !== 'folder') {
-        const pathContainer = inputContainer.createEl('div', { cls: 'rename-path-container' });
+        const pathContainer = inputContainer.createDiv({ cls: 'rename-path-container' });
         pathInput = pathContainer.createEl('textarea', {
             cls: 'rename-path-input',
             placeholder: pathParts.directory,
@@ -71,7 +71,7 @@ export function setupPathInput(
             }, 50);
         }
     } else {
-        pathInput = activeDocument.createElement('textarea');
+        pathInput = activeDocument.adoptNode(createEl('textarea'));
         pathInput.setAttribute('rows', '1');
         pathInput.value = pathParts.directory;
         pathInput.classList.add('is-hidden');

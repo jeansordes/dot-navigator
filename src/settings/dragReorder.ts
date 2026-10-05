@@ -1,3 +1,4 @@
+import { RenderLifetime } from './renderLifetime';
 import { Setting, setIcon } from 'obsidian';
 import { t } from '../i18n';
 
@@ -72,7 +73,9 @@ export function attachReorderHandle(
   groupKey: string,
   index: number,
   onReorder: ReorderCallback
-): void {
+): () => void {
+  const lifetime = new RenderLifetime();
+  const doc = rowEl.ownerDocument;
   rowEl.addClass(ROW_CLASS);
   rowEl.dataset.dotnavGroup = groupKey;
   rowEl.dataset.dotnavIndex = String(index);
@@ -82,9 +85,9 @@ export function attachReorderHandle(
   let pointerId = -1;
 
   const groupRows = (): HTMLElement[] => {
-    const parent = rowEl.parentElement;
+    const parent = rowEl.closest('.setting-items') ?? rowEl.parentElement;
     if (!parent) return [];
-    return Array.from(parent.children).filter(
+    return Array.from(parent.querySelectorAll(`.${ROW_CLASS}`)).filter(
       (el): el is HTMLElement =>
         el.instanceOf(HTMLElement) &&
         el.classList.contains(ROW_CLASS) &&
@@ -119,7 +122,7 @@ export function attachReorderHandle(
   const finish = (commit: boolean, clientY: number): void => {
     if (!dragging) return;
     dragging = false;
-    activeDocument.body.removeClass('dotnav-reordering');
+    doc.body.removeClass('dotnav-reordering');
     rowEl.removeClass('is-dragging');
     if (pointerId !== -1 && handleEl.hasPointerCapture(pointerId)) {
       handleEl.releasePointerCapture(pointerId);
@@ -138,28 +141,30 @@ export function attachReorderHandle(
   };
 
   handleEl.addClass('dotnav-drag-handle');
-  handleEl.addEventListener('pointerdown', (e: PointerEvent) => {
+  lifetime.listen(handleEl, 'pointerdown', (e: PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.preventDefault();
     dragging = true;
     pointerId = e.pointerId;
     rows = groupRows();
     handleEl.setPointerCapture(pointerId);
-    activeDocument.body.addClass('dotnav-reordering');
+    doc.body.addClass('dotnav-reordering');
     rowEl.addClass('is-dragging');
   });
 
-  handleEl.addEventListener('pointermove', (e: PointerEvent) => {
+  lifetime.listen(handleEl, 'pointermove', (e: PointerEvent) => {
     if (!dragging) return;
     e.preventDefault();
     paintIndicator(insertionIndexFor(e.clientY));
   });
 
-  handleEl.addEventListener('pointerup', (e: PointerEvent) => {
+  lifetime.listen(handleEl, 'pointerup', (e: PointerEvent) => {
     finish(true, e.clientY);
   });
 
-  handleEl.addEventListener('pointercancel', (e: PointerEvent) => {
+  lifetime.listen(handleEl, 'pointercancel', (e: PointerEvent) => {
     finish(false, e.clientY);
   });
+  lifetime.register(() => finish(false, 0));
+  return lifetime.dispose;
 }

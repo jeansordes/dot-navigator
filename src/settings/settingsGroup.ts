@@ -1,105 +1,71 @@
-import { Setting, SettingGroup, requireApiVersion } from 'obsidian';
+import type { Setting, SettingDefinitionGroup, SettingDefinitionRender } from 'obsidian';
 
+export type SettingRenderer = (setting: Setting) => void | (() => void);
+
+/** Collect definitions without creating DOM: Obsidian also calls this for search. */
 export interface SettingsSection {
-  addSetting(cb: (setting: Setting) => void): void;
-  /** The `.setting-items` container inside the group. */
-  listEl: HTMLElement;
-  /** The outer `.setting-group` element. */
-  groupEl: HTMLElement;
+  addSetting(name: string, desc: string | undefined, render: SettingRenderer): void;
+  addCustom(name: string, desc: string | undefined, render: (container: HTMLElement) => void | (() => void)): void;
 }
 
-export function createGroupHeading(
-  name: string,
-  description?: string,
-  count?: number
-): string | DocumentFragment {
-  if (!description && count === undefined) {
-    return name;
-  }
-
-  const heading = activeDocument.createDocumentFragment();
+export function createGroupHeading(name: string, description?: string, count?: number): string | DocumentFragment {
+  if (!description && count === undefined) return name;
+  const heading = activeDocument.adoptNode(createFragment());
   const nameEl = heading.createDiv({ cls: 'setting-item-name', text: name });
-  if (count !== undefined) {
-    nameEl.createSpan({ cls: 'dotnav-count-badge', text: String(count) });
-  }
-  if (description) {
-    heading.createDiv({ cls: 'setting-item-description', text: description });
-  }
+  if (count !== undefined) nameEl.createSpan({ cls: 'dotnav-count-badge', text: String(count) });
+  if (description) heading.createDiv({ cls: 'setting-item-description', text: description });
   return heading;
 }
 
 export function addSettingsGroup(
-  containerEl: HTMLElement,
-  heading: string | DocumentFragment
+  definitions: SettingDefinitionGroup[], name: string, description?: string, count?: number, cls?: string, id?: string,
 ): SettingsSection {
-  if (requireApiVersion('1.11.0')) {
-    const group = new SettingGroup(containerEl).setHeading(heading);
-    const groupEl = group.listEl.parentElement ?? group.listEl;
-    return {
-      addSetting(cb) {
-        group.addSetting(cb);
-      },
-      listEl: group.listEl,
-      groupEl,
-    };
-  }
-
-  return createFallbackSettingsGroup(containerEl, heading);
-}
-
-function createFallbackSettingsGroup(
-  containerEl: HTMLElement,
-  heading: string | DocumentFragment
-): SettingsSection {
-  const groupEl = containerEl.createDiv('setting-group');
-  const headingSetting = new Setting(groupEl);
-
-  if (typeof heading === 'string') {
-    headingSetting.setName(heading);
-  } else {
-    headingSetting.nameEl.empty();
-    headingSetting.nameEl.appendChild(heading);
-  }
-  headingSetting.setHeading();
-
-  const listEl = groupEl.createDiv('setting-items');
-  return {
-    addSetting(cb) {
-      const setting = new Setting(listEl);
-      cb(setting);
+  const items: SettingDefinitionRender[] = [];
+  definitions.push({ type: 'group', heading: name, cls, items });
+  const section: SettingsSection = {
+    addSetting(label, desc, render) {
+      const first = items.length === 0;
+      items.push({ name: label, desc, render(setting, group) {
+        if (first) {
+          group.setHeading(createGroupHeading(name, description, count));
+          if (id) (group.listEl.parentElement ?? group.listEl).id = id;
+        }
+        return render(setting);
+      } });
     },
-    listEl,
-    groupEl,
+    addCustom(label, desc, render) {
+      section.addSetting(label, desc, setting => {
+        setting.settingEl.empty();
+        setting.settingEl.addClass('dotnav-custom-setting');
+        return render(setting.settingEl);
+      });
+    },
   };
+  return section;
 }
 
-export function addActionSettingsRows(
-  section: SettingsSection,
-  cls: string
-): SettingsSection {
-  const listEl = section.listEl.createDiv(cls);
+export function addActionSettingsRows(section: SettingsSection, cls: string): SettingsSection {
   return {
-    addSetting(cb) {
-      const setting = new Setting(listEl);
-      cb(setting);
+    addSetting(name, desc, render) {
+      section.addSetting(name, desc, setting => {
+        setting.settingEl.addClass(cls);
+        return render(setting);
+      });
     },
-    listEl,
-    groupEl: listEl,
+    addCustom: (name, desc, render) => section.addCustom(name, desc, render),
   };
 }
 
 export function addSubsectionHeading(section: SettingsSection, name: string, count?: number): void {
-  section.addSetting((setting) => {
+  section.addSetting(name, undefined, setting => {
     setting.setName(name).setHeading();
     setting.settingEl.addClass('dotnav-subsection-heading');
-    if (typeof count === 'number') {
-      setting.nameEl.createSpan({ cls: 'dotnav-count-badge', text: String(count) });
-    }
+    if (count !== undefined) setting.nameEl.createSpan({ cls: 'dotnav-count-badge', text: String(count) });
   });
 }
 
 export function addEmptyState(section: SettingsSection, title: string, desc?: string): void {
-  section.addSetting((setting) => {
+  section.addSetting(title, desc, setting => {
     setting.settingEl.addClass('dotnav-empty-state');
     setting.setName(title);
     if (desc) setting.setDesc(desc);
@@ -107,10 +73,8 @@ export function addEmptyState(section: SettingsSection, title: string, desc?: st
 }
 
 export function addInfoRow(section: SettingsSection, name: string, desc?: string): void {
-  section.addSetting((setting) => {
+  section.addSetting(name, desc, setting => {
     setting.setName(name);
-    if (desc) {
-      setting.setDesc(desc);
-    }
+    if (desc) setting.setDesc(desc);
   });
 }

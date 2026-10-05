@@ -148,7 +148,7 @@ export function fuzzyCharMatch(item: string, word: string): FuzzyMatchResult {
  * Create highlighted text with fuzzy search matches
  */
 export function createHighlightedText(text: string, matches: Array<{ start: number, end: number }>): DocumentFragment {
-    const fragment = activeDocument.createDocumentFragment();
+    const fragment = activeDocument.adoptNode(createFragment());
 
     if (matches.length === 0) {
         fragment.appendChild(activeDocument.createTextNode(text));
@@ -176,7 +176,7 @@ export function createHighlightedText(text: string, matches: Array<{ start: numb
         }
 
         // Add highlighted text
-        const highlight = activeDocument.createElement('span');
+        const highlight = activeDocument.adoptNode(createSpan());
         highlight.className = 'fuzzy-match-highlight';
         highlight.textContent = text.substring(match.start, match.end);
         fragment.appendChild(highlight);

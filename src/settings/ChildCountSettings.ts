@@ -8,12 +8,14 @@ interface ChildCountLegacyPersisted {
   hideChildCountWhenExpanded?: boolean;
 }
 
-function childCountLegacy(settings: PluginSettings): ChildCountLegacyPersisted {
-  return settings as unknown as ChildCountLegacyPersisted;
+type PersistedChildCountSettings = PluginSettings & ChildCountLegacyPersisted;
+
+function childCountLegacy(settings: PersistedChildCountSettings): ChildCountLegacyPersisted {
+  return settings;
 }
 
-function clearChildCountLegacyKeys(settings: PluginSettings): void {
-  const legacy = settings as unknown as ChildCountLegacyPersisted;
+function clearChildCountLegacyKeys(settings: PersistedChildCountSettings): void {
+  const legacy = childCountLegacy(settings);
   delete legacy.showChildCount;
   delete legacy.hideChildCountWhenExpanded;
 }
@@ -64,7 +66,7 @@ export function addChildCountSetting(
 ): void {
   const countEnabled = isChildCountEnabled(settings);
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsChildCountDisplay'), t('settingsChildCountDisplayDesc'), (setting) => {
     setting
       .setName(t('settingsChildCountDisplay'))
       .setDesc(t('settingsChildCountDisplayDesc'))
@@ -86,7 +88,7 @@ export function addChildCountSetting(
       });
   });
 
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsChildCountMode'), t('settingsChildCountModeDesc'), (setting) => {
     setting
       .setName(t('settingsChildCountMode'))
       .setDesc(t('settingsChildCountModeDesc'))

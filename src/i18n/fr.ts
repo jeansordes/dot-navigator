@@ -78,6 +78,7 @@ export default {
     confirmDeleteFile: 'Supprimer ce fichier ?\n{{path}}',
     
     // Notices
+    noticeClipboardFailed: 'Impossible de copier dans le presse-papiers.',
     noticeCreatedNote: 'Note créée : {{path}}',
     noticeFailedCreateNote: 'Échec de création de la note : {{path}}',
     noticeCreatedFolder: 'Dossier créé : {{path}}',

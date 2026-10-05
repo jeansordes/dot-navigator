@@ -8,7 +8,7 @@ export function computeRowHeight(rootContainer: HTMLElement): number | null {
     const host = viewBody?.instanceOf(HTMLElement) ? viewBody : rootContainer;
 
     const toPx = (cssVar: string): number => {
-      const probe = activeDocument.createElement('div');
+      const probe = activeDocument.adoptNode(createDiv());
       probe.className = 'dotn_probe dotn_probe-row';
       // Allowed: height can be set directly; others come from CSS class
       probe.setCssStyles({ height: cssVar });
@@ -37,7 +37,7 @@ export function computeTreeBottomPadding(rootContainer: HTMLElement): number {
   try {
     const viewTree = rootContainer.querySelector('.dotn_view-tree');
     const host = viewTree?.instanceOf(HTMLElement) ? viewTree : rootContainer;
-    const probe = activeDocument.createElement('div');
+    const probe = activeDocument.adoptNode(createDiv());
     probe.className = 'dotn_probe dotn_probe-bottom-pad';
     host.appendChild(probe);
     const h = Math.round(probe.getBoundingClientRect().height);
@@ -53,7 +53,7 @@ export function computeGap(rootContainer: HTMLElement): number | null {
   try {
     const viewBody = rootContainer.querySelector('.dotn_view-body');
     const host = viewBody?.instanceOf(HTMLElement) ? viewBody : rootContainer;
-    const probe = activeDocument.createElement('div');
+    const probe = activeDocument.adoptNode(createDiv());
     probe.className = 'dotn_probe dotn_probe-gap';
     host.appendChild(probe);
     const h = Math.round(probe.getBoundingClientRect().height);

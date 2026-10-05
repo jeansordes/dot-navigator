@@ -4,3 +4,6 @@ declare const activeWindow: {
 };
 
 declare const activeDocument: Document;
+
+/** Replaced with a literal by esbuild in both development and release builds. */
+declare const __TM_DEV__: boolean;

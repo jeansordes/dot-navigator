@@ -20,7 +20,7 @@ export function addSchemaSuggestionsToggle(
   settings: PluginSettings,
   callbacks: SchemaToggleCallbacks
 ): void {
-  section.addSetting((setting) => {
+  section.addSetting(t('settingsEnableSchemaSuggestions'), t('settingsEnableSchemaSuggestionsDesc'), (setting) => {
     setting
       .setName(t('settingsEnableSchemaSuggestions'))
       .setDesc(t('settingsEnableSchemaSuggestionsDesc'))

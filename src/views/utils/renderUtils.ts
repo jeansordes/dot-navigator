@@ -18,7 +18,7 @@ export function ensurePoolCapacity(vt: VirtualTreeLike, onRowInit?: (row: HTMLEl
     const virtualizer = vt.virtualizer;
     if (virtualizer.instanceOf(HTMLElement)) {
       for (let i = poolSize; i < desired; i++) {
-        const row = activeDocument.createElement('div');
+        const row = activeDocument.adoptNode(createDiv());
         row.className = 'tree-row';
         row.dataset.poolIndex = String(i);
         if (onRowInit) onRowInit(row);

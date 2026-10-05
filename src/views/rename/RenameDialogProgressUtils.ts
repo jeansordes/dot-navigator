@@ -10,17 +10,17 @@ import type { RenameProgress } from './RenameProgress';
 export function showNoChangesMessage(contentEl: HTMLElement): void {
     hideInfoMessage(contentEl);
 
-    const messageElement = contentEl.createEl('div', { cls: 'rename-info-message' });
+    const messageElement = contentEl.createDiv({ cls: 'rename-info-message' });
 
-    const iconContainer = messageElement.createEl('div', { cls: 'rename-info-icon' });
+    const iconContainer = messageElement.createDiv({ cls: 'rename-info-icon' });
     setIcon(iconContainer, 'info');
 
-    const contentContainer = messageElement.createEl('div', { cls: 'rename-info-content' });
-    contentContainer.createEl('div', {
+    const contentContainer = messageElement.createDiv({ cls: 'rename-info-content' });
+    contentContainer.createDiv({
         text: t('renameDialogNoChangesTitle'),
         cls: 'rename-info-title'
     });
-    contentContainer.createEl('div', {
+    contentContainer.createDiv({
         text: t('renameDialogNoChangesDesc'),
         cls: 'rename-info-description'
     });

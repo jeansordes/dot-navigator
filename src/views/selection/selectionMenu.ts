@@ -1,3 +1,4 @@
+import { copyText } from '../../utils/misc/clipboard';
 import { Menu, Notice, TFile } from 'obsidian';
 import type { TreeSelectionController } from './TreeSelectionController';
 import { BulkDestinationModal, confirmBulk } from './BulkDialogs';
@@ -69,7 +70,7 @@ export function showSelectionMenu(controller: TreeSelectionController, anchor?: 
   if (!targets.length || controller.busy) return;
   const menu = new Menu();
   menu.addItem(item => item.setTitle(t('bulkCopyPaths')).setIcon('copy').onClick(() => run(controller,
-    () => navigator.clipboard.writeText(targets.map(target => target.path).join('\n')))));
+    async () => { await copyText(targets.map(target => target.path).join('\n')); })));
   if (targets.every(target => target.kind === 'file')) {
     menu.addItem(item => item.setTitle(t('bulkOpenTabs')).setIcon('files').onClick(() => run(controller, async () => {
       for (const target of targets) {

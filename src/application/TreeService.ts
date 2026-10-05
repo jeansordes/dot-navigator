@@ -179,13 +179,14 @@ export class TreeService {
   }
 
   private collectRedirectEntries(): RedirectEntry[] {
+    const files = this.vault.getFiles();
     const fileExists = (path: string) => this.vault.getFileByPath(path) !== null;
     const resolveLinkpath = createVaultLinkpathResolver(
       (path) => this.vault.getFileByPath(path),
-      () => this.vault.getFiles(),
+      () => files,
     );
 
-    return this.vault.getFiles().flatMap(file => {
+    return files.flatMap(file => {
       const raw = this.metadata.getFrontmatterField(file.path, REDIRECT_FM_KEY);
       const linkpath = parseRedirectTarget(raw);
       if (!linkpath) {

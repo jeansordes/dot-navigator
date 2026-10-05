@@ -57,7 +57,7 @@ function getDragGhostHost(row: HTMLElement): HTMLElement {
         return existing;
     }
 
-    const host = activeDocument.createElement('div');
+    const host = activeDocument.adoptNode(createDiv());
     host.className = 'dotn_view dotn_drag-ghost-host';
     activeDocument.body.appendChild(host);
     const view = row.closest('.dotn_view');
@@ -66,7 +66,7 @@ function getDragGhostHost(row: HTMLElement): HTMLElement {
 }
 
 export function createDragGhost(row: HTMLElement): HTMLElement {
-    const ghost = activeDocument.createElement('div');
+    const ghost = activeDocument.adoptNode(createDiv());
     ghost.className = 'dotn_drag-ghost';
 
     const icon = row.querySelector('.dotn_icon, .dotn_file-badge');
@@ -118,10 +118,10 @@ export function createDropPlaceholder(
     level: number,
     topPx: number,
 ): HTMLElement {
-    const placeholder = activeDocument.createElement('div');
+    const placeholder = activeDocument.adoptNode(createDiv());
     placeholder.className = 'dotn_drop-placeholder tree-row';
 
-    const title = activeDocument.createElement('div');
+    const title = activeDocument.adoptNode(createDiv());
     title.className = 'dotn_tree-item-title dotn_drop-placeholder-title';
     placeholder.appendChild(title);
 

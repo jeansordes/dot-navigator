@@ -4,46 +4,8 @@ import { t } from "../../i18n";
 import { PluginSettings } from "../../types";
 import type { SuggestionTargetKind } from '../../domain/schema/SuggestionPath';
 
-type FileExplorerViewApi = {
-    revealFile?: (file: TFile) => Promise<void> | void;
-    setSelection?: (files: TFile[], reveal?: boolean, silent?: boolean) => void;
-    setSelectedFile?: (file: TFile) => void;
-    selectFile?: (file: TFile) => void;
-};
+import { asFileExplorerView, getCommandExecutor, runAppCommand } from './optionalAppApis';
 
-type CommandExecutorApi = {
-    executeCommand?: (id: string) => unknown;
-    executeCommandById?: (id: string) => unknown;
-};
-
-function asFileExplorerView(view: unknown): FileExplorerViewApi | null {
-    if (typeof view !== 'object' || view === null) {
-        return null;
-    }
-    return view as FileExplorerViewApi;
-}
-
-function getCommandExecutor(app: App): CommandExecutorApi | null {
-    const commands: unknown = Reflect.get(app, 'commands');
-    if (typeof commands !== 'object' || commands === null) {
-        return null;
-    }
-    return commands as CommandExecutorApi;
-}
-
-async function runAppCommand(
-    executor: CommandExecutorApi,
-    method: 'executeCommand' | 'executeCommandById',
-    cmdId: string
-): Promise<boolean> {
-    const fn = executor[method];
-    if (typeof fn !== 'function') {
-        return false;
-    }
-    const commandFn = fn as (this: CommandExecutorApi, id: string) => unknown;
-    const res: unknown = await commandFn.call(executor, cmdId);
-    return Boolean(res);
-}
 export class FileUtils {
     public static basename(path: string): string {
         const normalizedPath = path.replace(/\\/g, '/');

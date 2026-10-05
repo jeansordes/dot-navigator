@@ -8,7 +8,7 @@
 		"dev": "concurrently \"sass --watch --load-path=. src/styles.scss:styles.css --style=compressed\" \"node esbuild.config.mjs\"",
 		"build": "npm run build:css && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"build:css": "sass src/styles.scss styles.css --style=compressed",
-		"ci": "npm run lint && npm run lint:hygiene && npm run audit:prod && npm run build && npm run test",
+		"ci": "npm run typecheck:production && npm run lint && npm run lint:hygiene && npm run audit:prod && npm run build && npm run test",
 		"audit:prod": "npm audit --omit=dev",
 		"commit": "cz",
 		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && node --loader ts-node/esm --no-warnings --experimental-specifier-resolution=node scripts/cleanup-changelog.ts",
@@ -25,7 +25,8 @@
 		"lint:ls": "npm run lint | grep -E '^[^ ]+\\.js|^[^ ]+\\.ts' | awk '{print $1}' | sort | uniq",
 		"lint:open": "scripts/lint-open.sh",
 		"pre-review": "node scripts/pre-review.mjs",
-		"prepare": "husky"
+		"prepare": "husky",
+		"typecheck:production": "tsc -p tsconfig.production.json"
 	},
 	"config": {
 		"commitizen": {
