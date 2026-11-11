@@ -1,6 +1,6 @@
 # Dot Navigator
 
-<img width="1720" height="1646" src="https://github.com/user-attachments/assets/a1a8e313-69d3-45a0-8856-67a2de1eb69b" />
+<img width="1280" alt="Dot Navigator hierarchical note tree" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/overview.png" />
 
 A hierarchical note management system with Dendron-like features.
 
@@ -22,7 +22,7 @@ Until the plugin is officially released, you can install it through BRAT (Beta R
 - **Designed and optimized for mobile before desktop** with lazy loading of suggestions for better mobile performance
 - **Rule-based suggestions** with an in-app rules editor in settings — define patterns and children, preview matches, reorder rules, and import/export JSON so you can scaffold structures before the notes exist
 
-<img width="2106" height="942" src="https://github.com/user-attachments/assets/2751c131-c3fe-4317-b920-526b6fc5da87" />
+<img width="1280" alt="Rule-based note suggestions" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/rule-suggestions.png" />
 
 - **Hierarchical suggestions from dotted children** - when a rule specifies children like `["foo.bar"]`, it creates nested suggestion nodes where "foo" contains "bar" as a child, allowing for deeper scaffolding of note hierarchies
 - **Double-click to create notes from suggestions** - quickly create suggested notes by double-clicking on them in the tree view
@@ -64,33 +64,33 @@ redirect: "[[My Note]]"     # wikilink
 
 - **UI for renaming a note and its children** with a nice UI
 
-<img width="1474" height="1158" src="https://github.com/user-attachments/assets/c110d95e-2207-4e6b-967f-6bb1d34aea53" />
+<img width="1280" alt="Rename a note and its children" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/rename.png" />
 
 - **Undo the last rename operation** that was done in the rename dialog of the plugin (through the UI, with **Cmd/Ctrl+Z** when undo is available, or with a command dedicated for that). The dialog auto-closes when the rename finishes and restores undo state when reopened.
 
-<img width="722" height="470" alt="CleanShot 2025-09-26 at 23 13 38@2x" src="https://github.com/user-attachments/assets/3d0ceb40-2910-48fa-8eea-8c4500d91e87" />
+<img width="1280" alt="Undo the last rename operation" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/undo-rename.png" />
 
 - **Customizable context menus** (click the "…" button or do a right click on a file or folder) - add your own commands and **drag to reorder** menu items
 
-<img width="2411" height="1464" alt="image" src="https://github.com/user-attachments/assets/90575bc4-7665-4767-9e0e-baf19bbf35a8" />
+<img width="1280" alt="Customizable context menu" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/context-menu.png" />
 
 - **Easy access to global commands in UI**
 
-<img width="1080" height="446" alt="CleanShot 2025-09-14 at 22 30 49@2x" src="https://github.com/user-attachments/assets/841125f6-d321-40a1-bfe2-a7a834ff177e" />
+<img width="1280" alt="Global command buttons" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/global-commands.png" />
 
 - **Support for all file types** with appropriate icons and extensions
 
-<img width="606" height="628" src="https://github.com/user-attachments/assets/89e6195e-0a52-43dc-8f7e-c71b50914123" />
+<img width="1280" alt="Supported file types and icons" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/file-types.png" />
 
 - **Theme-aware styling** with proper dark mode support
 
-<img width="3097" height="1897" src="https://github.com/user-attachments/assets/dfff2d5c-0ff1-447c-9b8e-8e0c700b0abc" />
+<img width="1280" alt="Dot Navigator in dark mode" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/dark-mode.png" />
 
 - **Child count badges** — optionally show direct children, total descendants, or both on tree rows (configurable in settings under **Tree display**)
 
 - **YAML title support** - displays custom titles from frontmatter instead of filenames (e.g. `prj.md` with the property `title = "Projects"` will be displayed as `Projects` in the tree view)
 
-<img width="1178" height="432" src="https://github.com/user-attachments/assets/8f3da2eb-6fb4-4ae9-b893-141539fb10e9" />
+<img width="1280" alt="Custom note titles from YAML frontmatter" src="https://raw.githubusercontent.com/jeansordes/dot-navigator/main/docs/images/yaml-titles.png" />
 
 - **Internationalization support**, based on the language set in the settings, defaulting to English. (As of now, only English and French 🇫🇷 are supported, you can request a new language by creating an issue)
 
