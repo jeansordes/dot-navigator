@@ -56,3 +56,5 @@ no-db: true
 # Keep task state local and git-trackable through .beads/issues.jsonl.
 backup:
   enabled: false
+
+sync.remote: "git+ssh://git@github.com/jeansordes/dot-navigator.git"

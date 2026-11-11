@@ -1,3 +1,9 @@
+## [1.31.7](https://github.com/jeansordes/dot-navigator/compare/1.31.6...1.31.7) (2026-11-11)
+
+### Bug Fixes
+
+* **docs:** preserve store screenshot proportions ([1414595](https://github.com/jeansordes/dot-navigator/commit/14145957ffc82cd624f784509745b67650cc84cd)), closes [#44](https://github.com/jeansordes/dot-navigator/issues/44)
+
 ## [1.31.6](https://github.com/jeansordes/dot-navigator/compare/1.31.5...1.31.6) (2026-10-01)
 
 ### Bug Fixes
